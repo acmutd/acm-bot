@@ -63,8 +63,9 @@ async function addStrike(client, msg, args) {
         (err) => {msg.channel.send('For some reason, could not increment strike in the database wowow pls contact program dude ;-;')},
         (doc) => {
             const strikes = doc.strikes + inc;
+            var member;
             if(strikes >= maxStrikes) {
-                var member = msg.mentions.members.first();
+                member = msg.mentions.members.first();
                 member.kick(`Reached ${maxStrikes} strikes.`);
                 msg.channel.send(`Automatically kicked ${member.user.username} for accumulating too many strikes.`);
             }

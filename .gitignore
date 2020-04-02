@@ -1,6 +1,7 @@
 # Bot specific stuff
 botSettings.json
 vision.json
+.DS_Store
 
 # Logs
 logs
