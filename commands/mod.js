@@ -67,11 +67,12 @@ async function addStrike(client, msg, args) {
             if(strikes >= maxStrikes) {
                 member = msg.mentions.members.first();
                 member.kick(`Reached ${maxStrikes} strikes.`);
-                msg.channel.send(`Automatically kicked ${member.user.username} for accumulating too many strikes.`);
+                //msg.channel.send(`Automatically kicked ${member.user.username} for accumulating too many strikes.`);
             }
             
             msg.channel.send(`Striked`);
-            msg.channel.send(`${member.user.username} has **${strikes}** strike${strikes == 1 ? '' : 's'}`);
+            msg.channel.send(`Total strikes: **${strikes}**`);
+            //msg.channel.send(`${member.user.username} has **${strikes}** strike${strikes == 1 ? '' : 's'}`);
         }
     );
 }
