@@ -138,26 +138,35 @@ async function projectMembers(client, msg, args, projectRole) {
     // 1. is the person leader
     if(!kit.isProjectLeader(msg, projectRole)) return msg.channel.send('⚠️ Only the __**project leader**__ can add/remove project members!')
     // 2. wizard node that takes user mentions and adds/removes project role
-    var user = await wizard.type.mention.user(msg, client, false, null, 
-        {
-            title: "__**Project Members: Add/Remove Members**__",
-            description: `Mention a user. \nIf the user __has__ the **${projectRole.name}** project role, then the role will be **removed**.\n If they __don't__, they will be **given** the role.`
-        },
-        {
-            title: "__**❌ Project Members: Add/Remove Members**__",
-            description: `**You must mention a user (@<username>)** \nIf the user __has__ the **${projectRole.name}** project role, then the role will be **removed**.\n If they __don't__, they will be **given** the role.\n You may quit anytime with \'quit\'`
-        },
-    );
-    if(user === false) return;
-    var member = msg.guild.members.cache.get(user.id);
-    if(member.roles.cache.has(projectRole.id)) {
-        member.roles.remove(projectRole);
-        msg.channel.send(`✅ Successfully removed **${member.nickname ? member.nickname : user.username}** from project **${projectRole.name}**!`)
-    }
-    else {
-        member.roles.add(projectRole)
-        msg.channel.send(`✅ Successfully added **${member.nickname ? member.nickname : user.username}** to project **${projectRole.name}**!`)
-    }
+    do {
+        var user = await wizard.default(
+            msg, client, false, msg.author, 
+            {
+                title: "__**Project Members: Add/Remove Members [LOOP]**__",
+                description: `Mention a user to add to your project. **TYPE 'done' WHEN YOU ARE DONE ADDING USERS.** \nIf the user __has__ the **${projectRole.name}** project role, then the role will be **removed**.\n If they __don't__, they will be **given** the role.\n `
+            },
+            (response) => {
+                if(response.mentions.users.array().length > 0) {
+                    return response.mentions.users.first();
+                } else if (response.content.toLowerCase() == 'done') return 'done'
+            },
+            {
+                title: "__**❌ Project Members: Add/Remove Members [LOOP]**__",
+                description: `**You must mention a user (@<username>)**. **TYPE 'done' WHEN YOU ARE DONE.** \nIf the user __has__ the **${projectRole.name}** project role, then the role will be **removed**.\n If they __don't__, they will be **given** the role.\n You may quit anytime with \'quit\'`
+            },
+        );
+        if(user === false) return;
+        if(user == 'done') { msg.channel.send('Successfully added/removed new people. Ended \'project members\' wizard.'); break;}
+        var member = msg.guild.members.cache.get(user.id);
+        if(member.roles.cache.has(projectRole.id)) {
+            member.roles.remove(projectRole);
+            msg.channel.send(`✅ Successfully removed **${member.nickname ? member.nickname : user.username}** from project **${projectRole.name}**!`)
+        }
+        else {
+            member.roles.add(projectRole)
+            msg.channel.send(`✅ Successfully added **${member.nickname ? member.nickname : user.username}** to project **${projectRole.name}**!`)
+        }
+    } while (user != 'done');
 }
 async function task(client, msg, args, projectRole) {
     switch(args[1]) {
