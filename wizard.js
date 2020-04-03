@@ -191,7 +191,31 @@ module.exports.type = {
             initialEmbed,
             (response) => {
                 var choice = parseInt(response.content);
-                if(numList.includes(choice)) return choice-1;
+                if(numList.includes(choice)) return {value: choice-1};
+            },
+            attemptedEmbed
+        );
+        return res;
+    },
+    optionsResponse: async (msg, client, options, skippable, skipValue, initialEmbed, attemptedEmbed) => {
+        var optionList = "\n";
+        var numList = [];
+        for(let i = 0; i < options.length; i++) {
+            optionList += `\`${i+1}\` | ${options[i]}\n`;
+            numList.push(i+1);
+        }
+        initialEmbed.description ? initialEmbed.description += optionList : initialEmbed.description = optionList;
+        if(attemptedEmbed) attemptedEmbed.description ? attemptedEmbed.description += optionList : attemptedEmbed.description = optionList;
+        var res = await this.default(
+            msg,
+            client,
+            skippable,
+            skipValue,
+            initialEmbed,
+            (response) => {
+                var choice = parseInt(response.content);
+                if(numList.includes(choice)) return {value: choice-1, isOption: true};
+                return {value: response.content, isOption: false};
             },
             attemptedEmbed
         );

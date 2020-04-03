@@ -2,7 +2,7 @@ const isURL = require("is-url");
 const request = require('request-promise').defaults({ encoding: null });
 const colorThief = require('colorthief');
 const colorChecker = require("css-color-checker");
-const { MessageEmbed } = require('discord.js');
+const { MessageEmbed, Collection } = require('discord.js');
 
 module.exports.ai = {
     detectSafeSearch: async (fileLink) => {

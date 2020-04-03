@@ -50,10 +50,10 @@ async function clearChat(client, msg, args) {
 // * strike series
 async function addStrike(client, msg, args) {
 
-    // strikes needed to get banned/kicked
-    var maxStrikes = 3;
+    // ! strikes needed to get banned/kicked
+    var maxStrikes = 20;
 
-    if(!args[1]) return msg.channel.send('hhh u should mention which user to strike like its pretty fking obv lmaooo');
+    if(!args[1]) return msg.channel.send('uhhh should mention which user to strike like its pretty fking obv lmaooo');
     if(msg.mentions.members.size < 1) return msg.channel.send('you gotta @ the person u wanna strike try again');
     var inc = 1/2;
     await toolkit.db.update.one(
@@ -63,16 +63,25 @@ async function addStrike(client, msg, args) {
         (err) => {msg.channel.send('For some reason, could not increment strike in the database wowow pls contact program dude ;-;')},
         (doc) => {
             const strikes = doc.strikes + inc;
-            var member;
+            var member = msg.mentions.members.first();
+            var responses = client.cache.guilds.get(msg.guild.id).responses;
             if(strikes >= maxStrikes) {
-                member = msg.mentions.members.first();
+                var kickResponse = responses.kick[Math.floor(Math.random() * responses.kick.length)] 
+                    ? responses.kick[Math.floor(Math.random() * responses.kick.length)]
+                    : `**${member.nickname ? member.nickname : member.user.username}** has been kicked!`;
+                kickResponse = kickResponse.replace('<user>', `**${member.nickname ? member.nickname : member.user.username}**`);
                 member.kick(`Reached ${maxStrikes} strikes.`);
-                //msg.channel.send(`Automatically kicked ${member.user.username} for accumulating too many strikes.`);
+                msg.channel.send(kickResponse);
+                msg.channel.send(`Automatically kicked ${member.user.username} for accumulating too many strikes.`);
             }
-            
-            msg.channel.send(`Striked`);
+            // custom message
+            var strikeResponse = responses.strike[Math.floor(Math.random() * responses.strike.length)]
+                ? responses.strike[Math.floor(Math.random() * responses.strike.length)]
+                : `**${member.nickname ? member.nickname : member.user.username}** has **${strikes}** strike${strikes == 1 ? '' : 's'}`;
+            strikeResponse = strikeResponse.replace('<user>', `**${member.nickname ? member.nickname : member.user.username}**`);
+            msg.channel.send(strikeResponse);
             msg.channel.send(`Total strikes: **${strikes}**`);
-            //msg.channel.send(`${member.user.username} has **${strikes}** strike${strikes == 1 ? '' : 's'}`);
+            // msg.channel.send(`**${member.nickname ? member.nickname : member.user.username}** has **${strikes}** strike${strikes == 1 ? '' : 's'}`);
         }
     );
 }
