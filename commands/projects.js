@@ -29,9 +29,8 @@ module.exports.run = async (client, msg, args) => {
             await projectMembers(client, msg, args, project);
             break;
         case 'task':
-            var project = await chooseProject(client, msg, args);
-            if(project === false) break;
-            await task(client, msg, args, project);
+            // project is asked in the task function
+            await task(client, msg, args);
             break;
         case 'help':
             await help(client, msg, args);
@@ -58,6 +57,7 @@ async function help(client, msg, args) {
 async function chooseProject(client, msg, args) {
     var project;
     var projectRoles = kit.projectsInvolved(msg);
+    if(projectRoles.length == 0) {msg.channel.send(`❌ You're not a part of any projects to add/remove members from! Use \`${process.env.PREFIX}project create\` to create one.`); return false;}
     var projectOptions = projectRoles.map(r => {
         var str = r.name;
         if (kit.isProjectLeader(msg, r)) str += " 👑";
@@ -111,6 +111,8 @@ async function createProject(client, msg, args) {
     var desc = `⭐, 👑: ${projectOwner.id}, 🎗️: ${projectRole.id}`;
     var projectChannel = await msg.guild.channels.create(projectName, {type: 'text', topic: desc, parent: projectCategory, permissionOverwrites: permissions});
     var projectVoiceChannel = await msg.guild.channels.create(projectName + " VC", {type: 'voice', parent: projectCategory, permissionOverwrites: permissions});
+
+    msg.channel.send(`✅ Successfully created project **.${projectName}**!`);
 }
 async function deleteProject(client, msg, args, projectRole) {
     if(!kit.isProjectLeader(msg, projectRole)) return msg.channel.send('⚠️ Only the __**project leader**__ can delete a project!')
@@ -130,7 +132,7 @@ async function deleteProject(client, msg, args, projectRole) {
     // 3. delete role
     projectRole.delete();
 
-    msg.channel.send(`Successfully deleted the **${projectRole.name}** project!`)
+    msg.channel.send(`✅ Successfully deleted the **${projectRole.name}** project!`)
 }
 
 // * Project Management series
@@ -168,10 +170,25 @@ async function projectMembers(client, msg, args, projectRole) {
         }
     } while (user != 'done');
 }
-async function task(client, msg, args, projectRole) {
+async function task(client, msg, args) {
     switch(args[1]) {
         case 'create':
-            await taskFunctions.create(client, msg, args, projectRole)
+            var project = await chooseProject(client, msg, args);
+            if(project === false) break;
+            await taskFunctions.create(client, msg, args, project)
+            break;
+        case 'delete':
+            var project = await chooseProject(client, msg, args);
+            if(project === false) break;
+            await taskFunctions.delete(client, msg, args, project)
+            break;
+        case 'members':
+            var project = await chooseProject(client, msg, args);
+            if(project === false) break;
+            await taskFunctions.members(client, msg, args, project)
+            break;
+        case 'help':
+            await taskFunctions.help(client, msg, args);
             break;
         default:
             msg.channel.send(`❌ That is not a proper \'task\' command. Try using **\'${process.env.PREFIX}project task help\'** for help.`)
@@ -227,8 +244,9 @@ const taskFunctions = {
         } while (taskMember != 'done');
 
         // 4. create a channel with permissions just for those members and the project leader
-        var perms = [taskLeader, msg.member];
-        taskMembers.forEach(mem => {
+        var allowed = [taskLeader, msg.member, ...taskMembers];
+        var perms = [];
+        allowed.forEach(mem => {
             perms.push({
                 id: mem,
                 allow: ['VIEW_CHANNEL'],
@@ -241,8 +259,68 @@ const taskFunctions = {
             type: 'role'
         })
         var projectCategory = kit.findCategory(msg, projectRole);
-        msg.guild.channels.create(taskName, {type: 'text', parent: projectCategory, permissionOverwrites: perms})
+        msg.guild.channels.create(taskName, {type: 'text', topic: "📌", parent: projectCategory, permissionOverwrites: perms});
     },
+    delete: async (client, msg, args,  projectRole) => {
+        var taskChannel = await kit.chooseTaskChannel(client, msg, projectRole);
+        if(taskChannel === false) return;
+        // confirm
+        var confirmation = await wizard.type.confirmation(msg, client, 
+            `⚠️ Are you sure you want to delete the **${taskChannel.name}** task for the **${projectRole.name}** project? Type **\'confirm\'** to delete, or type **\'quit\'** to quit.`,
+            "⚠️ You must type either **\'confirm\'** to confirm that you want to delete this task, or type **\'quit\'** to quit.");
+        if(confirmation === false) return;
+        taskChannel.delete();
+    },
+    members: async (client, msg, args, projectRole) => {
+        // list all the tasks
+        var taskChannel = await kit.chooseTaskChannel(client, msg, projectRole);
+        do {
+            var user = await wizard.default(
+                msg, client, false, msg.author, 
+                {
+                    title: "__**📌 Project Task Members: Add/Remove Members [LOOP]**__",
+                    description: `Mention a user to add to your project task. __TYPE **'done'** WHEN YOU ARE DONE ADDING USERS.__ \n\`1.\` If the user is alredy part of the task, then they will be **removed**. \n\`2.\` If they are not part of the tast, then they will be **added**`
+                },
+                (response) => {
+                    if(response.mentions.users.array().length > 0) {
+                        return response.mentions.users.first();
+                    } else if (response.content.toLowerCase() == 'done') return 'done'
+                },
+                {
+                    title: "__**❌ Project Task Members: Add/Remove Members [LOOP]**__",
+                    description: `**You must mention a user (@<username>)**. __TYPE **'done'** WHEN YOU ARE DONE ADDING USERS.__ \nIf the user __has__ the **${projectRole.name}** project role, then the role will be **removed**.\n If they __don't__, they will be **given** the role.\n You may quit anytime with \'quit\'`
+                },
+            );
+            if(user === false) return;
+            if(user == 'done') { msg.channel.send('Successfully added/removed new people. Ended \'project task members\' wizard.'); break;}
+            var member = msg.guild.members.cache.get(user.id);
+            // does person have a permission role already?
+            if(!taskChannel.permissionOverwrites.has(member.id)) {
+                taskChannel.updateOverwrite(member, { VIEW_CHANNEL: true });
+                msg.channel.send(`✅ Successfully added **${member.nickname ? member.nickname : user.username}** to project task **${taskChannel.name}**!`)
+            } else {
+                if(taskChannel.permissionOverwrites.get(member.id).allow.has('VIEW_CHANNEL')) {
+                    taskChannel.updateOverwrite(member, { VIEW_CHANNEL: false });
+                    msg.channel.send(`✅ Successfully removed **${member.nickname ? member.nickname : user.username}** from project task **${taskChannel.name}**!`)
+                } else {
+                    taskChannel.updateOverwrite(member, { VIEW_CHANNEL: true });
+                    msg.channel.send(`✅ Successfully added **${member.nickname ? member.nickname : user.username}** to project task **${taskChannel.name}**!`)
+                }
+            }
+        } while (user != 'done');
+
+    },
+    help: async (client, msg, args) => {
+        var embed = new MessageEmbed();
+        embed.setTitle(`**${process.env.PREFIX}project task** Command List`);
+        embed.setDescription('__🔮 = uses a setup wizard__ (no need for parameters)\n__🔨 = in development__')
+        embed.addField(`**${process.env.PREFIX}project task create**`, '🔮 Command used to create a new task for a project.');
+        embed.addField(`**${process.env.PREFIX}project task delete**`, '🔮 Command used to delete an existing task for a project.');
+        embed.addField(`**${process.env.PREFIX}project task members**`, '🔮 Command used to add or remove people from a task.');
+        embed.addField(`**${process.env.PREFIX}project task help**`, `Command used to show all possible commands for \'${process.env.PREFIX}project task\'.`)
+        embed.setFooter('If there seems to be an issue with any of these commands, contact a dev!');
+        msg.channel.send({embed});
+    }
 }
 
 var kit = {
@@ -269,6 +347,35 @@ var kit = {
         var categories = msg.guild.channels.cache.filter(c => c.type == 'category');
         var projectCategory = categories.find(c => c.permissionOverwrites.get(projectRole.id));
         return projectCategory;
+    },
+    findTaskChannels: (msg, projectRole) => {
+        var projectCategory = kit.findCategory(msg, projectRole);
+        var taskChannels = [];
+        projectCategory.children.forEach(channel => {
+            if(channel.type == 'text') {
+                if(channel.topic.includes('📌')) taskChannels.push(channel);
+            }
+        });
+        return taskChannels;
+    },
+    chooseTaskChannel: async (client, msg, projectRole) => {
+        var tasks = kit.findTaskChannels(msg, projectRole);
+        // if theres only one task then return that task automatically
+        if(tasks.length === 1) return tasks[0];
+        var taskIndex = await wizard.type.options(
+            msg, client, tasks.map(t => t.name), false, {value: 0},
+            {
+                title: "__**📌 Project Task Commands: Choose a task**__",
+                description: "Your project has multiple tasks. Choose which task you would like to perform the following command on. **Type the number**:"
+            }, 
+            {
+                title: "__**❌ Project Task Commands: Choose a task**__",
+                description: "[You must enter a valid number!] Your project has multiple tasks. Choose which task you would like to perform the following command on. **Type the number**:"
+            }
+        )
+        if(taskIndex === false) return false;
+        // return task channel
+        return tasks[taskIndex.value];
     }
 }
 

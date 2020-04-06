@@ -26,7 +26,7 @@ module.exports.run = (client, msg) => {
 
     // * before running the command, is the user already using a setup wizard?
     if(client.indicators.usingCommand.includes(msg.author.id)) {
-        msg.channel.send("You are already using a command (setup wizard, etc.). Finish that command before starting another one. B-BAKA!!!");
+        msg.channel.send("You are already using a command (setup wizard, etc.). Finish that command before starting another one!!!");
         return;
     }
 

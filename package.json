@@ -20,6 +20,7 @@
     "@google-cloud/vision": "^1.11.0",
     "colorthief": "^2.3.0",
     "css-color-checker": "^1.6.1",
+    "date-and-time": "^0.13.1",
     "discord.js": "^12.0.2",
     "dotenv": "^8.2.0",
     "is-url": "^1.2.4",
