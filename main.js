@@ -1,4 +1,4 @@
-const { Client, Collection } = require('discord.js');
+const { Client, Collection, MessageEmbed } = require('discord.js');
 const mongoose = require('mongoose');
 const toolkit = require('./toolkit.js');
 const schedule = require('node-schedule');
@@ -72,6 +72,26 @@ client.models.guild.find({}, async (err, docs) => {
         console.log("Initially cached the \'guilds\' collection!")
     }
 });
+
+// make sure that all errors are sent as embeds to the error channels
+process.on('unhandledRejection', (err) => handleUncaughtErrorsOverride(err));
+process.on('uncaughtException', (err) => handleUncaughtErrorsOverride(err));
+
+function handleUncaughtErrorsOverride(err) {
+    if(client.cache.guilds.first()) {
+        var guildForErrors = client.cache.guilds.first();
+        if(guildForErrors.channels.error) {
+            var guild = client.guilds.resolve(guildForErrors["_id"]);
+            var embed = new MessageEmbed();
+            embed.setTitle(`🤖 **${client.user.username}** BOT ERROR ${err.name ? "| "+err.name : ""}`);
+            embed.addField("**Error Message**", err.message ? err.message : err);
+            embed.setThumbnail(client.user.displayAvatarURL());
+            embed.setColor('RED');
+            guild.channels.resolve(guildForErrors.channels.error).send({embed});
+        }
+    }
+    console.log(err);
+}
 
 Array.prototype.diff = function(a) {
     return [...this.filter(function(i) {return a.indexOf(i) < 0;})];
