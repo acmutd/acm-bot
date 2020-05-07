@@ -1,0 +1,58 @@
+import ACMClient from "./Bot";
+import { Message, MessageEmbed } from "discord.js";
+
+export enum CommandType { PARAMS, WIZARD, BOTH }
+
+export interface CommandContext {
+    client: ACMClient,
+    msg: Message,
+    args: string[],
+}
+
+export interface CommandConfig {
+    name: string,
+    description: string,
+    type?: CommandType,
+    usage?: string[],
+    tags?: string[],
+    cooldown?: number,
+    dmWorks?: boolean,
+    userPermissons?: number
+}
+
+export default abstract class Command {
+    public name: string;
+    public description: string;
+    public type: CommandType;
+    public usage: string[];
+    public tags: string[];
+    public cooldown: number;
+    public dmWorks: boolean;
+    public userPermissions: number;
+
+    constructor(config: CommandConfig) {
+        this.name = config.name;
+        this.description = config.description;
+        this.type = config.type || CommandType.WIZARD;
+        this.usage = config.usage || [];
+        this.tags = config.tags || [];
+        this.cooldown = config.cooldown || 0;
+        this.dmWorks = config.dmWorks || false;
+        this.userPermissions = config.userPermissons || 0;
+    }
+
+    // TODO: Find a use for the return of the exec function
+    public async abstract exec(context: CommandContext): Promise<any>;
+
+    infoEmbed() {
+        var embed = new MessageEmbed()
+            .setTitle(`Command ${this.name}`)
+            .setDescription(`**${this.description}**`)
+            .addField('Usage', this.usage.length > 1 ? this.usage.join(', ') : 'No usage cases available', true)
+            .addField('Tags', this.tags.length > 1 ? this.tags.join(', ') : 'No tags', true)
+            .addField('Works in DMs?', this.dmWorks ? 'Yes' : 'No', true)
+            .addField('Cooldown', `${this.cooldown} seconds`, true);
+        
+        return embed;
+    }
+}
