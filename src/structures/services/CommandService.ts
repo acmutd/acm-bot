@@ -1,7 +1,7 @@
 import { Message, DMChannel, MessageEmbed } from "discord.js";
 import ACMClient from "../Bot";
 import Command from "../Command";
-
+import { settings } from "../../botsettings";
 
 
 export default class CommandService {
@@ -32,13 +32,13 @@ export default class CommandService {
      */
     async handle(msg: Message) {
         if(msg.author.bot) return;
-        if(!msg.content.startsWith(process.env.PREFIX!)) return;
+        if(!msg.content.startsWith(settings.prefix)) return;
 
-        const command = msg.content.substring(process.env.PREFIX!.length).split(" ")[0];
-        const args = msg.content.substring(process.env.PREFIX!.length).split(" ").slice(1);
+        const command = msg.content.substring(settings.prefix.length).split(" ")[0];
+        const args = msg.content.substring(settings.prefix.length).split(" ").slice(1);
 
         let cmd = this.client.manager.commands.get(command);
-        if(!cmd) return this.client.response.emit(msg.channel, `Not a command. Try \'${process.env.PREFIX}help\' for help.`, 'invalid');
+        if(!cmd) return this.client.response.emit(msg.channel, `Not a command. Try \'${settings.prefix}help\' for help.`, 'invalid');
         // * before running the command, is the user already using a setup wizard?
         if(this.client.indicators.hasUser('usingCommand', msg.author)) {
             return this.client.response.emit(msg.channel, "You are already using a command (setup wizard, etc.). Finish that command before starting another one.", 'invalid');

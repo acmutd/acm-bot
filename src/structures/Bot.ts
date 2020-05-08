@@ -8,6 +8,7 @@ import { Client } from 'discord.js';
 import LoggerUtil from '../utils/Logger';
 import CommandService from './services/CommandService';
 import ResponseUtil, { ResponseFormat } from '../utils/Responses';
+import { settings } from '../botsettings';
 
 export interface BotConfig {
     token: string,
@@ -23,6 +24,7 @@ export interface BotConfig {
 export default class ACMClient extends Client {
 
     // public commands: Collection<string, Command>;
+    public settings: any;
     public logger: LoggerUtil;
     public response: ResponseUtil;
     public manager: CommandManager;
@@ -37,6 +39,7 @@ export default class ACMClient extends Client {
 
     constructor(config: BotConfig) {
         super();
+        this.settings = settings;
         this.logger = new LoggerUtil();
         this.response = new ResponseUtil(config.responseFormat);
         this.manager = new CommandManager(this, config.commandPath);
@@ -44,7 +47,7 @@ export default class ACMClient extends Client {
         this.database = new DatabaseManager(config);
         this.indicators = new IndicatorManager();
         this.services = {
-            verification: new VerificationService(this, process.env.CONFIRMATION_CHANNEL!),
+            verification: new VerificationService(this, settings.channels.verification),
             command: new CommandService(this)
         }
         this.config = config;

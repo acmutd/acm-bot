@@ -22,12 +22,12 @@ export default class CommandManager {
 
     scanCommands() {
         fs.readdir(this.path, (err, files) => {
-            console.log(`Found ${files.length} command(s)!`);
+            this.bot.logger.info(`Found ${files.length} commands(s)!`);
             files.forEach(file => {
                 var cmd = require(`${this.path.endsWith('/') ? this.path : this.path+'/'}${file}`);
                 var command = new cmd.default();
                 this.commands.set(command.name, command);
-                console.log(`Loaded the \'${command.name}\' command!`)
+                this.bot.logger.info(`Loaded the \'${command.name}\' command!`)
             });
         })
     }

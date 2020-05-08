@@ -1,7 +1,6 @@
 import { TextChannel, Message } from "discord.js";
 import ACMClient from "../Bot";
-
-
+import { settings } from "../../botsettings";
 
 export default class VerificationService {
     public channelID: string;
@@ -17,7 +16,7 @@ export default class VerificationService {
             if(msg.channel.id == this.channelID && msg.member) {
                 try {
                     msg.member.setNickname(msg.content);
-                    msg.member.roles.add(process.env.MEMBER_ROLE!);
+                    msg.member.roles.add(settings.roles.member);
                     msg.delete();
                     return;
                 } catch(err) {

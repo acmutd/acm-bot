@@ -1,12 +1,12 @@
-import Bot from "./Bot";
+import ACMClient from "./Bot";
 
 
 export default abstract class Event {
-    public bot: Bot;
+    public client: ACMClient;
     public name: string;
 
-    constructor(bot: Bot, event: string) {
-        this.bot = bot;
+    constructor(client: ACMClient, event: string) {
+        this.client = client;
         this.name = event;
     }
 
