@@ -330,7 +330,7 @@ var kit = {
         // 1. find project channels
         var categories = msg.guild.channels.cache.filter(c => c.type == 'category');
         var projectCategory = categories.find(c => c.permissionOverwrites.get(projectRole.id));
-        var description = projectCategory.children.first().topic;
+        var description = projectCategory.children.filter(c => c.type === 'text' && projectCategory.name.toLowerCase().replace(" ", "-")[0] == c.name[0]).first().topic;
         var regex = /\d{18}/g;
         var ids = regex.exec(description);
         ids.forEach(id => {
