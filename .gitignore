@@ -2,6 +2,7 @@
 botSettings.json
 vision.json
 .DS_Store
+botconfig.js
 
 # Logs
 logs
