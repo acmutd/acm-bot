@@ -67,7 +67,6 @@ export default class Wizard {
             console.log('done');
             if (response.status == WizardNodeResponseStatus.INCOMPLETE) return false;
             responses.push(response.item);
-            console.log(response);
         }
         return responses;
     }
@@ -156,8 +155,17 @@ export abstract class WizardNode {
     abstract async validationCB(response: Message): Promise<any>;
 
     async emit(): Promise<WizardNodeResponse> {
-        let attempted = false;
         let details = this.implementDefaults(this.overwrites);
+        if (!details.footer)
+            details.footer = {
+                text: `${
+                    this.options.loopedCB
+                        ? "Enter '" +
+                          this.wizard.configs.commands.doneLoop +
+                          "' when you're finished. "
+                        : ''
+                }Enter '${this.wizard.configs.commands.quit}' to end wizard.`,
+            };
 
         // pre-send cb
         try {
@@ -165,10 +173,12 @@ export abstract class WizardNode {
             if (cb) details = cb;
         } catch (err) {
             // logger
+            console.log(err);
         }
         if (this.options.loopedCB) {
             let item = [];
             let failed = false;
+            let defaultColor = details.color;
             do {
                 do {
                     // if attempted then send the error message, if there is one
@@ -230,7 +240,7 @@ export abstract class WizardNode {
                     var res = await this.validationCB(response.first()!);
                     wizardNode.delete();
                     failed = !res;
-                    details.color = 'NOT_QUITE_BLACK';
+                    details.color = defaultColor ? defaultColor : 'NOT_QUITE_BLACK';
                 } while (!res);
                 if (res != this.wizard.configs.commands.doneLoop) {
                     const cbResult: WizardNodeLoopCBResponse = await this.options.loopedCB(item);
@@ -245,7 +255,9 @@ export abstract class WizardNode {
             } while (!res || res != this.wizard.configs.commands.doneLoop);
             return { status: WizardNodeResponseStatus.COMPLETE, item };
         } else {
+            let attempted = false;
             let item;
+
             do {
                 // if attempted then send the error message, if there is one
                 if (attempted) {

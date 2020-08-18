@@ -14,10 +14,10 @@ export default class AdminCommand extends Command {
     public async exec({ msg, client, args }: CommandContext) {
         const wizard = new Wizard(msg, undefined, { title: '🔮 | ' });
         wizard.addNodes([
-            new TextWizardNode(wizard, { title: 'text', description: 'add text' }),
+            new TextWizardNode(wizard, { title: 'text', description: 'add text', color: 'BLUE' }),
             new UserMentionWizardNode(
                 wizard,
-                { title: 'user', description: 'mention a user' },
+                { title: 'user', description: 'mention a user', color: 'YELLOW' },
                 {
                     loopedCB: function (item) {
                         return { item, message: 'haha' };
@@ -27,6 +27,5 @@ export default class AdminCommand extends Command {
         ]);
         var responses = await wizard.start();
         console.log(responses);
-        msg.channel.send('ending wizard');
     }
 }
