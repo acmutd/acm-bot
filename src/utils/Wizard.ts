@@ -1,28 +1,26 @@
-import { MessageEmbedOptions, Message, MessageEmbed, Collection } from "discord.js";
-import { keys } from 'ts-transformer-keys';
-import CheckerUtils from "./Color";
+import { MessageEmbedOptions, Message, MessageEmbed } from 'discord.js';
+import CheckerUtils from './Color';
 
 enum StringReplacements {
-    TIME = '<time>'
+    TIME = '<time>',
 }
 
 export interface WizardConfigurations {
     commands: {
-        quit: string,
-        skip: string,
-        doneLoop: string
-    },
+        quit: string;
+        skip: string;
+        doneLoop: string;
+    };
     responses: {
-        quit: string,
-        skip: string,
-        doneLoop: string,
-        time: string,
-        error: string
-    }
+        quit: string;
+        skip: string;
+        doneLoop: string;
+        time: string;
+        error: string;
+    };
 }
 
 export default class Wizard {
-
     public nodes: WizardNode[] = [];
     public message: Message;
     public defaults: MessageEmbedOptions | undefined;
@@ -41,76 +39,112 @@ export default class Wizard {
             commands: {
                 quit: 'quit',
                 skip: 'skip',
-                doneLoop: 'done'
+                doneLoop: 'done',
             },
             responses: {
                 quit: 'You have quit the wizard',
                 skip: '',
                 doneLoop: 'You have ended the loop',
-                time: '⏰ You ran out of time (<time> seconds). Ending wizard...',
-                error: 'There was an issue with the setup wizard.'
-            }
-        }
+                time: '⏰ You ran out of time (+<time> seconds). Ending wizard...',
+                error: 'There was an issue with the setup wizard.',
+            },
+        };
     }
 
-    addNode(node: WizardNode) { this.nodes.push(node); }
+    addNode(node: WizardNode) {
+        this.nodes.push(node);
+    }
 
-    async start() {}
+    addNodes(nodes: WizardNode[]) {
+        this.nodes.push(...nodes);
+    }
+
+    async start(): Promise<any[] | boolean | undefined> {
+        let responses: any[] = [];
+        for (let i = 0; i < this.nodes.length; i++) {
+            const node = this.nodes[i];
+            const response = await node.emit();
+            console.log('done');
+            if (response.status == WizardNodeResponseStatus.INCOMPLETE) return false;
+            responses.push(response.item);
+            console.log(response);
+        }
+        return responses;
+    }
 }
 
-
 enum WizardNodeResponseStatus {
-    COMPLETE, INCOMPLETE
+    COMPLETE,
+    INCOMPLETE,
 }
 
 export interface WizardNodeOptions {
-    timer?: number,
-    skip?: {
-        skippable: boolean,
-        skipValue: any
-    },
-    invalidMessage?: string,
-    looped?: boolean
+    timer?: number;
+    invalidMessage?: string;
+    /**
+     * Providing a skip value will give users the option to skip this node
+     */
+    skipValue?: any;
+    /**
+     * Providing a loopedCB value will turn the node into a looped node
+     */
+    loopedCB?: (item: any[]) => WizardNodeLoopCBResponse;
 }
 
 export interface WizardNodeResponse {
-    status: WizardNodeResponseStatus,
-    item: any
+    status: WizardNodeResponseStatus;
+    item: any;
 }
 
-export abstract class WizardNode {
+export interface WizardNodeLoopCBResponse {
+    item?: any[] | undefined;
+    message?: string | MessageEmbed | undefined;
+}
 
+const messageEmbedOptionKeys: (keyof MessageEmbedOptions)[] = [
+    'title',
+    'description',
+    'url',
+    'timestamp',
+    'color',
+    'fields',
+    'files',
+    'author',
+    'thumbnail',
+    'image',
+    'video',
+    'footer',
+];
+
+export abstract class WizardNode {
     public wizard: Wizard;
     public overwrites: MessageEmbedOptions;
     public options: WizardNodeOptions;
-    
-    public looped: boolean;
     public timer: number;
 
     constructor(wizard: Wizard, overwrites: MessageEmbedOptions, options?: WizardNodeOptions) {
         this.wizard = wizard;
-        this.options = options || { timer: 20, looped: false };
+        this.options = options || { timer: 20 };
         this.timer = options?.timer || 20;
-        this.looped = options?.looped || false;
         this.overwrites = overwrites;
     }
 
     private implementDefaults(overwrites: MessageEmbedOptions): MessageEmbedOptions {
         let details = overwrites;
         // 1. Replace the defaults where there are overwrites
-        if(this.wizard.defaults) {
+        if (this.wizard.defaults) {
             details = this.wizard.defaults;
-            keys<MessageEmbedOptions>().forEach(key => {
-                if(this.overwrites[key] && details[key]) 
-                details[key] = this.overwrites[key] as any;
+            messageEmbedOptionKeys.forEach((key) => {
+                if (this.overwrites[key] && details[key])
+                    details[key] = this.overwrites[key] as any;
             });
         }
         // 2. Add any additions in front of options
-        if(this.wizard.additions) {
+        if (this.wizard.additions) {
             let additions = this.wizard.additions;
-            keys<MessageEmbedOptions>().forEach(key => {
-                if(typeof additions[key] === 'string' && typeof details[key] === 'string') {
-                    details[key] = (additions[key] as string + details[key]) as any;
+            messageEmbedOptionKeys.forEach((key) => {
+                if (typeof additions[key] === 'string' && typeof details[key] === 'string') {
+                    details[key] = ((additions[key] as string) + details[key]) as any;
                 }
             });
         }
@@ -119,95 +153,213 @@ export abstract class WizardNode {
     }
 
     abstract async preSendCB(details: MessageEmbedOptions): Promise<MessageEmbedOptions | void>;
-    
     abstract async validationCB(response: Message): Promise<any>;
 
-    async emit() {
-        
+    async emit(): Promise<WizardNodeResponse> {
         let attempted = false;
         let details = this.implementDefaults(this.overwrites);
 
         // pre-send cb
         try {
             let cb = await this.preSendCB(details);
-            if(cb) details = cb;
-        } catch (err) { 
+            if (cb) details = cb;
+        } catch (err) {
             // logger
         }
-        do {
-            // if attempted then send the error message, if there is one
-            if(attempted && this.options.invalidMessage) {
-                this.wizard.message.channel.send(this.options.invalidMessage);
-            }
+        if (this.options.loopedCB) {
+            let item = [];
+            let failed = false;
+            do {
+                do {
+                    // if attempted then send the error message, if there is one
+                    if (failed) {
+                        // turn next message red
+                        details.color = 'RED';
+                        if (this.options.invalidMessage) {
+                            this.wizard.message.channel.send(this.options.invalidMessage);
+                        }
+                    }
 
-            let embed = new MessageEmbed(details);
-            var wizardNode = await this.wizard.message.channel.send({embed});
-            try {
-                var response = await this.wizard.message.channel.awaitMessages(m => m.author.id === this.wizard.message.author.id, {max: 1, time: this.timer*1000, errors: ['time']})
-            } catch(err) {
-                this.wizard.message.channel.send(this.wizard.configs.responses.time.replace(StringReplacements.TIME, this.timer.toString()));
-                return { status: WizardNodeResponseStatus.INCOMPLETE, item: false };
-            }
-            
-            if(response.first()?.content.toLowerCase() === this.wizard.configs.commands.quit) { wizardNode.delete(); this.wizard.message.channel.send(this.wizard.configs.responses.quit); return false; }
-        
-            if(this.options.skip) {
-                if(response.first()?.content.toLowerCase() === this.wizard.configs.commands.skip) { wizardNode.delete(); return this.options.skip.skipValue; }
-            }
+                    let embed = new MessageEmbed(details);
+                    var wizardNode = await this.wizard.message.channel.send({ embed });
+                    try {
+                        var response = await this.wizard.message.channel.awaitMessages(
+                            (m) => m.author.id === this.wizard.message.author.id,
+                            { max: 1, time: this.timer * 1000, errors: ['time'] }
+                        );
+                    } catch (err) {
+                        this.wizard.message.channel.send(
+                            this.wizard.configs.responses.time.replace(
+                                StringReplacements.TIME,
+                                this.timer.toString()
+                            )
+                        );
+                        return { status: WizardNodeResponseStatus.INCOMPLETE, item: false };
+                    }
 
-            // condition should return what it wants
-            var item = await this.validationCB(response.first()!);
-    
-            attempted = true;
-    
-        } while (!item)
+                    if (
+                        response.first()?.content.toLowerCase() ===
+                        this.wizard.configs.commands.quit
+                    ) {
+                        wizardNode.delete();
+                        this.wizard.message.channel.send(this.wizard.configs.responses.quit);
+                        return { status: WizardNodeResponseStatus.INCOMPLETE, item: false };
+                    }
 
-        wizardNode.delete();
-        return { status: WizardNodeResponseStatus.COMPLETE, item };
+                    if (this.options.skipValue) {
+                        if (
+                            response.first()?.content.toLowerCase() ===
+                            this.wizard.configs.commands.skip
+                        ) {
+                            wizardNode.delete();
+                            return {
+                                status: WizardNodeResponseStatus.COMPLETE,
+                                item: this.options.skipValue,
+                            };
+                        }
+                    }
+                    if (
+                        response.first()?.content.toLowerCase() ===
+                        this.wizard.configs.commands.doneLoop
+                    ) {
+                        res = response.first()?.content;
+                        break;
+                    }
+
+                    // condition should return what it wants
+                    var res = await this.validationCB(response.first()!);
+                    wizardNode.delete();
+                    failed = !res;
+                    details.color = 'NOT_QUITE_BLACK';
+                } while (!res);
+                if (res != this.wizard.configs.commands.doneLoop) {
+                    const cbResult: WizardNodeLoopCBResponse = await this.options.loopedCB(item);
+                    if (cbResult) {
+                        if (cbResult.item) item = cbResult.item;
+                        if (cbResult.message) this.wizard.message.channel.send(cbResult.message);
+                    }
+                    item.push(res);
+                    console.log(item.length);
+                }
+                failed = false;
+            } while (!res || res != this.wizard.configs.commands.doneLoop);
+            return { status: WizardNodeResponseStatus.COMPLETE, item };
+        } else {
+            let item;
+            do {
+                // if attempted then send the error message, if there is one
+                if (attempted) {
+                    // turn next message red
+                    details.color = 'RED';
+                    if (this.options.invalidMessage) {
+                        this.wizard.message.channel.send(this.options.invalidMessage);
+                    }
+                }
+
+                let embed = new MessageEmbed(details);
+                var wizardNode = await this.wizard.message.channel.send({ embed });
+                try {
+                    var response = await this.wizard.message.channel.awaitMessages(
+                        (m) => m.author.id === this.wizard.message.author.id,
+                        { max: 1, time: this.timer * 1000, errors: ['time'] }
+                    );
+                } catch (err) {
+                    this.wizard.message.channel.send(
+                        this.wizard.configs.responses.time.replace(
+                            StringReplacements.TIME,
+                            this.timer.toString()
+                        )
+                    );
+                    return { status: WizardNodeResponseStatus.INCOMPLETE, item: false };
+                }
+
+                if (response.first()?.content.toLowerCase() === this.wizard.configs.commands.quit) {
+                    wizardNode.delete();
+                    this.wizard.message.channel.send(this.wizard.configs.responses.quit);
+                    return { status: WizardNodeResponseStatus.INCOMPLETE, item: false };
+                }
+
+                if (this.options.skipValue) {
+                    if (
+                        response.first()?.content.toLowerCase() ===
+                        this.wizard.configs.commands.skip
+                    ) {
+                        wizardNode.delete();
+                        return {
+                            status: WizardNodeResponseStatus.COMPLETE,
+                            item: this.options.skipValue,
+                        };
+                    }
+                }
+
+                // condition should return what it wants
+                item = await this.validationCB(response.first()!);
+                wizardNode.delete();
+                attempted = true;
+            } while (!item);
+            return { status: WizardNodeResponseStatus.COMPLETE, item };
+        }
     }
 }
 
 export class TextWizardNode extends WizardNode {
-
     async preSendCB(details: MessageEmbedOptions): Promise<MessageEmbedOptions | void> {}
 
     async validationCB(response: Message): Promise<any> {
-        if(typeof response.content == 'string') {
+        if (typeof response.content == 'string') {
             return response.content;
         }
     }
 }
 
 export class ColorWizardNode extends WizardNode {
-
     async preSendCB(details: MessageEmbedOptions) {}
 
     async validationCB(response: Message) {
-        if(CheckerUtils.color.isHexColor(response.content)) {
+        if (CheckerUtils.color.isHexColor(response.content)) {
             return response.content;
         }
     }
 }
 
-//! add support for actual images
+// TODO: add support for actual images
 export class GraphicWizardNode extends WizardNode {
-
     async preSendCB(details: MessageEmbedOptions) {}
 
     async validationCB(response: Message) {
-        var isMedia = await CheckerUtils.isMediaURL(response.content.toString())
-        if(isMedia) {
+        var isMedia = await CheckerUtils.isMediaURL(response.content.toString());
+        if (isMedia) {
             return response.content;
         }
     }
 }
 
-export class UserMentionWizardNode extends WizardNode{
-
+export class UserMentionWizardNode extends WizardNode {
     async preSendCB(details: MessageEmbedOptions) {}
 
     async validationCB(response: Message) {
-        throw new Error("Method not implemented.");
+        if (response.mentions.users.array().length > 0) {
+            return response.mentions.users.first();
+        }
     }
+}
 
+export class ChannelMentionWizardNode extends WizardNode {
+    async preSendCB(details: MessageEmbedOptions) {}
+
+    async validationCB(response: Message) {
+        if (response.mentions.channels.array().length > 0) {
+            return response.mentions.channels.first();
+        }
+    }
+}
+
+export class RoleMentionWizardNode extends WizardNode {
+    async preSendCB(details: MessageEmbedOptions) {}
+
+    async validationCB(response: Message) {
+        if (response.mentions.roles.array().length > 0) {
+            return response.mentions.roles.first();
+        }
+    }
 }

@@ -1,23 +1,27 @@
-import ACMClient from "./Bot";
-import { Message, MessageEmbed } from "discord.js";
+import ACMClient from './Bot';
+import { Message, MessageEmbed } from 'discord.js';
 
-export enum CommandType { PARAMS, WIZARD, BOTH }
+export enum CommandType {
+    PARAMS,
+    WIZARD,
+    BOTH,
+}
 
 export interface CommandContext {
-    client: ACMClient,
-    msg: Message,
-    args: string[],
+    client: ACMClient;
+    msg: Message;
+    args: string[];
 }
 
 export interface CommandConfig {
-    name: string,
-    description: string,
-    type?: CommandType,
-    usage?: string[],
-    tags?: string[],
-    cooldown?: number,
-    dmWorks?: boolean,
-    userPermissons?: number
+    name: string;
+    description: string;
+    type?: CommandType;
+    usage?: string[];
+    tags?: string[];
+    cooldown?: number;
+    dmWorks?: boolean;
+    userPermissions?: number;
 }
 
 export default abstract class Command {
@@ -38,21 +42,31 @@ export default abstract class Command {
         this.tags = config.tags || [];
         this.cooldown = config.cooldown || 0;
         this.dmWorks = config.dmWorks || false;
-        this.userPermissions = config.userPermissons || 0;
+        this.userPermissions = config.userPermissions || 0;
     }
 
     // TODO: Find a use for the return of the exec function
-    public async abstract exec(context: CommandContext): Promise<any>;
+    public abstract async exec(context: CommandContext): Promise<any>;
 
     infoEmbed() {
         var embed = new MessageEmbed()
             .setTitle(`Command ${this.name}`)
             .setDescription(`**${this.description}**`)
-            .addField('Usage', this.usage.length > 1 ? this.usage.join(', ') : 'No usage cases available', true)
-            .addField('Tags', this.tags.length > 1 ? this.tags.join(', ') : 'No tags', true)
+            .addField(
+                'Usage',
+                this.usage.length > 1
+                    ? this.usage.join(', ')
+                    : 'No usage cases available',
+                true
+            )
+            .addField(
+                'Tags',
+                this.tags.length > 1 ? this.tags.join(', ') : 'No tags',
+                true
+            )
             .addField('Works in DMs?', this.dmWorks ? 'Yes' : 'No', true)
             .addField('Cooldown', `${this.cooldown} seconds`, true);
-        
+
         return embed;
     }
 }

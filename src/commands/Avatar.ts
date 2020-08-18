@@ -1,9 +1,7 @@
-import Command from "../structures/Command";
-import { CommandContext } from "../structures/Command";
-
+import Command from '../structures/Command';
+import { CommandContext } from '../structures/Command';
 
 export default class AvatarCommand extends Command {
-
     constructor() {
         super({
             name: 'avatar',
@@ -11,12 +9,13 @@ export default class AvatarCommand extends Command {
         });
     }
 
-    public async exec(context: CommandContext) {
-        const avatarURL = context.msg.author.displayAvatarURL({format: 'png'});
+    public async exec({ msg, client, args }: CommandContext) {
+        const avatarURL = msg.author.displayAvatarURL({ format: 'png' });
         // const results = await toolkit.ai.detectSafeSearch(avatarURL);
         // context.msg.channel.send(`Explicit Results: ${results ? results.adult : 'No Results'}`);
         // context.msg.channel.send(`Explicit Confidence: ${results ? results.adultConfidence : 'No Results'}`);
-        context.msg.channel.send('JUst making sure this command works');
-        context.msg.channel.send(`Here is ur avatar link: ${avatarURL}`)
+        msg.channel.send('JUst making sure this command works');
+        msg.channel.send(`Here is ur avatar link: ${avatarURL}`);
+        throw Error('something went wrong');
     }
 }
