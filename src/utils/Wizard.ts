@@ -59,12 +59,11 @@ export default class Wizard {
         this.nodes.push(...nodes);
     }
 
-    async start(): Promise<any[] | boolean | undefined> {
+    async start(): Promise<any[] | false> {
         let responses: any[] = [];
         for (let i = 0; i < this.nodes.length; i++) {
             const node = this.nodes[i];
             const response = await node.emit();
-            console.log('done');
             if (response.status == WizardNodeResponseStatus.INCOMPLETE) return false;
             responses.push(response.item);
         }
@@ -79,7 +78,7 @@ enum WizardNodeResponseStatus {
 
 export interface WizardNodeOptions {
     timer?: number;
-    invalidMessage?: string;
+    invalidMessage?: string | MessageEmbed;
     /**
      * Providing a skip value will give users the option to skip this node
      */
@@ -243,13 +242,12 @@ export abstract class WizardNode {
                     details.color = defaultColor ? defaultColor : 'NOT_QUITE_BLACK';
                 } while (!res);
                 if (res != this.wizard.configs.commands.doneLoop) {
+                    item.push(res);
                     const cbResult: WizardNodeLoopCBResponse = await this.options.loopedCB(item);
                     if (cbResult) {
                         if (cbResult.item) item = cbResult.item;
                         if (cbResult.message) this.wizard.message.channel.send(cbResult.message);
                     }
-                    item.push(res);
-                    console.log(item.length);
                 }
                 failed = false;
             } while (!res || res != this.wizard.configs.commands.doneLoop);
@@ -372,6 +370,50 @@ export class RoleMentionWizardNode extends WizardNode {
     async validationCB(response: Message) {
         if (response.mentions.roles.array().length > 0) {
             return response.mentions.roles.first();
+        }
+    }
+}
+
+export class OptionsWizardNode extends WizardNode {
+    public choices: string[];
+    public numList: number[];
+    constructor(
+        wizard: Wizard,
+        overwrites: MessageEmbedOptions,
+        choices: string[],
+        options?: WizardNodeOptions
+    ) {
+        super(wizard, overwrites, options);
+        this.choices = choices;
+        this.numList = [];
+    }
+    async preSendCB(details: MessageEmbedOptions) {
+        var optionList = '\n';
+        for (let i = 0; i < this.choices.length; i++) {
+            optionList += `\`${i + 1}\` | ${this.choices[i]}\n`;
+            this.numList.push(i + 1);
+        }
+        details.description
+            ? (details.description += optionList)
+            : (details.description = optionList);
+        return details;
+    }
+
+    async validationCB(response: Message): Promise<{ value: any; isOption: boolean }> {
+        var choice = parseInt(response.content);
+        if (this.numList.includes(choice)) return { value: choice - 1, isOption: true };
+        return { value: response.content, isOption: false };
+    }
+}
+
+export class ConfirmationWizardNode extends WizardNode {
+    async preSendCB(details: MessageEmbedOptions) {
+        details.footer = { text: "Enter 'confirm' to proceed. Enter 'quit' to end wizard." };
+        return details;
+    }
+    async validationCB(response: Message) {
+        if (typeof response.content == 'string' && response.content.toLowerCase() == 'confirm') {
+            return true;
         }
     }
 }
