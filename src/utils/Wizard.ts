@@ -232,6 +232,7 @@ export abstract class WizardNode {
                         this.wizard.configs.commands.doneLoop
                     ) {
                         res = response.first()?.content;
+                        wizardNode.delete();
                         break;
                     }
 
@@ -399,10 +400,10 @@ export class OptionsWizardNode extends WizardNode {
         return details;
     }
 
-    async validationCB(response: Message): Promise<{ value: any; isOption: boolean }> {
+    async validationCB(response: Message): Promise<{ value: number } | undefined> {
         var choice = parseInt(response.content);
-        if (this.numList.includes(choice)) return { value: choice - 1, isOption: true };
-        return { value: response.content, isOption: false };
+        console.log();
+        if (this.numList.includes(choice)) return { value: choice - 1 };
     }
 }
 
