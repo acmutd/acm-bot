@@ -1,5 +1,5 @@
 import { BotConfig } from '../Bot';
-import mongoose, { Model, Schema } from 'mongoose';
+import mongoose, { Model } from 'mongoose';
 import MemberSchema, { Member } from '../models/Member';
 import GuildSchema, { Guild } from '../models/Guild';
 
