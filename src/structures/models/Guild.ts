@@ -3,13 +3,14 @@ import { Schema, model, Document } from 'mongoose';
 export interface Guild extends Document {
     _id: String;
     channels: {
-        confirmation: string;
+        verification: string;
         error: string;
         bulletin: string;
     };
     roles: {
         member: string;
         mute: string;
+        director: string;
     };
     divisions: Object;
     responses: {
@@ -23,13 +24,14 @@ export interface Guild extends Document {
 const guildSchema = new Schema({
     _id: String,
     channels: {
-        confirmation: String,
+        verification: String,
         error: String,
         bulletin: String,
     },
     roles: {
         member: String,
         mute: String,
+        director: String,
     },
     divisions: Object,
     responses: {

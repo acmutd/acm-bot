@@ -377,14 +377,17 @@ export class RoleMentionWizardNode extends WizardNode {
 
 export class OptionsWizardNode extends WizardNode {
     public choices: string[];
+    public strict: boolean;
     public numList: number[];
     constructor(
         wizard: Wizard,
         overwrites: MessageEmbedOptions,
         choices: string[],
+        strict?: boolean,
         options?: WizardNodeOptions
     ) {
         super(wizard, overwrites, options);
+        this.strict = strict ?? true;
         this.choices = choices;
         this.numList = [];
     }
@@ -400,10 +403,12 @@ export class OptionsWizardNode extends WizardNode {
         return details;
     }
 
-    async validationCB(response: Message): Promise<{ value: number } | undefined> {
+    async validationCB(
+        response: Message
+    ): Promise<{ value: number | string; isOption: boolean } | undefined> {
         var choice = parseInt(response.content);
-        console.log();
-        if (this.numList.includes(choice)) return { value: choice - 1 };
+        if (this.numList.includes(choice)) return { value: choice - 1, isOption: true };
+        if (!this.strict) return { value: response.content, isOption: false };
     }
 }
 

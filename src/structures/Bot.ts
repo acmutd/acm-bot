@@ -45,14 +45,11 @@ export default class ACMClient extends Client {
         this.response = new ResponseUtil(config.responseFormat);
         this.manager = new CommandManager(this, config.commandPath);
         this.events = new EventManager(this, config.eventPath);
-        this.database = new DatabaseManager(config);
+        this.database = new DatabaseManager(this, config);
         this.error = new ErrorManager(this);
         this.indicators = new IndicatorManager();
         this.services = {
-            verification: new VerificationService(
-                this,
-                settings.channels.verification
-            ),
+            verification: new VerificationService(this, settings.channels.verification),
             command: new CommandService(this),
         };
         this.config = config;
@@ -64,6 +61,7 @@ export default class ACMClient extends Client {
     async start() {
         Sentry.init({ dsn: this.config.sentryDSN });
         await this.database.connect();
+        await this.database.setup();
         this.manager.scanCommands();
         this.events.scanEvents();
         this.error.setup();

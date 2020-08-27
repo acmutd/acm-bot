@@ -16,10 +16,12 @@ export interface Settings {
     channels: {
         verification: string;
         error: string;
+        bulletin: string;
     };
     roles: {
         member: string;
         director: string;
+        mute: string;
         divisions: {
             projects: string;
             education: string;
