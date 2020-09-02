@@ -1,5 +1,4 @@
-import ACMClient from "./Bot";
-
+import ACMClient from './Bot';
 
 export default abstract class Event {
     public client: ACMClient;
@@ -10,5 +9,5 @@ export default abstract class Event {
         this.name = event;
     }
 
-    public async abstract emit(...args: any[]): Promise<any>;
+    public abstract async emit(...args: any[]): Promise<any>;
 }

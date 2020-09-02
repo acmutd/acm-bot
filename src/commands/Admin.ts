@@ -1,14 +1,8 @@
 import Command, { CommandContext } from '../structures/Command';
-import Wizard, {
-    TextWizardNode,
-    ColorWizardNode,
-    UserMentionWizardNode,
-    ConfirmationWizardNode,
-    OptionsWizardNode,
-    ChannelMentionWizardNode,
-} from '../utils/Wizard';
-import { TextChannel, Message } from 'discord.js';
+import Wizard, { OptionsWizardNode } from '../utils/Wizard';
+import { Message } from 'discord.js';
 import ACMClient from '../structures/Bot';
+import { ResponsesType } from '../structures/models/Response';
 
 export default class AdminCommand extends Command {
     constructor() {
@@ -28,7 +22,8 @@ export default class AdminCommand extends Command {
                 await edit(client, msg, args);
                 break;
             case 'channels':
-                await channels(client, msg, args);
+                console.log(client.database.cache.responses);
+                // await channels(client, msg, args);
                 break;
             case 'strikes':
                 // await checkStrikes(client, msg, args);
@@ -48,7 +43,7 @@ export default class AdminCommand extends Command {
 async function edit(client: ACMClient, msg: Message, args: string[]) {}
 
 async function responses(client: ACMClient, msg: Message, args: string[]) {
-    var options = ['kick', 'ban', 'mute', 'strike'];
+    var options: ResponsesType[] = ['kick', 'ban', 'mute', 'strike'];
     switch (args[1]) {
         case 'kick':
             await responseAddRemove(client, msg, args, 'kick');
@@ -77,11 +72,14 @@ async function responseAddRemove(
     client: ACMClient,
     msg: Message,
     args: string[],
-    type: 'strike' | 'mute' | 'ban' | 'kick'
+    type: ResponsesType
 ) {
     const placeholder = '<user>';
     // 1. get current responses
-    var responses = client.database.cache.guilds.get(msg.guild!.id)!.responses[type] ?? [];
+    var responses =
+        client.database.cache.responses
+            .filter((r) => r.type == type)
+            .map((r) => r.message.toString()) ?? [];
     let wizard = new Wizard(msg);
     wizard.addNode(
         new OptionsWizardNode(
@@ -99,79 +97,81 @@ async function responseAddRemove(
     if (res === false) return;
     const resp = res[0];
     if (resp.isOption) {
+        // 2.1 remove option from list
         var responseChoice = responses[resp.value];
-        // 2. remove option index
-        let obj: any = { $pull: {} };
-        obj['$pull'][`responses.${type}`] = responseChoice;
-        await client.database.updateGuild(msg.guild!.id, obj);
-        return client.response.emit(
-            msg.channel,
-            "Successfully removed a response from the '" + type + "' event.",
-            'success'
-        );
+        const success = await client.database.responseDelete(responseChoice);
+        success
+            ? client.response.emit(
+                  msg.channel,
+                  "Successfully removed a response from the '" + type + "' event.",
+                  'success'
+              )
+            : client.response.emit(msg.channel, 'Was unable to remove a response!', 'error');
     } else {
-        // 3. add option to list
+        // 2.2 add option to list
         var newResponse = resp.value;
         let obj: any = { $addToSet: {} };
         obj['$addToSet'][`responses.${type}`] = newResponse;
-        await client.database.updateGuild(msg.guild!.id, obj);
-        return client.response.emit(
-            msg.channel,
-            "Successfully added a response to the '" + type + "' event.",
-            'success'
-        );
+        const success = await client.database.responseAdd(type, newResponse);
+        success
+            ? client.response.emit(
+                  msg.channel,
+                  "Successfully added a response to the '" + type + "' event.",
+                  'success'
+              )
+            : client.response.emit(msg.channel, 'Was unable to add a response!', 'error');
     }
 }
 
-async function channels(client: ACMClient, msg: Message, args: string[]) {
-    var channelOptions = ['confirmation', 'error', 'bulletin'];
+// async function channels(client: ACMClient, msg: Message, args: string[]) {
+//     var channelOptions = ['confirmation', 'error', 'bulletin'];
 
-    let wizard = new Wizard(msg);
-    wizard.addNode(
-        new OptionsWizardNode(
-            wizard,
-            {
-                title: '__**Channel Settings: Type**__',
-                description: 'What channel type would you like to reconfigure?',
-            },
-            channelOptions,
-            true
-        )
-    );
-    const res = await wizard.start();
-    if (res === false) return;
-    const channelType = res[0];
+//     let wizard = new Wizard(msg);
+//     wizard.addNode(
+//         new OptionsWizardNode(
+//             wizard,
+//             {
+//                 title: '__**Channel Settings: Type**__',
+//                 description: 'What channel type would you like to reconfigure?',
+//             },
+//             channelOptions,
+//             true
+//         )
+//     );
+//     const res = await wizard.start();
+//     if (res === false) return;
+//     const channelType = res[0];
 
-    let wizard2 = new Wizard(msg);
-    wizard2.addNode(
-        new ChannelMentionWizardNode(wizard, {
-            title: '__**Channel Settings: New Channel**__',
-            description:
-                'Mention the channel you would like to make the new ' +
-                channelOptions[channelType.value] +
-                ' channel:',
-        })
-    );
-    const res2 = await wizard.start();
-    if (res2 === false) return;
-    const newChannel = res2[0];
+//     let wizard2 = new Wizard(msg);
+//     wizard2.addNode(
+//         new ChannelMentionWizardNode(wizard, {
+//             title: '__**Channel Settings: New Channel**__',
+//             description:
+//                 'Mention the channel you would like to make the new ' +
+//                 channelOptions[channelType.value] +
+//                 ' channel:',
+//         })
+//     );
+//     const res2 = await wizard.start();
+//     if (res2 === false) return;
+//     const newChannel = res2[0];
 
-    var obj: any = {};
-    obj[`channels.${channelOptions[channelType.value]}`] = newChannel.id;
-    try {
-        await client.database.updateGuild(msg.guild!.id, obj);
-        return client.response.emit(
-            msg.channel,
-            `Successfully reconfigured channel settings for the ${
-                channelOptions[channelType.value]
-            } channel`,
-            'success'
-        );
-    } catch (err) {
-        return client.response.emit(
-            msg.channel,
-            'There was an issue updating the channel.',
-            'error'
-        );
-    }
-}
+//     var obj: any = {};
+//     obj[`channels.${channelOptions[channelType.value]}`] = newChannel.id;
+//     try {
+//         await client.database.updateGuild(msg.guild!.id, obj);
+//         return client.response.emit(
+//             msg.channel,
+//             `Successfully reconfigured channel settings for the ${
+//                 channelOptions[channelType.value]
+//             } channel`,
+//             'success'
+//         );
+//     } catch (err) {
+//         return client.response.emit(
+//             msg.channel,
+//             'There was an issue updating the channel.',
+//             'error'
+//         );
+//     }
+// }

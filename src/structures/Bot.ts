@@ -70,7 +70,10 @@ export default class ACMClient extends Client {
         this.error.setup();
         // login
         this.login(this.config.token);
+        // this.on('debug', (e) => {
+        //     console.error(e);
+        // });
 
-        await this.services.rr.fetchMsgs();
+        // await this.services.rr.fetchMsgs();
     }
 }

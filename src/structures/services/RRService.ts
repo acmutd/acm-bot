@@ -1,7 +1,6 @@
 import ACMClient from '../Bot';
 import { MessageReaction, TextChannel } from 'discord.js';
 import { User } from '@sentry/node';
-import Guild from '../models/Guild';
 
 export default class RRService {
     public client: ACMClient;
@@ -31,16 +30,15 @@ export default class RRService {
     public async fetchMsgs() {
         let channelIDs = this.client.database.cache.rrmessages.map((rr) => rr.channel);
         channelIDs = channelIDs.filter((a, b) => channelIDs.indexOf(a) === b);
-        console.log(channelIDs);
         for (let i = 0; i < channelIDs.length; i++) {
             let id = channelIDs[i];
-            const guildID = this.client.database.cache.rrmessages.find((rr) => rr.channel == id)!
-                .guild;
-            const guild = await this.client.guilds.fetch(guildID);
-            console.log(this.client.guilds);
-            const channel = guild.channels.resolve(id);
-            if (channel) await channel.fetch();
-            else return this.client.logger.error('Could not fetch RR channels :(');
+            let channel;
+            try {
+                channel = await this.client.channels.fetch(id, true, false);
+            } catch (e) {
+                console.error(e);
+            }
+            if (!channel) return this.client.logger.error('Could not fetch RR channels :(');
             console.log('Fetched RR channels!');
         }
     }

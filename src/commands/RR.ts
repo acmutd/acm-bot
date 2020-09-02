@@ -178,7 +178,7 @@ async function rrCreate(msg: Message, client: ACMClient, args: string[]) {
     });
 
     try {
-        await client.database.addRRMessage(reactionRole);
+        await client.database.rrmsgAdd(reactionRole);
         client.response.emit(
             msg.channel,
             'Successfully created a reaction role message!',
