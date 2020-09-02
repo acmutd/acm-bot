@@ -2,12 +2,14 @@ import ACMClient, { BotConfig } from '../Bot';
 import mongoose, { Model } from 'mongoose';
 import MemberSchema, { Member } from '../models/Member';
 import GuildSchema, { Guild } from '../models/Guild';
+import RRMessageSchema, { RRMessage } from '../models/RRMessage';
 import { Collection } from 'discord.js';
 import { settings } from '../../botsettings';
 
 export interface SchemaTypes {
     member: Model<Member>;
     guild: Model<Guild>;
+    rrmessage: Model<RRMessage>;
 }
 
 export default class DatabaseManager {
@@ -16,18 +18,25 @@ export default class DatabaseManager {
     public m!: typeof mongoose;
     public schemas: SchemaTypes;
 
-    public guildCache: Collection<string, Guild>;
+    public cache: {
+        guilds: Collection<string, Guild>;
+        rrmessages: Collection<string, RRMessage>;
+    };
     /**
      * Constructor of the database manager
      * @param config The BotConfig of the ACMClient (from main.ts).
      */
     constructor(client: ACMClient, config: BotConfig) {
         this.client = client;
-        this.guildCache = new Collection();
+        this.cache = {
+            guilds: new Collection(),
+            rrmessages: new Collection(),
+        };
         this.url = config.dbUrl;
         this.schemas = {
             member: MemberSchema,
             guild: GuildSchema,
+            rrmessage: RRMessageSchema,
         };
     }
 
@@ -51,8 +60,20 @@ export default class DatabaseManager {
     public async recacheGuilds() {
         try {
             let docs = await this.schemas.guild.find({});
+            this.cache.guilds = new Collection();
             docs.forEach((doc) => {
-                this.guildCache.set(doc['_id'] as string, doc);
+                this.cache.guilds.set(doc['_id'] as string, doc);
+            });
+        } catch (err) {
+            this.client.logger.error(err);
+        }
+    }
+    public async recacheRRMessages() {
+        try {
+            let docs = await this.schemas.rrmessage.find({});
+            this.cache.rrmessages = new Collection();
+            docs.forEach((doc) => {
+                this.cache.rrmessages.set(doc['_id'] as string, doc);
             });
         } catch (err) {
             this.client.logger.error(err);
@@ -60,7 +81,8 @@ export default class DatabaseManager {
     }
     public async setup() {
         await this.recacheGuilds();
-        if (this.guildCache.size > 0) return;
+        await this.recacheRRMessages();
+        if (this.cache.guilds.size > 0) return;
 
         try {
             await this.schemas.guild.create({
@@ -110,4 +132,9 @@ export default class DatabaseManager {
             if (failCB) failCB(error);
         }
     }
+    public async addRRMessage(newData: any) {
+        await this.schemas.rrmessage.create(newData);
+        await this.recacheRRMessages();
+    }
+    public async changeStrike(amount: number, id: string) {}
 }

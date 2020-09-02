@@ -81,7 +81,7 @@ async function responseAddRemove(
 ) {
     const placeholder = '<user>';
     // 1. get current responses
-    var responses = client.database.guildCache.get(msg.guild!.id)!.responses[type] ?? [];
+    var responses = client.database.cache.guilds.get(msg.guild!.id)!.responses[type] ?? [];
     let wizard = new Wizard(msg);
     wizard.addNode(
         new OptionsWizardNode(

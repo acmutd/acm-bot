@@ -313,6 +313,25 @@ export abstract class WizardNode {
     }
 }
 
+export class CustomWizardNode extends WizardNode {
+    public callback: Function;
+    constructor(
+        wizard: Wizard,
+        overwrites: MessageEmbedOptions,
+        callback: (arg0: Message) => any,
+        options?: WizardNodeOptions
+    ) {
+        super(wizard, overwrites, options);
+        this.callback = callback;
+    }
+    async preSendCB(details: MessageEmbedOptions): Promise<MessageEmbedOptions | void> {}
+
+    async validationCB(response: Message): Promise<any> {
+        let res = this.callback(response);
+        if (res) return res;
+    }
+}
+
 export class TextWizardNode extends WizardNode {
     async preSendCB(details: MessageEmbedOptions): Promise<MessageEmbedOptions | void> {}
 
@@ -420,6 +439,22 @@ export class ConfirmationWizardNode extends WizardNode {
     async validationCB(response: Message) {
         if (typeof response.content == 'string' && response.content.toLowerCase() == 'confirm') {
             return true;
+        }
+    }
+}
+
+/**
+ * This node returns a boolean
+ */
+export class YesNoWizardNode extends WizardNode {
+    async preSendCB(details: MessageEmbedOptions) {
+        details.footer = { text: "Enter 'yes' or 'no' to proceed. Enter 'quit' to end wizard." };
+        return details;
+    }
+    async validationCB(response: Message) {
+        if (typeof response.content == 'string') {
+            if (response.content.toLowerCase() == 'yes') return true;
+            if (response.content.toLowerCase() == 'no') return false;
         }
     }
 }

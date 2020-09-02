@@ -10,6 +10,7 @@ import CommandService from './services/CommandService';
 import ResponseUtil, { ResponseFormat } from '../utils/Responses';
 import { settings } from '../botsettings';
 import ErrorManager from './managers/ErrorManager';
+import RRService from './services/RRService';
 
 export interface BotConfig {
     token: string;
@@ -35,11 +36,12 @@ export default class ACMClient extends Client {
     public services: {
         verification: VerificationService;
         command: CommandService;
+        rr: RRService;
     };
     public config: BotConfig;
 
     constructor(config: BotConfig) {
-        super();
+        super({ partials: ['REACTION', 'MESSAGE'] });
         this.settings = settings;
         this.logger = new LoggerUtil();
         this.response = new ResponseUtil(config.responseFormat);
@@ -51,6 +53,7 @@ export default class ACMClient extends Client {
         this.services = {
             verification: new VerificationService(this, settings.channels.verification),
             command: new CommandService(this),
+            rr: new RRService(this),
         };
         this.config = config;
     }
@@ -67,5 +70,7 @@ export default class ACMClient extends Client {
         this.error.setup();
         // login
         this.login(this.config.token);
+
+        await this.services.rr.fetchMsgs();
     }
 }
