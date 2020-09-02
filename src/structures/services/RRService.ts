@@ -38,6 +38,7 @@ export default class RRService {
                 .guild;
             const guild = await this.client.guilds.fetch(guildID);
             console.log(this.client.guilds);
+            const channel = guild.channels.resolve(id);
             if (channel) await channel.fetch();
             else return this.client.logger.error('Could not fetch RR channels :(');
             console.log('Fetched RR channels!');
