@@ -3,6 +3,8 @@ import DatabaseManager from './managers/DatabaseManager';
 import IndicatorManager from './managers/IndicatorManager';
 import CommandManager from './managers/CommandManager';
 import EventManager from './managers/EventManager';
+import ExpressManager from './managers/ExpressManager';
+import CalendarManager from './managers/CalendarManager';
 import * as Sentry from '@sentry/node';
 import { Client } from 'discord.js';
 import LoggerUtil from '../utils/Logger';
@@ -28,11 +30,15 @@ export default class ACMClient extends Client {
     public settings: any;
     public logger: LoggerUtil;
     public response: ResponseUtil;
+    // managers
     public manager: CommandManager;
     public events: EventManager;
     public error: ErrorManager;
     public database: DatabaseManager;
     public indicators: IndicatorManager;
+    // public express: ExpressManager;
+    // public calendar: CalendarManager;
+    // services
     public services: {
         verification: VerificationService;
         command: CommandService;
@@ -70,6 +76,10 @@ export default class ACMClient extends Client {
         this.error.setup();
         // login
         this.login(this.config.token);
+
+        // this.calendar.setup();
+        // this.express.setup();
+
         // this.on('debug', (e) => {
         //     console.error(e);
         // });
