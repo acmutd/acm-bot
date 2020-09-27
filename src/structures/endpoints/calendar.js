@@ -7,12 +7,26 @@ module.exports = (app, client) => {
 
     app.get('/verify', (req, res) => {
         console.log('Loaded verify page');
-        return res.render('verify', { authURL: authorizeUrl });
+        res.status(200).send(
+            '<p href="' + authorizeUrl + '">Log into Google to authenticate</p>' +
+            '<p href="/verifysuccess">Check login status</p>'
+        );
+        //return res.render('verify', { authURL: authorizeUrl });
         //opn(authorizeUrl, {wait: false}).then(cp => cp.unref());
-        res.status(200).end();
+        //res.status(200).end();
     });
 
     app.get('/verifysuccess', (req, res) => {
+        /**
+         * here we should try to fetch the calendar and return if we are able to access it
+         * 
+         * The possible responses are:
+         *  1. Success (200): logged in and can access calendar
+         *  2. Forbidden (403): logged in but can't access
+         *  3. Unauthorized (401): not logged in
+         *  4. Service Unavailable (503): something weird happened
+         */ 
+
         console.log('Loaded verifysuccess');
         if (Object.keys(tokens).length === 0) {
             res.status(503).send('Not logged in');
