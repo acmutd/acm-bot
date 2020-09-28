@@ -1,8 +1,7 @@
-import fs from 'fs';
-import path from 'path';
+import fs = require('fs');
+import url = require('url');
 import express from 'express';
 import https from 'https';
-import url from 'url';
 import bodyParser from 'body-parser';
 import ACMClient from '../Bot';
 import { file } from 'googleapis/build/src/apis/file';
@@ -13,6 +12,10 @@ export default class ExpressManager {
     public port: number = 1337;
     public path: string = '../routes';
     public server: any;
+    // move to config
+    public privateKeyFile: string = '/etc/letsencrypt/live/acm-bot.tk/privkey.pem';
+    public certFile: string = '/etc/letsencrypt/live/acm-bot.tk/cert.pem';
+    
 
     constructor(client: ACMClient) {
         this.client = client;
@@ -23,8 +26,8 @@ export default class ExpressManager {
         this.setupEndpoints();
 
         // Certificate
-        const privateKey = fs.readFileSync('/etc/letsencrypt/live/acm-bot.tk/privkey.pem', 'utf8');
-        const certificate = fs.readFileSync('/etc/letsencrypt/live/acm-bot.tk/cert.pem', 'utf8');
+        const privateKey = fs.readFileSync(this.privateKeyFile, 'utf8');
+        const certificate = fs.readFileSync(this.certFile, 'utf8');
         const credentials = {
             key: privateKey,
             cert: certificate,
@@ -35,9 +38,6 @@ export default class ExpressManager {
     }
 
     setupEndpoints() {
-        this.app.set('view engine', 'ejs');
-        this.app.set('views', __dirname);
-
         // Tell express to use body-parser's JSON parsing
         this.app.use(bodyParser.json());
 
