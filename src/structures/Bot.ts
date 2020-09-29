@@ -35,6 +35,8 @@ export default class ACMClient extends Client {
     public events: EventManager;
     public error: ErrorManager;
     public database: DatabaseManager;
+    public calendar: CalendarManager;
+    public express: ExpressManager;
     public indicators: IndicatorManager;
     // public express: ExpressManager;
     // public calendar: CalendarManager;
@@ -54,6 +56,8 @@ export default class ACMClient extends Client {
         this.manager = new CommandManager(this, config.commandPath);
         this.events = new EventManager(this, config.eventPath);
         this.database = new DatabaseManager(this, config);
+        this.calendar = new CalendarManager(this);
+        this.express = new ExpressManager(this);
         this.error = new ErrorManager(this);
         this.indicators = new IndicatorManager();
         this.services = {
@@ -77,8 +81,8 @@ export default class ACMClient extends Client {
         // login
         this.login(this.config.token);
 
-        // this.calendar.setup();
-        // this.express.setup();
+        this.calendar.setup();
+        this.express.setup();
 
         // this.on('debug', (e) => {
         //     console.error(e);
