@@ -67,8 +67,8 @@ export default class ExpressManager {
 
             const member = ACMGuild.members.cache.find(gm => gm.user.tag == req.body.username);
             if (member) {
-                // send off the status and end
-                res.status(200).send(member.id).end();
+                // send off the status
+                res.status(200).json({ snowflake: member.id });
                 // update roles
                 const hacktoberfesterRole = ACMGuild.roles.cache.find(role => role.name === 'hacktoberfester');
                 if (!hacktoberfesterRole) {
@@ -79,7 +79,8 @@ export default class ExpressManager {
                 member.roles.add(hacktoberfesterRole);
             }
             else {
-                res.status(418).send('-1').end();
+                // Send -1 because couldn't find
+                res.status(418).json({ snowflake: '-1'});
                 (errorChannel as TextChannel).send('Could find user:\n' + JSON.stringify(req.body));
             }
         });
