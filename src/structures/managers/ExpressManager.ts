@@ -7,6 +7,7 @@ import url from 'url';
 import bodyParser from 'body-parser';
 import ACMClient from '../Bot';
 import { file } from 'googleapis/build/src/apis/file';
+import { TextChannel } from 'discord.js';
 
 /**
  * Good Reference
@@ -50,8 +51,37 @@ export default class ExpressManager {
 
         this.app.post('/mapdiscord', async (req: Request, res: Response) => {
             console.log(req.body);
-            let userID = this.client.users.cache.find(user => user.username == req.body.username)?.id;
-            res.status(200).send(userID);
+            
+            const ACMGuild = this.client.guilds.cache.find(g => g.id == '744488967465992225');
+            if (!ACMGuild) {
+                console.log('Please invite me to that guild :(');
+                res.status(418).send('-2');
+                return;
+            }
+
+            const errorChannel = ACMGuild.channels.cache.find(c => c.name === 'htf-registration-errors' && c.type === 'text');
+            if (!errorChannel) {
+                console.log('Valid error channel couldn\'t be found!');
+            }
+
+
+            const member = ACMGuild.members.cache.find(gm => gm.user.tag == req.body.username);
+            if (member) {
+                // send off the status and end
+                res.status(200).send(member.id).end();
+                // update roles
+                const hacktoberfesterRole = ACMGuild.roles.cache.find(role => role.name === 'hacktoberfester');
+                if (!hacktoberfesterRole) {
+                    (errorChannel as TextChannel).send('Please create a role called hacktoberfester');
+                    console.log('Please create a role called hacktoberfester');
+                    return;
+                }
+                member.roles.add(hacktoberfesterRole);
+            }
+            else {
+                res.status(418).send('-1').end();
+                (errorChannel as TextChannel).send('Could find user:\n' + JSON.stringify(req.body));
+            }
         });
 
 
