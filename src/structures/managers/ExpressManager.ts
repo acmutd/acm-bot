@@ -33,6 +33,11 @@ export default class ExpressManager {
     }
 
     async setup() {
+        const ACMGuildID = '744488967465992225';
+        const confirmationChannelID = '761049773058162728';
+        const errorChannelID = '760648261391351868';
+        const hacktoberfestRoleID = '760638516819918848';
+
         //this.setupEndpoints();
 
         // Certificate
@@ -49,39 +54,62 @@ export default class ExpressManager {
         this.app.use(bodyParser.raw());
        
 
+        /**
+         * Takes in json with at least a full discord username { username: "user#discrim" }
+         * 
+         * Returns the following:
+         * 
+         * User found            → status = 200, data = { snowflake: 'userID' }
+         * User not found        → status = 418, data = { snowflake: '-1' }
+         * Bot setup not correct → status = 503, data = { snowflake: '-2' }
+         * 
+         */
         this.app.post('/mapdiscord', async (req: Request, res: Response) => {
             console.log(req.body);
             
-            const ACMGuild = this.client.guilds.cache.find(g => g.id == '744488967465992225');
+            /* Bot is not in guild → nothing can be done, return -2 with server error */
+            const ACMGuild = this.client.guilds.cache.find(g => g.id == ACMGuildID);
             if (!ACMGuild) {
-                console.log('Please invite me to that guild :(');
-                res.status(418).send('-2');
+                console.log('The ACM guild cannot be found.');
+                res.status(503).json({ snowflake: '-2'});
                 return;
             }
 
-            const errorChannel = ACMGuild.channels.cache.find(c => c.name === 'htf-registration-errors' && c.type === 'text');
-            if (!errorChannel) {
-                console.log('Valid error channel couldn\'t be found!');
-            }
+            /* No error channel → log and continue */
+            const errorChannel = (ACMGuild.channels.cache.find(c => c.id == errorChannelID) as TextChannel);
+            if (!errorChannel)
+                console.log('The htf error channel cannot be found.');
 
+            /* No confirmation channel → log and continue */
+            const confirmationChannel = (ACMGuild.channels.cache.find(c => c.id == confirmationChannelID) as TextChannel);
+            if (!confirmationChannel)
+                console.log('The htf confirmation channel cannot be found.');
 
             const member = ACMGuild.members.cache.find(gm => gm.user.tag == req.body.username);
             if (member) {
-                // send off the status
+                // send off the ID first if user is found. If something fails later, log and fix manually
                 res.status(200).json({ snowflake: member.id });
-                // update roles
-                const hacktoberfesterRole = ACMGuild.roles.cache.find(role => role.name === 'hacktoberfester');
-                if (!hacktoberfesterRole) {
-                    (errorChannel as TextChannel).send('Please create a role called hacktoberfester');
-                    console.log('Please create a role called hacktoberfester');
+
+                const hacktoberfestRole = ACMGuild.roles.cache.find(role => role.id == hacktoberfestRoleID);
+                if (hacktoberfestRole) {
+                    member.roles.add(hacktoberfestRole);
+                    confirmationChannel?.send(`<@${member.id}>, thank you for registering for Hacktoberfest!`);
+                    member.send(`Hi **${req.body.name}**, thank you for registering for ACM Hacktoberfest!\n` + 
+                                'If you did not recently request this action, please contact an ACM staff member.')
+                        .catch ((e) => errorChannel.send(`Warning: DMs are off for <@${member.id}> (${req.body.name})`));
+                }
+                /* No role to add → log and give up */
+                else {
+                    errorChannel.send('The hacktoberfest role could not be found.');
+                    console.log('The hacktoberfest role could not be found.');
                     return;
                 }
-                member.roles.add(hacktoberfesterRole);
+                
             }
+            /* User not found → return -1 */
             else {
-                // Send -1 because couldn't find
                 res.status(418).json({ snowflake: '-1'});
-                (errorChannel as TextChannel).send('Could find user:\n' + JSON.stringify(req.body));
+                (errorChannel as TextChannel)?.send('Could not find user:\n' + JSON.stringify(req.body));
             }
         });
 
