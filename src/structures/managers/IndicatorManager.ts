@@ -2,7 +2,7 @@ import { User, Collection } from 'discord.js';
 
 // ! USE REDIS THIS IS SUCH AN INEFFICIENT SYSTEM OMFG
 
-export type IndicatorType = 'usingCommand' | 'teleporting';
+export type IndicatorType = 'usingCommand' | 'reacting';
 
 export default class IndicatorManager {
     private indicators: Collection<string, Array<string>>;

@@ -1,7 +1,6 @@
 import Event from '../structures/Event';
 import ACMClient from '../structures/Bot';
-import { MessageReaction } from 'discord.js';
-import { User } from '@sentry/node';
+import { MessageReaction, User } from 'discord.js';
 
 export default class MessageReactionAddEvent extends Event {
     constructor(client: ACMClient) {
@@ -9,6 +8,6 @@ export default class MessageReactionAddEvent extends Event {
     }
 
     public async emit(client: ACMClient, reaction: MessageReaction, user: User) {
-        client.services.rr.handle(reaction, user, 'add');
+        client.services.rr.handle(reaction, user);
     }
 }
