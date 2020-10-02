@@ -32,11 +32,12 @@ export default class ExpressManager {
 
     }
 
+
     async setup() {
-        const ACMGuildID = '744488967465992225';
-        const confirmationChannelID = '761049773058162728';
-        const errorChannelID = '760648261391351868';
-        const hacktoberfestRoleID = '760638516819918848';
+        const ACMGuildID = '692266201644007424';
+        const confirmationChannelID = '761270273214644255';
+        const errorChannelID = '761271032283267082';
+        const hacktoberfestRoleID = '760918461986766930';
 
         //this.setupEndpoints();
 
@@ -85,7 +86,10 @@ export default class ExpressManager {
             if (!confirmationChannel)
                 console.log('The htf confirmation channel cannot be found.');
 
+            console.log(ACMGuild.members.cache.size);
             const member = ACMGuild.members.cache.find(gm => gm.user.tag == req.body.username);
+
+
             if (member) {
                 // send off the ID first if user is found. If something fails later, log and fix manually
                 res.status(200).json({ snowflake: member.id });
