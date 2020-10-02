@@ -18,9 +18,12 @@ export default class CacheCheckCommand extends Command {
     }
 
     public async exec({ msg, client, args }: CommandContext) {
-        if (msg.mentions.users.array.length > 0) {
+        if (msg.mentions.users.array().length > 0) {
             const memberId = msg.guild?.members.cache.get(msg.mentions.users.first()!.id);
             msg.channel.send(memberId + ' ' + String(msg.guild?.members.cache.size));
+        }
+        else {
+            msg.channel.send('Please mention a user in your message');
         }
     }
 }
