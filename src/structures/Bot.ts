@@ -49,7 +49,10 @@ export default class ACMClient extends Client {
     public config: BotConfig;
 
     constructor(config: BotConfig) {
-        super({ partials: ['REACTION', 'MESSAGE'] });
+        super({ 
+            partials: ['REACTION', 'MESSAGE'],
+            fetchAllMembers: true,
+        });
         this.settings = settings;
         this.logger = new LoggerUtil();
         this.response = new ResponseUtil(config.responseFormat);
