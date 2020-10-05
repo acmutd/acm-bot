@@ -107,13 +107,10 @@ export default class ExpressManager {
 
                     // create DM embed with further information
                     const verificationEmbed = {
+                        color: '#e67e22',
                         title: 'Hacktoberfest Registration Confirmed',
-                        description: `Hi **${req.body.name}**, thank you for registering for ACM Hacktoberfest!\n`,
-                        fields: [
-                            {
-                                value: 'Please also check your inbox and spam for an email confirmation.',
-                            },
-                        ],
+                        description: `Hi **${req.body.name}**, thank you for registering for ACM Hacktoberfest!\n` + 
+                            'Please also check your inbox and spam for an email confirmation.',
                         footer: {
                             text: 'If you did not recently request this action, please contact an ACM staff member.',
                         },
