@@ -6,6 +6,7 @@ import http from 'http';
 import url from 'url';
 import bodyParser from 'body-parser';
 import ACMClient from '../Bot';
+import { settings } from '../../botsettings';
 import { file } from 'googleapis/build/src/apis/file';
 import { MessageEmbed, TextChannel } from 'discord.js';
 
@@ -18,27 +19,32 @@ import { MessageEmbed, TextChannel } from 'discord.js';
 export default class ExpressManager {
     public client: ACMClient;
     public app: Express;
-    public port: number = 1337;
+    public port: number;
+    public confirmationChannelID: string;
+    public errorChannelID: string;
+    public hacktoberfestRoleID: string;
     public path: string = '/home/eric/acm-bot/src/structures/endpoints/';
     public server: http.Server | null = null;
     // move to config
-    public privateKeyFile: string = '/etc/letsencrypt/live/acm-bot.tk/privkey.pem';
-    public certFile: string = '/etc/letsencrypt/live/acm-bot.tk/cert.pem';
+    public privateKeyFile: string;
+    public certFile: string;
     
 
     constructor(client: ACMClient) {
         this.client = client;
         this.app = express();
 
+        this.port = settings.express.port;
+        this.privateKeyFile = settings.express.privateKey;
+        this.certFile = settings.express.cert;
+
+        this.confirmationChannelID = settings.hacktoberfest.confirmationChannel;
+        this.errorChannelID = settings.hacktoberfest.errorChannel;
+        this.hacktoberfestRoleID = settings.hacktoberfest.htfRole;
     }
 
 
     async setup() {
-        const ACMGuildID = '692266201644007424';
-        const confirmationChannelID = '761270273214644255';
-        const errorChannelID = '761271032283267082';
-        const hacktoberfestRoleID = '760918461986766930';
-
         //this.setupEndpoints();
 
         // Certificate
@@ -69,7 +75,7 @@ export default class ExpressManager {
             console.log(req.body);
             
             /* Bot is not in guild → nothing can be done, return -2 with server error */
-            const ACMGuild = this.client.guilds.cache.find(g => g.id == ACMGuildID);
+            const ACMGuild = this.client.guilds.cache.find(g => g.id == settings.guild);
             if (!ACMGuild) {
                 console.log('The ACM guild cannot be found.');
                 res.status(503).json({ snowflake: '-2'});
@@ -77,12 +83,12 @@ export default class ExpressManager {
             }
 
             /* No error channel → log and continue */
-            const errorChannel = (ACMGuild.channels.cache.find(c => c.id == errorChannelID) as TextChannel);
+            const errorChannel = (ACMGuild.channels.cache.find(c => c.id == this.errorChannelID) as TextChannel);
             if (!errorChannel)
                 console.log('The htf error channel cannot be found.');
 
             /* No confirmation channel → log and continue */
-            const confirmationChannel = (ACMGuild.channels.cache.find(c => c.id == confirmationChannelID) as TextChannel);
+            const confirmationChannel = (ACMGuild.channels.cache.find(c => c.id == this.confirmationChannelID) as TextChannel);
             if (!confirmationChannel)
                 console.log('The htf confirmation channel cannot be found.');
 
@@ -94,7 +100,7 @@ export default class ExpressManager {
                 // send off the ID first if user is found. If something fails later, log and fix manually
                 res.status(200).json({ snowflake: member.id });
 
-                const hacktoberfestRole = ACMGuild.roles.cache.find(role => role.id == hacktoberfestRoleID);
+                const hacktoberfestRole = ACMGuild.roles.cache.find(role => role.id == this.hacktoberfestRoleID);
                 if (hacktoberfestRole) {
                     member.roles.add(hacktoberfestRole);
                     confirmationChannel?.send(`<@${member.id}>, thank you for registering for Hacktoberfest!`);
