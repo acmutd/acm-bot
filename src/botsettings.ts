@@ -9,10 +9,20 @@ export interface Settings {
     };
     sentryDNS: string;
     databaseURL: string;
+    express: {
+        port: number,
+        privateKey: string,
+        cert: string,
+    };
     responseFormat: ResponseFormat;
     disabledCommands: string[];
     disabledCategories: string[];
     guild: string;
+    hacktoberfest: {
+        confirmationChannel: string;
+        errorChannel: string;
+        htfRole: string;
+    }
     channels: {
         verification: string;
         error: string;
