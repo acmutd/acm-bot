@@ -47,11 +47,11 @@ export default class CommandService {
 
         let cmd = this.client.manager.commands.get(command);
         if (!cmd) {
-            return this.client.response.emit(
-                msg.channel,
-                `Not a command. Try \'${settings.prefix}help\' for help.`,
-                'invalid'
-            );
+            // return this.client.response.emit(
+            //     msg.channel,
+            //     `Not a command. Try \'${settings.prefix}help\' for help.`,
+            //     'invalid'
+            // );
             return;
         }
         // * before running the command, is the user already using a setup wizard?
