@@ -7,7 +7,7 @@ import url from 'url';
 import bodyParser from 'body-parser';
 import ACMClient from '../Bot';
 import { file } from 'googleapis/build/src/apis/file';
-import { TextChannel } from 'discord.js';
+import { MessageEmbed, TextChannel } from 'discord.js';
 
 /**
  * Good Reference
@@ -98,8 +98,22 @@ export default class ExpressManager {
                 if (hacktoberfestRole) {
                     member.roles.add(hacktoberfestRole);
                     confirmationChannel?.send(`<@${member.id}>, thank you for registering for Hacktoberfest!`);
-                    member.send(`Hi **${req.body.name}**, thank you for registering for ACM Hacktoberfest!\n` + 
-                                'If you did not recently request this action, please contact an ACM staff member.')
+
+                    // create DM embed with further information
+                    const verificationEmbed = {
+                        title: 'Hacktoberfest Registration Confirmed',
+                        description: `Hi **${req.body.name}**, thank you for registering for ACM Hacktoberfest!\n`,
+                        fields: [
+                            {
+                                value: 'Please also check your inbox and spam for an email confirmation.',
+                            },
+                        ],
+                        footer: {
+                            text: 'If you did not recently request this action, please contact an ACM staff member.',
+                        },
+                    }
+
+                    member.send({embed: verificationEmbed})
                         .catch ((e) => errorChannel.send(`Warning: DMs are off for <@${member.id}> (${req.body.name})`));
                 }
                 /* No role to add → log and give up */
