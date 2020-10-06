@@ -8,7 +8,7 @@ import bodyParser from 'body-parser';
 import ACMClient from '../Bot';
 import { settings } from '../../botsettings';
 import { file } from 'googleapis/build/src/apis/file';
-import { MessageEmbed, TextChannel } from 'discord.js';
+import { GuildMember, MessageEmbed, TextChannel } from 'discord.js';
 
 /**
  * Good Reference
@@ -93,7 +93,11 @@ export default class ExpressManager {
                 console.log('The htf confirmation channel cannot be found.');
 
             console.log(ACMGuild.members.cache.size);
-            const member = ACMGuild.members.cache.find(gm => gm.user.tag == req.body.username);
+            let member: GuildMember | undefined = undefined;
+            if (/#\d{4}/.test(req.body.username))
+                member = ACMGuild.members.cache.find(gm => gm.user.tag == req.body.username);
+            else
+                member = ACMGuild.members.cache.find(gm => gm.user.username == req.body.username);
 
 
             if (member) {
@@ -117,7 +121,7 @@ export default class ExpressManager {
                     }
 
                     member.send({embed: verificationEmbed})
-                        .catch ((e) => errorChannel.send(`Warning: DMs are off for <@${member.id}> (${req.body.name})`));
+                        .catch ((e) => errorChannel.send(`Warning: DMs are off for <@${member?.id}> (${req.body.name})`));
                 }
                 /* No role to add → log and give up */
                 else {
