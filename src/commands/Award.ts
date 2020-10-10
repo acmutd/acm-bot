@@ -51,7 +51,7 @@ export default class AwardCommand extends Command {
         // increment points on firestore
         for (let userId of awardees.values()) {
             try {
-                client.firestore.firestore?.collection("htf_leaderboard/snowflake_to_all/mapping").doc(userId).update({
+                await client.firestore.firestore?.collection("htf_leaderboard/snowflake_to_all/mapping").doc(userId).update({
                     points: increment,
                 });
                 awardeeList.push(`<@${userId}>`);
