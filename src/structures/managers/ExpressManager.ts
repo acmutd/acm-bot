@@ -23,7 +23,7 @@ export default class ExpressManager {
     public confirmationChannelID: string;
     public errorChannelID: string;
     public hacktoberfestRoleID: string;
-    public path: string = '/home/eric/acm-bot/src/structures/endpoints/';
+    public path: string = '../endpoints/';
     public server: http.Server | null = null;
     // move to config
     public privateKeyFile: string;
@@ -45,7 +45,11 @@ export default class ExpressManager {
 
 
     async setup() {
-        //this.setupEndpoints();
+        this.app.use(bodyParser.urlencoded({ extended: true }));
+        this.app.use(bodyParser.json());
+        this.app.use(bodyParser.raw());
+
+        this.setupEndpoints();
 
         // Certificate
         /*
@@ -56,9 +60,7 @@ export default class ExpressManager {
             cert: certificate,
         };
         */
-        this.app.use(bodyParser.urlencoded({ extended: true }));
-        this.app.use(bodyParser.json());
-        this.app.use(bodyParser.raw());
+
        
 
         /**
@@ -71,73 +73,74 @@ export default class ExpressManager {
          * Bot setup not correct → status = 503, data = { snowflake: '-2' }
          * 
          */
-        this.app.post('/mapdiscord', async (req: Request, res: Response) => {
-            console.log(req.body);
-            
-            /* Bot is not in guild → nothing can be done, return -2 with server error */
-            const ACMGuild = this.client.guilds.cache.find(g => g.id == settings.guild);
-            if (!ACMGuild) {
-                console.log('The ACM guild cannot be found.');
-                res.status(503).json({ snowflake: '-2'});
-                return;
-            }
-
-            /* No error channel → log and continue */
-            const errorChannel = (ACMGuild.channels.cache.find(c => c.id == this.errorChannelID) as TextChannel);
-            if (!errorChannel)
-                console.log('The htf error channel cannot be found.');
-
-            /* No confirmation channel → log and continue */
-            const confirmationChannel = (ACMGuild.channels.cache.find(c => c.id == this.confirmationChannelID) as TextChannel);
-            if (!confirmationChannel)
-                console.log('The htf confirmation channel cannot be found.');
-
-            console.log(ACMGuild.members.cache.size);
-            let member: GuildMember | undefined = undefined;
-            if (/#\d{4}/.test(req.body.username))
-                member = ACMGuild.members.cache.find(gm => gm.user.tag == req.body.username);
-            else
-                member = ACMGuild.members.cache.find(gm => gm.user.username == req.body.username);
-
-
-            if (member) {
-                // send off the ID first if user is found. If something fails later, log and fix manually
-                res.status(200).json({ snowflake: member.id });
-
-                const hacktoberfestRole = ACMGuild.roles.cache.find(role => role.id == this.hacktoberfestRoleID);
-                if (hacktoberfestRole) {
-                    member.roles.add(hacktoberfestRole);
-                    confirmationChannel?.send(`<@${member.id}>, thank you for registering for Hacktoberfest!`);
-
-                    // create DM embed with further information
-                    const verificationEmbed = {
-                        color: '#93c2db',
-                        title: 'Hacktoberfest Registration Confirmed',
-                        description: `Hi **${req.body.name}**, thank you for registering for ACM Hacktoberfest!\n` + 
-                            'Also, please check your inbox or spam for a confirmation email.',
-                        footer: {
-                            text: 'If you did not recently request this action, please contact an ACM staff member.',
-                        },
-                    }
-
-                    member.send({embed: verificationEmbed})
-                        .catch ((e) => errorChannel.send(`Warning: DMs are off for <@${member?.id}> (${req.body.name})`));
-                }
-                /* No role to add → log and give up */
-                else {
-                    errorChannel.send('The hacktoberfest role could not be found.');
-                    console.log('The hacktoberfest role could not be found.');
-                    return;
-                }
-                
-            }
-            /* User not found → return -1 */
-            else {
-                res.status(418).json({ snowflake: '-1'});
-                (errorChannel as TextChannel)?.send('Could not find user:\n' + JSON.stringify(req.body));
-            }
-        });
-
+        
+        //this.app.post('/mapdiscord', async (req: Request, res: Response) => {
+        //    console.log(req.body);
+        //    
+        //    /* Bot is not in guild → nothing can be done, return -2 with server error */
+        //    const ACMGuild = this.client.guilds.cache.find(g => g.id == settings.guild);
+        //    if (!ACMGuild) {
+        //        console.log('The ACM guild cannot be found.');
+        //        res.status(503).json({ snowflake: '-2'});
+        //        return;
+        //    }
+//
+        //    /* No error channel → log and continue */
+        //    const errorChannel = (ACMGuild.channels.cache.find(c => c.id == this.errorChannelID) as TextChannel);
+        //    if (!errorChannel)
+        //        console.log('The htf error channel cannot be found.');
+//
+        //    /* No confirmation channel → log and continue */
+        //    const confirmationChannel = (ACMGuild.channels.cache.find(c => c.id == this.confirmationChannelID) as TextChannel);
+        //    if (!confirmationChannel)
+        //        console.log('The htf confirmation channel cannot be found.');
+//
+        //    console.log(ACMGuild.members.cache.size);
+        //    let member: GuildMember | undefined = undefined;
+        //    if (/#\d{4}/.test(req.body.username))
+        //        member = ACMGuild.members.cache.find(gm => gm.user.tag == req.body.username);
+        //    else
+        //        member = ACMGuild.members.cache.find(gm => gm.user.username == req.body.username);
+//
+//
+        //    if (member) {
+        //        // send off the ID first if user is found. If something fails later, log and fix manually
+        //        res.status(200).json({ snowflake: member.id });
+//
+        //        const hacktoberfestRole = ACMGuild.roles.cache.find(role => role.id == this.hacktoberfestRoleID);
+        //        if (hacktoberfestRole) {
+        //            member.roles.add(hacktoberfestRole);
+        //            confirmationChannel?.send(`<@${member.id}>, thank you for registering for Hacktoberfest!`);
+//
+        //            // create DM embed with further information
+        //            const verificationEmbed = {
+        //                color: '#93c2db',
+        //                title: 'Hacktoberfest Registration Confirmed',
+        //                description: `Hi **${req.body.name}**, thank you for registering for ACM Hacktoberfest!\n` + 
+        //                    'Also, please check your inbox or spam for a confirmation email.',
+        //                footer: {
+        //                    text: 'If you did not recently request this action, please contact an ACM staff member.',
+        //                },
+        //            }
+//
+        //            member.send({embed: verificationEmbed})
+        //                .catch ((e) => errorChannel.send(`Warning: DMs are off for <@${member?.id}> (${req.body.name})`));
+        //        }
+        //        /* No role to add → log and give up */
+        //        else {
+        //            errorChannel.send('The hacktoberfest role could not be found.');
+        //            console.log('The hacktoberfest role could not be found.');
+        //            return;
+        //        }
+        //        
+        //    }
+        //    /* User not found → return -1 */
+        //    else {
+        //        res.status(418).json({ snowflake: '-1'});
+        //        (errorChannel as TextChannel)?.send('Could not find user:\n' + JSON.stringify(req.body));
+        //    }
+        //});
+        
 
         this.app.listen(this.port, () => {
             console.log(`Express server started on port ${this.port}`);
@@ -158,8 +161,7 @@ export default class ExpressManager {
 
         fs.readdir(this.path, (err, files) => {
             files.forEach((file) => {
-                const com = require(this.path + file);
-                com(this.app, this.client);
+                require(this.path + file)(this.app, this.client);
             });
         });
     }
