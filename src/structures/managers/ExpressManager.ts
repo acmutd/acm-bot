@@ -62,15 +62,13 @@ export default class ExpressManager {
         */   
 
         this.app.listen(this.port, () => {
-            this.client.logger.info(`Express server started on port ${this.port}`);
+            this.client.logger.info(`Express server started on port ${this.port}!`);
         });
 
 
        //this.server = https.createServer(credentials, this.app);
        //this.server = http.createServer(this.app);
-       //this.server.listen(this.port, (() => console.log('Express server started, ' + this.server?.listenerCount('get') + 'listeners')));
-
-       
+       //this.server.listen(this.port, (() => console.log('Express server started, ' + this.server?.listenerCount('get') + 'listeners')));      
     }
 
     setupEndpoints() {
@@ -78,13 +76,10 @@ export default class ExpressManager {
         fs.readdir(__dirname + this.path, (err, files) => {
             files.forEach((file) => {
                 require(this.path + file)(this.app, this.client);
+                this.client.logger.info(`Registered endpoints in '${file}'!`);
             });
         });
 
-        this.app._router.stack.forEach((r: any) => {
-            if (r.route && r.route.path){
-                this.client.logger.info(`Created the '${r.route.path}' endpoint!`);
-            }
-          })
+
     }
 }
