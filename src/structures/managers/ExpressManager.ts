@@ -159,7 +159,9 @@ export default class ExpressManager {
         this.app.use(bodyParser.json());
         
 
-        fs.readdir(this.path, (err, files) => {
+        // readdir is relative to process cwd, so we need to convert to abs path
+        console.log(__dirname + this.path);
+        fs.readdir(__dirname + this.path, (err, files) => {
             files.forEach((file) => {
                 require(this.path + file)(this.app, this.client);
             });
