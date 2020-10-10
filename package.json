@@ -17,6 +17,7 @@
     },
     "homepage": "https://github.com/jafrilli/acm-bot#readme",
     "dependencies": {
+        "@google-cloud/firestore": "^4.4.0",
         "@google-cloud/vision": "^1.11.0",
         "@sentry/node": "^5.15.5",
         "@types/express": "^4.17.8",

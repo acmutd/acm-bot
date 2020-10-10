@@ -9,6 +9,10 @@ export interface Settings {
     };
     sentryDNS: string;
     databaseURL: string;
+    firestore: {
+        projectId: string,
+        keyFilename: string,
+    }
     express: {
         port: number,
         privateKey: string,
