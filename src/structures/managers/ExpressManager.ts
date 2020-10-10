@@ -73,13 +73,17 @@ export default class ExpressManager {
 
     setupEndpoints() {
         // readdir is relative to process cwd, so we need to convert to abs path
-        fs.readdir(__dirname + '/' + this.path, (err, files) => {
-            files.forEach((file) => {
-                require(this.path + file)(this.app, this.client);
-                this.client.logger.info(`Registered endpoints in '${file}'!`);
-            });
+        const endpointFiles: string[] = fs.readdirSync(__dirname + '/' + this.path);
+        endpointFiles.forEach((file) => {
+            require(this.path + file)(this.app, this.client);
         });
-
+        
+        this.app._router.stack.forEach((r: any) => {
+            console.log(r);
+            if (r.route && r.route.path){
+                this.client.logger.info(`Registered the '${r.route.path}' endpoint!`);
+            }
+        });
 
     }
 }
