@@ -17,7 +17,7 @@ module.exports = (app: Express, client: ACMClient) => {
      * 
      */
     app.post('/mapdiscord', async (req: Request, res: Response) => {
-        console.log(req.body);
+        //console.log(req.body);
             
         /* Bot is not in guild → nothing can be done, return -2 with server error */
         const ACMGuild = client.guilds.cache.find(g => g.id == settings.guild);
@@ -37,7 +37,6 @@ module.exports = (app: Express, client: ACMClient) => {
         if (!confirmationChannel)
             console.log('The htf confirmation channel cannot be found.');
 
-        console.log(ACMGuild.members.cache.size);
         let member: GuildMember | undefined = undefined;
         if (/#\d{4}/.test(req.body.username))
             member = ACMGuild.members.cache.find(gm => gm.user.tag == req.body.username);
