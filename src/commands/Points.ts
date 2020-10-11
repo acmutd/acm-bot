@@ -57,7 +57,7 @@ export default class PointsCommand extends Command {
                     icon_url: user?.user.avatarURL,
                 },
                 title: `${data?.points} points`,
-                description: '**Points breakdown**\n',
+                description: '\n',
                 footer: {
                     text: 'ACM Hacktoberfest',
                     icon_url: 'https://i.imgur.com/u6c1gDm.png',
@@ -65,14 +65,15 @@ export default class PointsCommand extends Command {
             }
 
             let userActivities = [];
-            console.log(data?.activities);
             if (data?.activities) {
                 for (let activity in data?.activities) {
                     userActivities.push(`*${activity}*: ${data?.activities[activity]}\n`);
                 }
+                scorecardEmbed.description = "**Points breakdown**\n" + userActivities.join();
             }
 
-            scorecardEmbed.description.concat(...userActivities);
+
+            
 
             return msg.channel.send({embed: scorecardEmbed});
         }
