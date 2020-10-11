@@ -47,7 +47,7 @@ export default class HacktoberfestService {
                         }
                     }
                     else {
-                        activities[activity] = (activities.hasOwnProperty(activity) ? activities[activity]+1 : 1);
+                        activities[activity] = (activities.hasOwnProperty(activity) ? activities[activity]+points : points);
                     }
                     
                     await docRef?.update({
