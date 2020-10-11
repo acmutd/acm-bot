@@ -40,18 +40,19 @@ export default class HacktoberfestService {
                     }
 
                     // update the main points storage
-                    activities = doc.data()?.activities;
+                    let activities: any = doc.data()?.activities;
                     if (!activities) {
                         activities = {
-                            reason: points
+                            [reason]: points
                         }
                     }
                     else {
-                        console.log(activities);
+                        activities[reason] = (activities.hasOwnProperty(reason) ? activities[reason]+1 : 1);
                     }
                     
                     await docRef?.update({
                         points: increment,
+                        activities: activities,
                     });
                     // add ledger entry
                     await this.client.firestore.firestore?.collection("htf_leaderboard/transactions/ledger").add({

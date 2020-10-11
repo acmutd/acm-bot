@@ -19,11 +19,11 @@ export default class PointsCommand extends Command {
 
         // get user if it was passed in. Supports straight ID, user ping, username, or user tag
         if (args.length > 0) {
-            if (/[\d]{17,18}/.test(args[0])) {
+            if (/^[\d]{17,18}$/.test(args[0])) {
                 // interpret as plain ID
                 userId = msg.guild?.members.cache.find(gm => gm.user.id == args[0])?.id;
             }
-            else if (/<@[\d]{17,18}>/.test(args[0])) {
+            else if (/^<@[\d]{17,18}>$/.test(args[0])) {
                 // a user was mentioned
                 userId = msg.guild?.members.cache.find(gm => gm.user.id == args[0].slice(2, -1))?.id;
             }
@@ -50,19 +50,28 @@ export default class PointsCommand extends Command {
         const {exists, data} = await client.services.hacktoberfest.getData(userId);
         if (exists && data?.points) {
             // we build a nice embed scorecard
-            const scorecardEmbed = {
+            let scorecardEmbed = {
                 color: '#93c2db',
                 author: {
                     name: user?.user.tag,
                     icon_url: user?.user.avatarURL,
                 },
                 title: `${data?.points} points`,
-                description: 'Activities here [WIP]',
+                description: '**Points breakdown**\n',
                 footer: {
                     text: 'ACM Hacktoberfest',
                     icon_url: 'https://i.imgur.com/u6c1gDm.png',
                 },
             }
+
+            let userActivities = [];
+            if (data?.activities) {
+                for (let activity in data?.activities) {
+                    userActivities.push(`*${activity}*: ${data?.activities[activity]}\n`);
+                }
+            }
+
+            scorecardEmbed.description.concat(...userActivities);
 
             return msg.channel.send({embed: scorecardEmbed});
         }
