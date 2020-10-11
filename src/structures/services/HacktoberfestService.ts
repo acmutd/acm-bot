@@ -40,7 +40,7 @@ export default class HacktoberfestService {
                     await docRef?.update({
                         points: increment,
                     });
-                    await this.client.firestore.firestore?.collection("htf_leaderboard/ledger").add({
+                    await this.client.firestore.firestore?.collection("htf_leaderboard/transactions/ledger").add({
                         name: doc.data()?.name,
                         reason: reason,
                         points: points,
