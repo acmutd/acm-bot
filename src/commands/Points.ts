@@ -25,7 +25,7 @@ export default class PointsCommand extends Command {
             }
             else if (/<@[\d]{17,18}>/.test(args[0])) {
                 // a user was mentioned
-                userId = msg.guild?.members.cache.find(gm => gm.user.id == args[0])?.id;
+                userId = msg.guild?.members.cache.find(gm => gm.user.id == args[0].slice(2, -1))?.id;
             }
             else if (/#\d{4}/.test(args[0])) {
                 // a user's full tag was included
@@ -39,7 +39,7 @@ export default class PointsCommand extends Command {
             if (!userId) {
                 return client.response.emit(
                     msg.channel,
-                    `I couldn't match a user in this server to '${args[0]}'.`,
+                    `I couldn't match a user in this server for '${args[0]}'.`,
                     'invalid'
                 );
             }

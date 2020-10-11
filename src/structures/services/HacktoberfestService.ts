@@ -25,7 +25,7 @@ export default class HacktoberfestService {
         let success: string[] = [];
         let failure: string[] = [];
 
-        let activity = {};
+        let activities = {};
 
         // incrementor
         const increment = FieldValue.increment(points);
@@ -40,14 +40,14 @@ export default class HacktoberfestService {
                     }
 
                     // update the main points storage
-                    activity = doc.data()?.activity;
-                    if (!activity) {
-                        activity = {
+                    activities = doc.data()?.activities;
+                    if (!activities) {
+                        activities = {
                             reason: points
                         }
                     }
                     else {
-                        console.log(activity);
+                        console.log(activities);
                     }
                     
                     await docRef?.update({
@@ -55,7 +55,7 @@ export default class HacktoberfestService {
                     });
                     // add ledger entry
                     await this.client.firestore.firestore?.collection("htf_leaderboard/transactions/ledger").add({
-                        createdAt: FieldValue.serverTimestamp(),
+                        created_at: FieldValue.serverTimestamp(),
                         name: doc.data()?.name,
                         reason: reason,
                         change: points,
