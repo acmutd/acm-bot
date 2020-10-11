@@ -54,7 +54,7 @@ export default class PointsCommand extends Command {
                 color: '#93c2db',
                 author: {
                     name: user?.user.tag,
-                    icon_url: user?.user.avatarURL,
+                    icon_url: user?.user.avatarURL(),
                 },
                 title: `${data?.points} points`,
                 description: '\n',
@@ -67,9 +67,9 @@ export default class PointsCommand extends Command {
             let userActivities = [];
             if (data?.activities) {
                 for (let activity in data?.activities) {
-                    userActivities.push(`*${activity}*: ${data?.activities[activity]}\n`);
+                    userActivities.push(`**${activity}**: ${data?.activities[activity]}\n`);
                 }
-                scorecardEmbed.description = "**Points breakdown**\n" + userActivities.join();
+                scorecardEmbed.description = "__**Breakdown of Points by Activity**__\n" + userActivities.join('');
             }
 
 
