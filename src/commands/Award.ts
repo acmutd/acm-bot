@@ -8,7 +8,7 @@ export default class AwardCommand extends Command {
         super({
             name: 'award',
             description: 'Manually award Hacktoberfest points to users',
-            usage: ['.award [amount] [reason-id] [user1, user 2, user3...]'],
+            usage: ['.award [amount] [activity-id] [user1, user 2, user3...]'],
         });
     }
 
@@ -25,7 +25,7 @@ export default class AwardCommand extends Command {
         }
 
         const points = +args[0];
-        const reasonId = args[1];
+        const activityId = args[1];
         const awardees = new Set<string>();
 
         // invalid award amount
@@ -42,7 +42,7 @@ export default class AwardCommand extends Command {
             awardees.add(userId);
         });
 
-        const {success, failure} = await client.services.hacktoberfest.awardPoints(points, reasonId, awardees);
+        const {success, failure} = await client.services.hacktoberfest.awardPoints(points, activityId, awardees);
 
         // send back our results
         msg.reply(`Successfully awarded ${points} points to ${success.length} participants: ${success.join(' ')}\n` +

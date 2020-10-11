@@ -21,7 +21,7 @@ export default class HacktoberfestService {
     /**
      * Function for handling point changes
      */
-    async awardPoints(points: number, reason: string, awardees: Set<string>) {
+    async awardPoints(points: number, activity: string, awardees: Set<string>) {
         let success: string[] = [];
         let failure: string[] = [];
 
@@ -43,11 +43,11 @@ export default class HacktoberfestService {
                     let activities: any = doc.data()?.activities;
                     if (!activities) {
                         activities = {
-                            [reason]: points
+                            [activity]: points
                         }
                     }
                     else {
-                        activities[reason] = (activities.hasOwnProperty(reason) ? activities[reason]+1 : 1);
+                        activities[activity] = (activities.hasOwnProperty(activity) ? activities[activity]+1 : 1);
                     }
                     
                     await docRef?.update({
@@ -58,7 +58,7 @@ export default class HacktoberfestService {
                     await this.client.firestore.firestore?.collection("htf_leaderboard/transactions/ledger").add({
                         created_at: FieldValue.serverTimestamp(),
                         name: doc.data()?.name,
-                        reason: reason,
+                        reason: activity,
                         change: points,
                         new_points: doc.data()?.points + points,
                     });

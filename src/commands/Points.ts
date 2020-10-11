@@ -23,9 +23,9 @@ export default class PointsCommand extends Command {
                 // interpret as plain ID
                 userId = msg.guild?.members.cache.find(gm => gm.user.id == args[0])?.id;
             }
-            else if (/^<@[\d]{17,18}>$/.test(args[0])) {
+            else if (/^<@![\d]{17,18}>$/.test(args[0])) {
                 // a user was mentioned
-                userId = msg.guild?.members.cache.find(gm => gm.user.id == args[0].slice(2, -1))?.id;
+                userId = msg.guild?.members.cache.find(gm => gm.user.id == args[0].slice(3, -1))?.id;
             }
             else if (/#\d{4}/.test(args[0])) {
                 // a user's full tag was included
@@ -65,6 +65,7 @@ export default class PointsCommand extends Command {
             }
 
             let userActivities = [];
+            console.log(data?.activities);
             if (data?.activities) {
                 for (let activity in data?.activities) {
                     userActivities.push(`*${activity}*: ${data?.activities[activity]}\n`);
