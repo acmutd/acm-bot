@@ -44,9 +44,10 @@ export default class AwardCommand extends Command {
 
         const {success, failure} = await client.services.hacktoberfest.awardPoints(points, activityId, awardees);
 
-        // send back our results
-        msg.reply(`Successfully awarded ${points} points to ${success.length} participants: ${success.join(' ')}\n` +
-                  `${failure.length} users were not registered: ${failure.join(' ')}`);
+        // send back our results with mentions but not pings
+        msg.reply(`\nAwarded ${points} points to ${success.length} users:\n${success.join(' ')}\n` +
+                failure.length ? `${failure.length} users were not registered: ${failure.join(' ')}` : '', 
+                {"allowedMentions": { "users" : []}});
 
     }
 }
