@@ -43,7 +43,8 @@ export default class HacktoberfestService {
                     await this.client.firestore.firestore?.collection("htf_leaderboard/transactions/ledger").add({
                         name: doc.data()?.name,
                         reason: reason,
-                        points: points,
+                        change: points,
+                        new_points: doc.data()?.points + points,
                     });
                 })
 
