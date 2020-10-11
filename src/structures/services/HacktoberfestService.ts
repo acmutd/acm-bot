@@ -25,6 +25,8 @@ export default class HacktoberfestService {
         let success: string[] = [];
         let failure: string[] = [];
 
+        let activity = {};
+
         // incrementor
         const increment = FieldValue.increment(points);
 
@@ -37,10 +39,23 @@ export default class HacktoberfestService {
                         throw new Error(`User with ID ${userId} does not exist!`);
                     }
 
+                    // update the main points storage
+                    activity = doc.data()?.activity;
+                    if (!activity) {
+                        activity = {
+                            reason: points
+                        }
+                    }
+                    else {
+                        console.log(activity);
+                    }
+                    
                     await docRef?.update({
                         points: increment,
                     });
+                    // add ledger entry
                     await this.client.firestore.firestore?.collection("htf_leaderboard/transactions/ledger").add({
+                        createdAt: FieldValue.serverTimestamp(),
                         name: doc.data()?.name,
                         reason: reason,
                         change: points,
@@ -57,4 +72,21 @@ export default class HacktoberfestService {
 
         return {success, failure};
     }
+
+    /**
+     * Function for retrieving data for user from firestore
+     */
+    async getData(userId: string) {
+        let exists: boolean | undefined;
+        let data: FirebaseFirestore.DocumentData | undefined;
+        await this.client.firestore.firestore?.collection("htf_leaderboard/snowflake_to_all/mapping").doc(userId).get().then(async (doc) => {
+            exists = doc.exists;
+            data = doc.data();
+        });
+        return {
+            exists, 
+            data
+        }
+    }
+
 }
