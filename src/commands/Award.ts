@@ -27,9 +27,6 @@ export default class AwardCommand extends Command {
         const points = +args[0];
         const reasonId = args[1];
         const awardees = new Set<string>();
-        const unregisteredAwardees = new Set<string>();
-        let awardeeList: string[] = [];
-        let unregisteredAwardeeList: string[] = [];
 
         // invalid award amount
         if (isNaN(points) || points < -100 || points > 100) {
@@ -45,26 +42,11 @@ export default class AwardCommand extends Command {
             awardees.add(userId);
         });
 
-        // incrementor
-        const increment = FieldValue.increment(points);
-
-        // increment points on firestore
-        for (let userId of awardees.values()) {
-            try {
-                await client.firestore.firestore?.collection("htf_leaderboard/snowflake_to_all/mapping").doc(userId).update({
-                    points: increment,
-                });
-                awardeeList.push(`<@${userId}>`);
-            }
-            catch (error) {
-                console.log(error);
-                unregisteredAwardeeList.push(`<@${userId}>`);
-            }
-        }
+        const {success, failure} = await client.services.hacktoberfest.awardPoints(points, reasonId, awardees);
 
         // send back our results
-        msg.reply(`Successfully awarded ${points} points to ${awardeeList.length} participants: ${awardeeList.join(' ')}\n` +
-                  `${unregisteredAwardeeList.length} users were not registered: ${unregisteredAwardeeList.join(' ')}`);
+        msg.reply(`Successfully awarded ${points} points to ${success.length} participants: ${success.join(' ')}\n` +
+                  `${failure.length} users were not registered: ${failure.join(' ')}`);
 
     }
 }

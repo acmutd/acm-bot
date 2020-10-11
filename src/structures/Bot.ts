@@ -14,6 +14,7 @@ import { settings } from '../botsettings';
 import ErrorManager from './managers/ErrorManager';
 import RRService from './services/RRService';
 import FirestoreManager from './managers/FirestoreManager';
+import HacktoberfestService from './services/HacktoberfestService';
 
 export interface BotConfig {
     token: string;
@@ -47,6 +48,7 @@ export default class ACMClient extends Client {
         verification: VerificationService;
         command: CommandService;
         rr: RRService;
+        hacktoberfest: HacktoberfestService;
     };
     public config: BotConfig;
 
@@ -70,6 +72,7 @@ export default class ACMClient extends Client {
             verification: new VerificationService(this, settings.channels.verification),
             command: new CommandService(this),
             rr: new RRService(this),
+            hacktoberfest: new HacktoberfestService(this),
         };
         this.config = config;
     }
