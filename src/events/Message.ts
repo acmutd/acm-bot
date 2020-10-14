@@ -10,5 +10,6 @@ export default class MessageEvent extends Event {
     public async emit(client: ACMClient, msg: Message) {
         client.services.verification.handle(msg);
         client.services.command.handle(msg);
+        client.services.activity.handle(msg);
     }
 }

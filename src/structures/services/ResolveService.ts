@@ -59,7 +59,7 @@ export default class ResolveService {
             }
             // nickname, lenient
             if (!user && (strategies.size == 0 || strategies.has('nickname'))) {
-                user = guild?.members.cache.find(gm => gm.nickname == toResolve)?.user;
+                user = guild?.members.cache.find(gm => this.makeLenient(gm.nickname? gm.nickname : '') == toResolve)?.user;
             }
         }
 

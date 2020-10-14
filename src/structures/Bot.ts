@@ -16,6 +16,7 @@ import RRService from './services/RRService';
 import FirestoreManager from './managers/FirestoreManager';
 import HacktoberfestService from './services/HacktoberfestService';
 import ResolveService from './services/ResolveService';
+import ActivityService from './services/ActivityService';
 
 export interface BotConfig {
     token: string;
@@ -50,6 +51,7 @@ export default class ACMClient extends Client {
         command: CommandService;
         rr: RRService;
         hacktoberfest: HacktoberfestService;
+        activity: ActivityService;
         resolver: ResolveService;
     };
     public config: BotConfig;
@@ -75,6 +77,7 @@ export default class ACMClient extends Client {
             command: new CommandService(this),
             rr: new RRService(this),
             hacktoberfest: new HacktoberfestService(this),
+            activity: new ActivityService(this),
             resolver: new ResolveService(this),
         };
         this.config = config;
