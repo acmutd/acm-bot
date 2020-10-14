@@ -15,16 +15,15 @@ export default class PointsCommand extends Command {
     }
 
     public async exec({ msg, client, args }: CommandContext) {
-        let user: User | undefined;
+        let user: User | undefined = msg.author;
 
         if (!msg.guild) {
             // shouldn't ever happen
             return msg.reply("This command cannot be run in DMs!");
         }
 
-        user = await client.services.resolver.ResolveGuildUser(args[0], msg.guild).then((gm) => {
-            return gm ? gm : (msg.author);
-        });
+        if (args.length > 0)
+            user = await client.services.resolver.ResolveGuildUser(args[0], msg.guild);
 
         if (!user) {
             return client.response.emit(
