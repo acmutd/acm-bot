@@ -22,20 +22,23 @@ export default class ActivityService {
         if (!this.enabled) return;
 
         // add points if cooldown has expired or if first message
-        if ( 
-            (this.activityLog.has(msg.author.id) && Number(msg.id) >> 22 > this.activityLog.get(msg.author.id)! + 10*1000) ||
-            (!this.activityLog.has(msg.author.id))
+        if (
+            (this.activityLog.has(msg.author.id) &&
+                Number(msg.id) >> 22 > this.activityLog.get(msg.author.id)! + 10 * 1000) ||
+            !this.activityLog.has(msg.author.id)
         ) {
             let {success, failure} = await this.client.services.hacktoberfest.awardPoints(1, 'DiscordActivity', new Set<string>([msg.author.id]));
             if (success.length == 0) {
-                ; // put something here if we want to handle user not registered
-            }
-            else {
-                console.log(`${new Date().toLocaleTimeString()}: ${msg.author.tag} was awarded 1 pt for activity (${Number(msg.id) >> 22})`);
+                // put something here if we want to handle user not registered
+            } else {
+                console.log(
+                    `${new Date().toLocaleTimeString()}: ${
+                        msg.author.tag
+                    } was awarded 1 pt for activity (${Number(msg.id) >> 22})`
+                );
             }
             this.activityLog.set(msg.author.id, Number(msg.id) >> 22);
         }
-
     }
 
     enable() {
@@ -45,7 +48,4 @@ export default class ActivityService {
     disable() {
         this.enabled = false;
     }
-
 }
-
-
