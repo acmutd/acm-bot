@@ -12,7 +12,7 @@ export default class ResolveService {
     }
     /**
      * Searches a guild for a member based on several resolution strategies. 
-     * The available strategies are 'id', 'mention', 'tag', 'username'. Resolution is always done in that order.
+     * The available strategies are 'id', 'mention', 'tag', 'username', and 'nickname'. Resolution is always done in that order.
      * 
      * @param {string} toResolve - Value to be resolved into a GuildMember
      * @param {Guild} guild - Discord guild to perform search in
@@ -40,18 +40,26 @@ export default class ResolveService {
         }
         // username, strict
         else if ((strategies.size == 0 || strategies.has('username'))) {
-            user = guild?.members.cache.find(gm => gm.user.username.toLowerCase() == toResolve)?.user;
+            user = guild?.members.cache.find(gm => gm.user.username == toResolve)?.user;
+        }        
+        // nickname, strict
+        else if ((strategies.size == 0 || strategies.has('nickname'))) {
+            user = guild?.members.cache.find(gm => gm.nickname == toResolve)?.user;
         }
         // lenient matching: string manipulation potentially expensive!
         else if (lenient) {
             toResolve = this.makeLenient(toResolve);
-            // full tag
+            // full tag, lenient
             if ((strategies.size == 0 || strategies.has('tag')) && /#\d{4}$/.test(toResolve)) {
                 user = guild?.members.cache.find(gm => this.makeLenient(gm.user.tag) == toResolve)?.user;
             }
-            // username
+            // username, lenient
             else if ((strategies.size == 0 || strategies.has('username'))) {
                 user = guild?.members.cache.find(gm => this.makeLenient(gm.user.username) == toResolve)?.user;
+            }
+            // nickname, lenient
+            else if ((strategies.size == 0 || strategies.has('nickname'))) {
+                user = guild?.members.cache.find(gm => gm.nickname == toResolve)?.user;
             }
         }
 
