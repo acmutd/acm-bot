@@ -19,7 +19,10 @@ export default class HacktoberfestService {
     }
 
     /**
-     * Function for handling point changes
+     * Increments points for many users
+     * @param points 
+     * @param activity 
+     * @param awardees 
      */
     async awardPoints(points: number, activity: string, awardees: Set<string>) {
         let success: string[] = [];
