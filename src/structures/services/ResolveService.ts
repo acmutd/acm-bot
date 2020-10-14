@@ -26,39 +26,39 @@ export default class ResolveService {
         // All strategies are enabled if we don't specify any
 
         // user ID
-        if ((strategies.size == 0 || strategies.has('id')) && /^[\d]{17,18}$/.test(toResolve)) {
+        if (!user && (strategies.size == 0 || strategies.has('id')) && /^[\d]{17,18}$/.test(toResolve)) {
             user = guild?.members.cache.find(gm => gm.user.id == toResolve)?.user;
         }
         // user mention
-        else if ((strategies.size == 0 || strategies.has('mention')) && /^<@![\d]{17,18}>$/.test(toResolve)) {
+        if (!user && (strategies.size == 0 || strategies.has('mention')) && /^<@![\d]{17,18}>$/.test(toResolve)) {
             let newToResolve = toResolve.slice(3, -1);
             user = guild?.members.cache.find(gm => gm.user.id == newToResolve)?.user;
         }
         // full tag, strict
-        else if ((strategies.size == 0 || strategies.has('tag')) && /#\d{4}$/.test(toResolve)) {
+        if (!user && (strategies.size == 0 || strategies.has('tag')) && /#\d{4}$/.test(toResolve)) {
             user = guild?.members.cache.find(gm => gm.user.tag == toResolve)?.user;
         }
         // username, strict
-        else if ((strategies.size == 0 || strategies.has('username'))) {
+        if (!user && (strategies.size == 0 || strategies.has('username'))) {
             user = guild?.members.cache.find(gm => gm.user.username == toResolve)?.user;
         }        
         // nickname, strict
-        else if ((strategies.size == 0 || strategies.has('nickname'))) {
+        if (!user && (strategies.size == 0 || strategies.has('nickname'))) {
             user = guild?.members.cache.find(gm => gm.nickname == toResolve)?.user;
         }
         // lenient matching: string manipulation potentially expensive!
-        else if (lenient) {
+        if (lenient) {
             toResolve = this.makeLenient(toResolve);
             // full tag, lenient
-            if ((strategies.size == 0 || strategies.has('tag')) && /#\d{4}$/.test(toResolve)) {
+            if (!user && (strategies.size == 0 || strategies.has('tag')) && /#\d{4}$/.test(toResolve)) {
                 user = guild?.members.cache.find(gm => this.makeLenient(gm.user.tag) == toResolve)?.user;
             }
             // username, lenient
-            else if ((strategies.size == 0 || strategies.has('username'))) {
+            if (!user && (strategies.size == 0 || strategies.has('username'))) {
                 user = guild?.members.cache.find(gm => this.makeLenient(gm.user.username) == toResolve)?.user;
             }
             // nickname, lenient
-            else if ((strategies.size == 0 || strategies.has('nickname'))) {
+            if (!user && (strategies.size == 0 || strategies.has('nickname'))) {
                 user = guild?.members.cache.find(gm => gm.nickname == toResolve)?.user;
             }
         }
