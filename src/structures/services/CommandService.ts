@@ -44,7 +44,7 @@ export default class CommandService {
         if (!msg.content.startsWith(settings.prefix)) return;
 
         const command = msg.content.substring(settings.prefix.length).split(' ')[0];
-        const args = shlex.split(msg.content.slice(settings.prefix.length).trim());
+        const args = shlex.split(msg.content.slice(settings.prefix.length).trim()).slice(1);
 
         let cmd = this.client.manager.commands.get(command);
         if (!cmd) {
