@@ -2,6 +2,7 @@ import { Message, DMChannel, MessageEmbed } from 'discord.js';
 import ACMClient from '../Bot';
 import Command from '../Command';
 import { settings } from '../../botsettings';
+import shlex from 'shlex';
 
 export default class CommandService {
     public client: ACMClient;
@@ -43,7 +44,7 @@ export default class CommandService {
         if (!msg.content.startsWith(settings.prefix)) return;
 
         const command = msg.content.substring(settings.prefix.length).split(' ')[0];
-        const args = msg.content.substring(settings.prefix.length).split(' ').slice(1);
+        const args = shlex.split(msg.content.slice(settings.prefix.length).trim());
 
         let cmd = this.client.manager.commands.get(command);
         if (!cmd) {

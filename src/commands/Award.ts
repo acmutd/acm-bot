@@ -2,6 +2,13 @@ import { FieldValue } from '@google-cloud/firestore';
 import Command from '../structures/Command';
 import { CommandContext } from '../structures/Command';
 import Wizard, { ConfirmationWizardNode } from '../utils/Wizard';
+import { Message, MessageAttachment } from 'discord.js'
+import ACMClient from '../structures/Bot'
+const streamifier = require('streamifier');
+const csv = require('csv-parser')
+import fs from 'fs';
+
+export type ActivityType = "";
 
 export default class AwardCommand extends Command {
     constructor() {
@@ -37,6 +44,8 @@ export default class AwardCommand extends Command {
             );
         }
 
+        processAttachments(client, msg, points, activityId);
+
         // scan message for userIds. This will catch mentions but not usernames/tags
         msg.content.match(/[\d]{17,18}/g)?.forEach((userId) => {
             awardees.add(userId);
@@ -49,5 +58,31 @@ export default class AwardCommand extends Command {
                 (failure.length ? `${failure.length} users were not registered: ${failure.join(' ')}` : ''), 
                 {"allowedMentions": { "users" : []}});
 
+    }
+}
+
+function processAttachments(client: ACMClient, msg: Message, points: number, activityId: string) {
+    if(msg.attachments.size == 0) return;
+    msg.attachments.forEach(val => {
+        if(val.name?.endsWith(".csv")) {
+            processCSV(client, msg, val, points, activityId);
+        }
+    })
+}
+
+async function processCSV(client: ACMClient, msg: Message, val: MessageAttachment, points: number, activityId: string) {
+    const results: Set<string> = new Set<string>();
+
+    await streamifier.createReadStream()
+        .pipe(csv(['name', 'email', 'minutes']))
+        .on('data', (data: string) => results.add(data))
+        .on('end', () => {
+            console.log(results);
+        });
+
+    const ids = await client.services.hacktoberfest.emailsToSnowflakes(results);
+    if(ids && ids.length > 0) {
+        const response = await client.services.hacktoberfest.awardPoints(points, activityId, new Set<string>(ids));
+        client.response.emit(msg.channel,  `Successfully added points to **${response.success}** people!\nFailed to add points to **${response.failure}** people.`)
     }
 }

@@ -4,12 +4,14 @@ import Command from '../structures/Command';
 import { CommandContext } from '../structures/Command';
 import Wizard, { ConfirmationWizardNode } from '../utils/Wizard';
 
-export default class ActivityTrackerCommand extends Command {
+export default class EventCommand extends Command {
     constructor() {
         super({
-            name: 'activitytracker',
-            description: 'begin logging Hacktoberfest activity',
-            usage: ['.activitytracker [start | end]'],
+            name: 'event',
+            description: 'start and stop voice channel and text events',
+            usage: ['.event start text [text-channel] [activity-id] [reaction]',
+                    '.event stop text [text-channel] [activity-id] [reaction]',
+                    '.event [start | end] voice [activity-id] [points]'],
             dmWorks: false,
         });
     }

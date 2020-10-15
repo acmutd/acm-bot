@@ -93,4 +93,21 @@ export default class HacktoberfestService {
         }
     }
 
+    /**
+     * Function for getting snowflake from email address
+     */
+    async emailsToSnowflakes(emails: Set<string>): Promise<string[] | null> {
+        let snowflakes: string[] = [];
+        await this.client.firestore.firestore?.collection("htf_leaderboard").doc("email_to_snowflake").get().then(async (doc) => {
+            if (!doc.exists || !doc.data()) return null;
+
+            for (let email in emails.values()) {
+                if (email in doc.data()!) {
+                    snowflakes.push(doc.data()?.get(email));
+                }
+            }
+            return snowflakes;
+        });
+        return snowflakes;
+    }
 }
