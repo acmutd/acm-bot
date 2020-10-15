@@ -44,8 +44,6 @@ export default class AwardCommand extends Command {
             );
         }
 
-        processAttachments(client, msg, points, activityId);
-
         // scan message for userIds. This will catch mentions but not usernames/tags
         msg.content.match(/[\d]{17,18}/g)?.forEach((userId) => {
             awardees.add(userId);
@@ -58,14 +56,15 @@ export default class AwardCommand extends Command {
                 (failure.length ? `${failure.length} users were not registered: ${failure.join(' ')}` : ''), 
                 {"allowedMentions": { "users" : []}});
 
+        await processAttachments(client, msg, points, activityId);
     }
 }
 
-function processAttachments(client: ACMClient, msg: Message, points: number, activityId: string) {
+async function processAttachments(client: ACMClient, msg: Message, points: number, activityId: string) {
     if(msg.attachments.size == 0) return;
-    msg.attachments.forEach(val => {
+    msg.attachments.forEach(async (val) => {
         if(val.name?.endsWith(".csv")) {
-            processCSV(client, msg, val, points, activityId);
+            await processCSV(client, msg, val, points, activityId);
         }
     })
 }
@@ -75,7 +74,7 @@ async function processCSV(client: ACMClient, msg: Message, val: MessageAttachmen
 
     await streamifier.createReadStream()
         .pipe(csv(['name', 'email', 'minutes']))
-        .on('data', (data: string) => results.add(data))
+        .on('data', (data: any) => results.add(data.email))
         .on('end', () => {
             console.log(results);
         });
