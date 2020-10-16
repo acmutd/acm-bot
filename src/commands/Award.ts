@@ -69,7 +69,7 @@ export default class AwardCommand extends Command {
 async function processAttachments(client: ACMClient, msg: Message, points: number, activityId: string) {
     let awardees = new Set<string>();
     if(msg.attachments.size == 0) return;
-    msg.attachments.forEach(async (val) => {
+    await msg.attachments.forEach(async (val) => {
         if(val.name?.endsWith(".csv")) {
             let attachmentAwardees = await processCSV(client, msg, val, points, activityId)
             attachmentAwardees?.forEach((id) => {
