@@ -5,14 +5,14 @@ import { CommandContext } from '../structures/Command';
 import Wizard, { ConfirmationWizardNode } from '../utils/Wizard';
 import { settings } from '../botsettings';
 
-export default class TextEventCommand extends Command {
+export default class ReactionEventCommand extends Command {
     constructor() {
         super({
-            name: 'textevent',
+            name: 'reactionevent',
             description: 'start and stop and text events in the current channel',
-            usage: ['.textevent [start | stop]',
-                    '.textevent start [activity-id] [reaction] [points]',
-                    '.textevent stop'],
+            usage: ['.reactionevent [start | stop]',
+                    '.reactionevent start [activity-id] [reaction] [points]',
+                    '.reactionevent stop'],
             dmWorks: false,
             requiredRole: settings.hacktoberfest.staffRole,
         });

@@ -136,7 +136,7 @@ export default class HacktoberfestService {
                 failure.push(`<@${userId}>`);
             }
         }
-        console.log(`Awarded ${points} points to ${success.length}/${awardees.size} users for ${activities}`);
+        console.log(`Awarded ${points} points to ${success.length}/${awardees.size} users for ${activity}`);
         return {success, failure};
     }
 
