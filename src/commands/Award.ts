@@ -50,7 +50,8 @@ export default class AwardCommand extends Command {
             awardees.add(userId);
         });
 
-        (await processAttachments(client, msg, points, activityId))?.forEach((id) => {
+        let attachmentAwardees = await processAttachments(client, msg, points, activityId);
+        attachmentAwardees?.forEach((id) => {
             console.log(`1. ${id}`)
             awardees.add(id);
         });
@@ -62,7 +63,6 @@ export default class AwardCommand extends Command {
                 (failure.length ? `${failure.length} users were not registered: ${failure.join(' ')}` : ''), 
                 {"allowedMentions": { "users" : []}});
 
-        await processAttachments(client, msg, points, activityId);
     }
 }
 
@@ -71,8 +71,9 @@ async function processAttachments(client: ACMClient, msg: Message, points: numbe
     if(msg.attachments.size == 0) return;
     msg.attachments.forEach(async (val) => {
         if(val.name?.endsWith(".csv")) {
-            (await processCSV(client, msg, val, points, activityId))?.forEach((id) => {
-                console.log(`1. ${id}`)
+            let attachmentAwardees = await processCSV(client, msg, val, points, activityId)
+            attachmentAwardees?.forEach((id) => {
+                console.log(`2. ${id}`)
                 awardees.add(id)
             });
         }
