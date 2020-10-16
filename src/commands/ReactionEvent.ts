@@ -76,6 +76,15 @@ export default class ReactionEventCommand extends Command {
             }));
             points = +args[3];
 
+            // invalid award amount
+            if (isNaN(points) || points < -100 || points > 100) {
+                return client.response.emit(
+                    msg.channel,
+                    `\`${args[0]}\` is not a valid number of points between -100 and 100 (inclusive).`,
+                    'invalid'
+                );
+            }
+
             // start reaction event and confirm
             client.services.hacktoberfest.startReactionEvent(channelId, activityId, reactionId!, moderatorId, points);
             return client.response.emit(

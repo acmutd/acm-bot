@@ -73,6 +73,15 @@ export default class VoiceEventCommand extends Command {
             activityId = args[1];
             points = +args[2];
 
+            // invalid award amount
+            if (isNaN(points) || points < -100 || points > 100) {
+                return client.response.emit(
+                    msg.channel,
+                    `\`${args[0]}\` is not a valid number of points between -100 and 100 (inclusive).`,
+                    'invalid'
+                );
+            }
+
             // start voice event and confirm
             client.services.hacktoberfest.startVoiceEvent(voiceChannel, activityId, moderatorId, points);
             return client.response.emit(

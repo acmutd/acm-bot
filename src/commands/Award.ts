@@ -1,13 +1,8 @@
-import { FieldValue } from '@google-cloud/firestore';
 import Command from '../structures/Command';
 import { CommandContext } from '../structures/Command';
-import Wizard, { ConfirmationWizardNode } from '../utils/Wizard';
 import { Message, MessageAttachment } from 'discord.js'
 import ACMClient from '../structures/Bot'
 import axios from 'axios'
-const streamifier = require('streamifier');
-const csv = require('csv-parser')
-import fs from 'fs';
 
 export type ActivityType = "";
 
@@ -53,11 +48,9 @@ export default class AwardCommand extends Command {
         let attachmentAwardees = await processAttachments(client, msg, points, activityId);
         if (attachmentAwardees) {
             for (let id of attachmentAwardees) {
-                console.log(`1. ${id}`)
                 awardees.add(id);
             }
         }
-        console.log('1. Awarding...');
 
         const {success, failure} = await client.services.hacktoberfest.awardPoints(points, activityId, awardees);
 
@@ -73,17 +66,15 @@ async function processAttachments(client: ACMClient, msg: Message, points: numbe
     let awardees = new Set<string>();
     if(msg.attachments.size == 0) return;
     await Promise.all(msg.attachments.map(async (val) => {
-        let attachmentAwardees = await processCSV(client, msg, val, points, activityId)
+        let attachmentAwardees = await processCSV(client, val)
         attachmentAwardees?.forEach((id) => {
-            console.log(`2. ${id}`)
             awardees.add(id)
         });
     }));
-    console.log('2. return')
     return awardees;
 }
 
-async function processCSV(client: ACMClient, msg: Message, attachment: MessageAttachment, points: number, activityId: string) {
+async function processCSV(client: ACMClient, attachment: MessageAttachment) {
     let csvRaw: string;
     const emails: Set<string> = new Set<string>();
 
@@ -97,16 +88,6 @@ async function processCSV(client: ACMClient, msg: Message, attachment: MessageAt
     catch (error) {
         return;
     }
-    
-
-    /*
-    await streamifier.createReadStream()
-        .pipe(csv(['name', 'email', 'minutes']))
-        .on('data', (data: any) => results.add(data.email))
-        .on('end', () => {
-            console.log(results);
-        });
-    */
 
     let res =  await client.services.hacktoberfest.emailsToSnowflakes(emails);
     return res;
