@@ -4,7 +4,9 @@
     "description": "The official Discord bot for the ACM Community server!",
     "main": "main.js",
     "scripts": {
-        "test": "echo \"Error: no test specified\" && exit 1"
+        "test": "echo \"Error: no test specified\" && exit 1",
+        "update": "rm -r dist && git pull && tsc",
+        "run": "node dist/main.js"
     },
     "repository": {
         "type": "git",
