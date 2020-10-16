@@ -51,10 +51,13 @@ export default class AwardCommand extends Command {
         });
 
         let attachmentAwardees = await processAttachments(client, msg, points, activityId);
-        attachmentAwardees?.forEach((id) => {
-            console.log(`1. ${id}`)
-            awardees.add(id);
-        });
+        if (attachmentAwardees) {
+            for (let id of attachmentAwardees) {
+                console.log(`1. ${id}`)
+                awardees.add(id);
+            }
+        }
+        console.log('1. Awarding...');
 
         const {success, failure} = await client.services.hacktoberfest.awardPoints(points, activityId, awardees);
 
@@ -69,16 +72,14 @@ export default class AwardCommand extends Command {
 async function processAttachments(client: ACMClient, msg: Message, points: number, activityId: string) {
     let awardees = new Set<string>();
     if(msg.attachments.size == 0) return;
-    await msg.attachments.forEach(async (val) => {
-        if(val.name?.endsWith(".csv")) {
-            let attachmentAwardees = await processCSV(client, msg, val, points, activityId)
-            attachmentAwardees?.forEach((id) => {
-                console.log(`2. ${id}`)
-                awardees.add(id)
-            });
-        }
-    })
-
+    await Promise.all(msg.attachments.map(async (val) => {
+        let attachmentAwardees = await processCSV(client, msg, val, points, activityId)
+        attachmentAwardees?.forEach((id) => {
+            console.log(`2. ${id}`)
+            awardees.add(id)
+        });
+    }));
+    console.log('2. return')
     return awardees;
 }
 
