@@ -164,9 +164,11 @@ export default class HacktoberfestService {
         await this.client.firestore.firestore?.collection("htf_leaderboard").doc("email_to_snowflake").get().then(async (doc) => {
             if (!doc.exists || !doc.data()) return null;
 
-            for (let email in emails.values()) {
+            let data = doc.data()!;
+
+            for (let email of emails.values()) {
                 if (email in doc.data()!) {
-                    snowflakes.push(doc.data()?.get(email));
+                    snowflakes.push(data[email]);
                 }
             }
             return snowflakes;

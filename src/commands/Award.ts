@@ -24,7 +24,7 @@ export default class AwardCommand extends Command {
         // TODO: turn this into a wizard so people can't mess up as easily
 
         // invalid arg length
-        if (args.length < 3) {
+        if (args.length < 2) {
             return client.response.emit(
                 msg.channel,
                 `Usage: \`${this.usage[0]}\``,
@@ -84,7 +84,7 @@ async function processCSV(client: ACMClient, msg: Message, attachment: MessageAt
     const emails: Set<string> = new Set<string>();
 
     try {
-        csvRaw = (await axios.get("http://35.226.240.23:1337/mapdiscord")).data;
+        csvRaw = (await axios.get(attachment.url)).data;
         for (let line of csvRaw.split('\n')) {
             let email = line.split(',')[1];
             if (email.length > 0)
