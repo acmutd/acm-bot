@@ -51,6 +51,7 @@ export default class AwardCommand extends Command {
         });
 
         (await processAttachments(client, msg, points, activityId))?.forEach((id) => {
+            console.log(`1. ${id}`)
             awardees.add(id);
         });
 
@@ -71,6 +72,7 @@ async function processAttachments(client: ACMClient, msg: Message, points: numbe
     msg.attachments.forEach(async (val) => {
         if(val.name?.endsWith(".csv")) {
             (await processCSV(client, msg, val, points, activityId))?.forEach((id) => {
+                console.log(`1. ${id}`)
                 awardees.add(id)
             });
         }
@@ -87,8 +89,7 @@ async function processCSV(client: ACMClient, msg: Message, attachment: MessageAt
         csvRaw = (await axios.get(attachment.url)).data;
         for (let line of csvRaw.split('\n')) {
             let email = line.split(',')[1];
-            if (email.length > 0)
-                emails.add(email);
+            emails.add(email);
         }
     }
     catch (error) {
@@ -105,5 +106,6 @@ async function processCSV(client: ACMClient, msg: Message, attachment: MessageAt
         });
     */
 
-    return await client.services.hacktoberfest.emailsToSnowflakes(emails);
+    let res =  await client.services.hacktoberfest.emailsToSnowflakes(emails);
+    return res;
 }

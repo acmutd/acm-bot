@@ -168,11 +168,12 @@ export default class HacktoberfestService {
 
             for (let email of emails.values()) {
                 if (email in doc.data()!) {
+                    console.log(`Pushing snowflake ${data[email]}`);
                     snowflakes.push(data[email]);
                 }
             }
-            return snowflakes;
         });
+        console.log(`Snowflakes: ${snowflakes}`)
         return snowflakes;
     }
 }
