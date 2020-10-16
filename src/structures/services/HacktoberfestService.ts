@@ -1,4 +1,4 @@
-import { Message, DMChannel, MessageEmbed, MessageReaction, User, VoiceChannel } from 'discord.js';
+import { Message, DMChannel, MessageEmbed, MessageReaction, User, VoiceChannel, Collection } from 'discord.js';
 import ACMClient from '../Bot';
 import Command from '../Command';
 import { settings } from '../../botsettings';
@@ -10,6 +10,11 @@ export default class HacktoberfestService {
     constructor(client: ACMClient) {
         this.client = client;
     }
+
+    //
+    // Event monitoring and handling //
+    //
+
 
     /**
      * This will run when a reaction changes.
@@ -76,10 +81,11 @@ export default class HacktoberfestService {
         voiceEvent.attendees = trueAttendees;
 
         return voiceEvent;
-        
-        // now let's award all of these dedicated attendees
-        //return this.client.services.hacktoberfest.awardPoints(voiceEvent.points, voiceEvent.activityId, trueAttendees);
     }
+
+    //
+    // Firestore interaction section //
+    //
 
     /**
      * Increments points for many users
@@ -146,7 +152,9 @@ export default class HacktoberfestService {
     async getData(userId: string) {
         let exists: boolean | undefined;
         let data: FirebaseFirestore.DocumentData | undefined;
-        await this.client.firestore.firestore?.collection("htf_leaderboard/snowflake_to_all/mapping").doc(userId).get().then(async (doc) => {
+        await this.client.firestore.firestore?.collection("htf_leaderboard/snowflake_to_all/mapping")
+                .doc(userId)
+                .get().then(async (doc) => {
             exists = doc.exists;
             data = doc.data();
         });
@@ -157,11 +165,13 @@ export default class HacktoberfestService {
     }
 
     /**
-     * Function for getting snowflake from email address
+     * Get snowflakes from email addresses
      */
     async emailsToSnowflakes(emails: Set<string>): Promise<string[] | null> {
         let snowflakes: string[] = [];
-        await this.client.firestore.firestore?.collection("htf_leaderboard").doc("email_to_snowflake").get().then(async (doc) => {
+        await this.client.firestore.firestore?.collection("htf_leaderboard")
+                .doc("email_to_snowflake")
+                .get().then(async (doc) => {
             if (!doc.exists || !doc.data()) return null;
 
             let data = doc.data()!;
@@ -175,5 +185,31 @@ export default class HacktoberfestService {
         });
         console.log(`Snowflakes: ${snowflakes}`)
         return snowflakes;
+    }
+
+    /**
+     * Retrieve the ENTIRE user list. Could be expensive!
+     * @param limit Number of users to retrieve, default 0/invalid (all users)
+     */
+    async getLeaderboard(limit: number = 0) {
+        let res: Map<string, any> = new Map<string, any>();
+        let snapshot: FirebaseFirestore.QuerySnapshot<FirebaseFirestore.DocumentData> | undefined;
+        if (limit > 0) {
+            snapshot = await this.client.firestore.firestore?.collection('htf_leaderboard/snowflake_to_all/mapping')
+                    .orderBy('points', 'desc')
+                    .limit(limit)
+                    .get();
+        }
+        else {
+            snapshot = await this.client.firestore.firestore?.collection('htf_leaderboard/snowflake_to_all/mapping')
+                    .orderBy('points', 'desc')
+                    .get();
+        }
+
+        snapshot?.forEach( (doc) => {
+            res.set(doc.id, doc.data());
+        });
+
+        return res;
     }
 }

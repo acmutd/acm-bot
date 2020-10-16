@@ -3,6 +3,7 @@ import { CommandContext } from '../structures/Command';
 import { Message, MessageAttachment } from 'discord.js'
 import ACMClient from '../structures/Bot'
 import axios from 'axios'
+import { settings } from '../botsettings';
 
 export type ActivityType = "";
 
@@ -12,6 +13,8 @@ export default class AwardCommand extends Command {
             name: 'award',
             description: 'Manually award Hacktoberfest points to users',
             usage: ['.award [amount] [activity-id] [user1, user 2, user3...]'],
+            dmWorks: false,
+            requiredRole: settings.hacktoberfest.staffRole,
         });
     }
 
