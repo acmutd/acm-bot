@@ -48,41 +48,6 @@ export default class ActivityService {
         }
     }
 
-    async startRecordVoiceChannel(voiceChannel: VoiceChannel) {
-        let attendees = new Set<string>();
-
-        if (voiceChannel.guild.id != settings.guild) return; // only works if we are in the right guild
-        if (!this.enabled) return; // doesn't work if the event hasn't started
-        if (this.client.indicators.hasKey('voiceActivity', voiceChannel.id)) // event already running in this channel
-
-        // add non-bot users to the attendance set
-        for (const [snowflake, member] of voiceChannel.members) {
-            if (member.user.bot) continue;
-            attendees.add(member.id);
-        }
-
-        this.client.indicators.setKeyValue('voiceActivity', voiceChannel.id, attendees);
-    }
-
-    async endRecordVoiceChannel(voiceChannel: VoiceChannel) {
-        let originalAttendees: Set<string> = this.client.indicators.getValue('voiceActivity', voiceChannel.id) as Set<string>;
-        let trueAttendees = new Set<string>();
-
-        if (voiceChannel.guild.id != settings.guild) return; // only works if we are in the right guild
-        if (!this.enabled) return; // doesn't work if the event hasn't started
-        if (!originalAttendees) return; // no event running in this channel
-
-        for (const [snowflake, member] of voiceChannel.members) {
-            if (member.user.bot) continue;
-            if (originalAttendees.has(snowflake)) {
-                trueAttendees.add(snowflake);
-            }
-        }
-        this.client.indicators.removeKey('voiceActivity', voiceChannel.id);
-
-        return trueAttendees;
-    }
-
     enableTracking() {
         this.enabled = true;
     }

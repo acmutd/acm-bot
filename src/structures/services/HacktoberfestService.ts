@@ -1,4 +1,4 @@
-import { Message, DMChannel, MessageEmbed } from 'discord.js';
+import { Message, DMChannel, MessageEmbed, MessageReaction, User, VoiceChannel } from 'discord.js';
 import ACMClient from '../Bot';
 import Command from '../Command';
 import { settings } from '../../botsettings';
@@ -14,8 +14,71 @@ export default class HacktoberfestService {
     /**
      * This will run when a reaction changes.
      */
-    async handleReaction(msg: Message) {
+    async handleReactionAdd(reaction: MessageReaction, user: User) {
+        let reactionEvent = this.client.indicators.getValue('reactionEvent', reaction.message.channel.id);
+        if (!reactionEvent || 
+            reaction.emoji.id != reactionEvent.reactionId ||
+            user.id != reactionEvent.userId) return;
+        
+        this.client.services.hacktoberfest.awardPoints(reactionEvent.points, reactionEvent.activityId, new Set<string>([reaction.message.author.id]));
+    }
+    
+    startReactionEvent(channelId: string, activityId: string, reactionId: string, moderatorId: string, points: number) {
+        if (this.client.indicators.hasKey('reactionEvent', channelId)) return false;
+        
+        this.client.indicators.setKeyValue('reactionEvent', channelId, {channelId, activityId, reactionId, moderatorId, points});
+        return true;
+    }
+    
+    stopReactionEvent(channelId: string) {
+        if (!this.client.indicators.hasKey('reactionEvent', channelId)) return false;
+        
+        this.client.indicators.removeKey('reactionEvent', channelId);
+        return true;
+    }
 
+    startVoiceEvent(voiceChannel: VoiceChannel, activityId: string, moderatorId: string, points: number) {
+        let attendees = new Set<string>();
+
+        if (this.client.indicators.hasKey('voiceEvent', voiceChannel.id)) return false; // event already running in this channel
+
+        // add non-bot users to the attendance set
+        for (const [, member] of voiceChannel.members) {
+            if (member.user.bot) continue;
+            attendees.add(member.id);
+        }
+
+        this.client.indicators.setKeyValue('voiceEvent', voiceChannel.id, {attendees, activityId, moderatorId, points});
+        return true;
+    }
+
+    async stopVoiceEvent(voiceChannel: VoiceChannel) {
+        let voiceEvent = this.client.indicators.getValue('voiceEvent', voiceChannel.id);
+        let originalAttendees: Set<string>;
+        let trueAttendees = new Set<string>();
+
+        if (!voiceEvent) return; // no event running in this channel
+
+        // pull attendees into a separate variable to work with
+        originalAttendees = voiceEvent.attendees as Set<string>;;
+
+        // we can disable this voice event now
+        this.client.indicators.removeKey('voiceEvent', voiceChannel.id);
+
+        // populate trueAttendees with only those who were there in the beginning and the end
+        for (const [snowflake, member] of voiceChannel.members) {
+            if (member.user.bot) continue;
+            if (originalAttendees.has(snowflake)) {
+                trueAttendees.add(snowflake);
+            }
+        }
+
+        voiceEvent.attendees = trueAttendees;
+
+        return voiceEvent;
+        
+        // now let's award all of these dedicated attendees
+        //return this.client.services.hacktoberfest.awardPoints(voiceEvent.points, voiceEvent.activityId, trueAttendees);
     }
 
     /**

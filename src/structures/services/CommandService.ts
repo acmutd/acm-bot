@@ -28,6 +28,18 @@ export default class CommandService {
             );
 
         if (
+            command.requiredRole &&
+            msg.member &&
+            !msg.member.roles.cache.has(command.requiredRole)
+        ) {
+            let role = msg.guild?.roles.cache.get(command.requiredRole);
+            return this.client.response.build(
+                `You do not have the appropriate role (${role?.toString()}) to use this command.`,
+                'invalid'
+            );
+        }
+
+        if (
             this.client.config.disabledCommands &&
             this.client.config.disabledCommands.includes(command.name)
         )

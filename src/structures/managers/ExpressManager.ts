@@ -40,7 +40,7 @@ export default class ExpressManager {
 
         this.confirmationChannelID = settings.hacktoberfest.confirmationChannel;
         this.errorChannelID = settings.hacktoberfest.errorChannel;
-        this.hacktoberfestRoleID = settings.hacktoberfest.htfRole;
+        this.hacktoberfestRoleID = settings.hacktoberfest.memberRole;
     }
 
 

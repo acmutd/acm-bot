@@ -3,14 +3,14 @@ import { User, Collection } from 'discord.js';
 // ! USE REDIS THIS IS SUCH AN INEFFICIENT SYSTEM OMFG
 
 export type IndicatorType = 'usingCommand' | 'reacting';
-export type IndicatorCacheType = 'textActivity' | 'voiceActivity';
+export type IndicatorCacheType = 'textActivity' | 'voiceEvent' | 'reactionEvent';
 
 export default class IndicatorManager {
     private indicators: Collection<string, Array<string>>;
     private indicatorCache: Collection<string, Collection<string, any>>;
 
     // for text activity monitoring, 'textActivity' → (userID → lastMessageTimestamp)
-    // for voice channel monitoring, 'voiceActivity'→ (voiceChannelID → [userID, userId, ...])
+    // for voice channel monitoring, 'voiceEvent'→ (voiceChannelID → [userID, userId, ...])
 
     constructor() {
         this.indicators = new Collection();

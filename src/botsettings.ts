@@ -25,7 +25,8 @@ export interface Settings {
     hacktoberfest: {
         confirmationChannel: string;
         errorChannel: string;
-        htfRole: string;
+        memberRole: string;
+        staffRole: string;
     }
     channels: {
         verification: string;

@@ -48,7 +48,7 @@ module.exports = (app: Express, client: ACMClient) => {
             // send off the ID first if user is found. If something fails later, log and fix manually
             res.status(200).json({ snowflake: member.id });
 
-            const hacktoberfestRole = ACMGuild.roles.cache.find(role => role.id == settings.hacktoberfest.htfRole);
+            const hacktoberfestRole = ACMGuild.roles.cache.find(role => role.id == settings.hacktoberfest.memberRole);
             if (hacktoberfestRole) {
                 member.roles.add(hacktoberfestRole);
                 confirmationChannel?.send(`<@${member.id}>, thank you for registering for Hacktoberfest!`);

@@ -22,6 +22,7 @@ export interface CommandConfig {
     cooldown?: number;
     dmWorks?: boolean;
     userPermissions?: number;
+    requiredRole?: string;
 }
 
 export default abstract class Command {
@@ -33,6 +34,7 @@ export default abstract class Command {
     public cooldown: number;
     public dmWorks: boolean;
     public userPermissions: number;
+    public requiredRole: string | undefined;
 
     constructor(config: CommandConfig) {
         this.name = config.name;
@@ -43,6 +45,7 @@ export default abstract class Command {
         this.cooldown = config.cooldown || 0;
         this.dmWorks = config.dmWorks || false;
         this.userPermissions = config.userPermissions || 0;
+        this.requiredRole = config.requiredRole;
     }
 
     // TODO: Find a use for the return of the exec function
