@@ -26,7 +26,7 @@ export default class TextEventCommand extends Command {
                 'invalid'
             )
         }
-        if (args.length < 1 || (args[0] != 'start' && args[1] != 'stop')) {
+        if (args.length < 1 || (args[0] != 'start' && args[0] != 'stop')) {
             return client.response.emit(
                 msg.channel,
                 `Usage: \`${this.usage[0]}\``,
