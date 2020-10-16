@@ -18,9 +18,9 @@ export default class HacktoberfestService {
         let reactionEvent = this.client.indicators.getValue('reactionEvent', reaction.message.channel.id);
         if (!reactionEvent || 
             reaction.emoji.id != reactionEvent.reactionId ||
-            user.id != reactionEvent.userId) return;
+            user.id != reactionEvent.moderatorId) return;
         
-        this.client.services.hacktoberfest.awardPoints(reactionEvent.points, reactionEvent.activityId, new Set<string>([reaction.message.author.id]));
+        await this.client.services.hacktoberfest.awardPoints(reactionEvent.points, reactionEvent.activityId, new Set<string>([reaction.message.author.id]));
     }
     
     startReactionEvent(channelId: string, activityId: string, reactionId: string, moderatorId: string, points: number) {
@@ -52,7 +52,7 @@ export default class HacktoberfestService {
         return true;
     }
 
-    async stopVoiceEvent(voiceChannel: VoiceChannel) {
+    stopVoiceEvent(voiceChannel: VoiceChannel) {
         let voiceEvent = this.client.indicators.getValue('voiceEvent', voiceChannel.id);
         let originalAttendees: Set<string>;
         let trueAttendees = new Set<string>();
@@ -136,7 +136,7 @@ export default class HacktoberfestService {
                 failure.push(`<@${userId}>`);
             }
         }
-
+        console.log(`Awarded ${points} points to ${success.length}/${awardees.size} users for ${activities}`);
         return {success, failure};
     }
 

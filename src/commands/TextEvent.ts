@@ -22,7 +22,7 @@ export default class TextEventCommand extends Command {
         if (!client.services.activity.enabled) {
             return client.response.emit(
                 msg.channel,
-                'An event is not currently in session',
+                'Hacktoberfest is not currently in session',
                 'invalid'
             )
         }

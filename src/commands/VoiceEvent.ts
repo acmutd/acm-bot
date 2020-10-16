@@ -22,7 +22,7 @@ export default class VoiceEventCommand extends Command {
         if (!client.services.activity.enabled) {
             return client.response.emit(
                 msg.channel,
-                'An event is not currently in session',
+                'Hacktoberfest is not currently in session',
                 'invalid'
             )
         }
@@ -109,7 +109,7 @@ export default class VoiceEventCommand extends Command {
             
             
             // attempt to close off the event. If that is successful, award
-            let voiceEvent = await client.services.hacktoberfest.stopVoiceEvent(voiceChannel)
+            let voiceEvent = client.services.hacktoberfest.stopVoiceEvent(voiceChannel)
             if (voiceEvent) {
                 let {success, failure} = await client.services.hacktoberfest.awardPoints(voiceEvent.points, voiceEvent.activityId, voiceEvent.attendees);
                 return msg.reply(

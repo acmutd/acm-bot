@@ -4,6 +4,7 @@ import { CommandContext } from '../structures/Command';
 import Wizard, { ConfirmationWizardNode } from '../utils/Wizard';
 import { Message, MessageAttachment } from 'discord.js'
 import ACMClient from '../structures/Bot'
+import axios from 'axios'
 const streamifier = require('streamifier');
 const csv = require('csv-parser')
 import fs from 'fs';
@@ -49,6 +50,10 @@ export default class AwardCommand extends Command {
             awardees.add(userId);
         });
 
+        (await processAttachments(client, msg, points, activityId))?.forEach((id) => {
+            awardees.add(id);
+        });
+
         const {success, failure} = await client.services.hacktoberfest.awardPoints(points, activityId, awardees);
 
         // send back our results with mentions but not pings
@@ -61,27 +66,44 @@ export default class AwardCommand extends Command {
 }
 
 async function processAttachments(client: ACMClient, msg: Message, points: number, activityId: string) {
+    let awardees = new Set<string>();
     if(msg.attachments.size == 0) return;
     msg.attachments.forEach(async (val) => {
         if(val.name?.endsWith(".csv")) {
-            await processCSV(client, msg, val, points, activityId);
+            (await processCSV(client, msg, val, points, activityId))?.forEach((id) => {
+                awardees.add(id)
+            });
         }
     })
+
+    return awardees;
 }
 
-async function processCSV(client: ACMClient, msg: Message, val: MessageAttachment, points: number, activityId: string) {
-    const results: Set<string> = new Set<string>();
+async function processCSV(client: ACMClient, msg: Message, attachment: MessageAttachment, points: number, activityId: string) {
+    let csvRaw: string;
+    const emails: Set<string> = new Set<string>();
 
+    try {
+        csvRaw = (await axios.get("http://35.226.240.23:1337/mapdiscord")).data;
+        for (let line of csvRaw.split('\n')) {
+            let email = line.split(',')[1];
+            if (email.length > 0)
+                emails.add(email);
+        }
+    }
+    catch (error) {
+        return;
+    }
+    
+
+    /*
     await streamifier.createReadStream()
         .pipe(csv(['name', 'email', 'minutes']))
         .on('data', (data: any) => results.add(data.email))
         .on('end', () => {
             console.log(results);
         });
+    */
 
-    const ids = await client.services.hacktoberfest.emailsToSnowflakes(results);
-    if(ids && ids.length > 0) {
-        const response = await client.services.hacktoberfest.awardPoints(points, activityId, new Set<string>(ids));
-        client.response.emit(msg.channel,  `Successfully added points to **${response.success}** people!\nFailed to add points to **${response.failure}** people.`)
-    }
+    return await client.services.hacktoberfest.emailsToSnowflakes(emails);
 }

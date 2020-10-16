@@ -33,7 +33,7 @@ export default class ActivityService {
             indicators.setKeyValue('textActivity', msg.author.id, msg.createdTimestamp);
             let { success, failure } = await this.client.services.hacktoberfest.awardPoints(
                 1,
-                'DiscordActivity',
+                'Discord',
                 new Set<string>([msg.author.id])
             );
             if (success.length == 0) {
