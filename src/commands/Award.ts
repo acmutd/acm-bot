@@ -5,8 +5,6 @@ import ACMClient from '../structures/Bot'
 import axios from 'axios'
 import { settings } from '../botsettings';
 
-export type ActivityType = "";
-
 export default class AwardCommand extends Command {
     constructor() {
         super({
@@ -61,7 +59,6 @@ export default class AwardCommand extends Command {
         msg.reply(`Awarded **${points}** points to **${success.length}** users for completing **${activityId}**:\n${success.join(' ')}\n` +
                 (failure.length ? `${failure.length} users were not registered: ${failure.join(' ')}` : ''), 
                 {"allowedMentions": { "users" : []}});
-
     }
 }
 
