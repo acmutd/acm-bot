@@ -30,7 +30,7 @@ export default class EventManager {
                 var event = new eventClass.default(this.bot);
                 this.bot.on(event.name, event.emit.bind(null, this.bot));
                 this.bot.logger.info(`Setup response for the \'${event.name}\' event!`)
-            }) 
+            });
         })
     }
 }

@@ -50,7 +50,7 @@ export default class ResponseUtil {
     }
     private embed(msg: string, emojiSet: {simple: string, embed: string, color: ColorResolvable}) {
         return new MessageEmbed()
-            .setTitle(`${emojiSet.embed} | ${msg}`)
+            .setDescription(`${emojiSet.embed} | **${msg}**`)
             .setColor(emojiSet.color);
     }
 
