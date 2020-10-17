@@ -143,13 +143,15 @@ export default class HacktoberfestService {
             }
         }
 
-        // push update to log channel
-        const logChannel = this.client.channels.cache.get(settings.hacktoberfest.logChannel);
-        if (success.length < 60)
-            (logChannel as TextChannel)?.send(`Awarded ${points} points to ${success.join(', ')} for ${activity}!`);
-        else
-            (logChannel as TextChannel)?.send(`Awarded ${points} points to ${success.length} users for ${activity}!`,
-                    {"allowedMentions": { "users" : []}});
+        if (activity != 'Discord') {
+            // push update to log channel if not for general activity
+            const logChannel = this.client.channels.cache.get(settings.hacktoberfest.logChannel);
+            if (success.length < 60)
+                (logChannel as TextChannel)?.send(`Awarded ${points} points to ${success.join(', ')} for ${activity}!`);
+            else
+                (logChannel as TextChannel)?.send(`Awarded ${points} points to ${success.length} users for ${activity}!`,
+                        {"allowedMentions": { "users" : []}});
+        }
 
         console.log(`Awarded ${points} points to ${success.length}/${awardees.size} users for ${activity}`);
         return {success, failure};
