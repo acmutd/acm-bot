@@ -147,7 +147,8 @@ export default class HacktoberfestService {
             // push update to log channel if not for general activity
             const logChannel = this.client.channels.cache.get(settings.hacktoberfest.logChannel);
             if (success.length < 60)
-                (logChannel as TextChannel)?.send(`Awarded ${points} points to ${success.join(', ')} for ${activity}!`);
+                (logChannel as TextChannel)?.send(`Awarded ${points} points to ${success.join(', ')} for ${activity}!`,
+                {"allowedMentions": { "users" : []}});
             else
                 (logChannel as TextChannel)?.send(`Awarded ${points} points to ${success.length} users for ${activity}!`,
                         {"allowedMentions": { "users" : []}});
