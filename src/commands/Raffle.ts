@@ -43,7 +43,10 @@ export default class RaffleCommand extends Command {
 
         // first, we want to find the sum of all points
         allUsers.forEach( (user) => {
-            sum += user.points;
+            if (user.points > 0)
+                sum += user.points;
+            else
+                allUsers.delete(user);
         });
 
         // now we want to generate random numbers accordingly
