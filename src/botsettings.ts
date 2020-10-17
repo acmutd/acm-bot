@@ -25,6 +25,7 @@ export interface Settings {
     hacktoberfest: {
         confirmationChannel: string;
         errorChannel: string;
+        logChannel: string;
         memberRole: string;
         staffRole: string;
     }

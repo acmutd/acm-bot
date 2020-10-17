@@ -1,4 +1,4 @@
-import { Message, DMChannel, MessageEmbed, MessageReaction, User, VoiceChannel, Collection } from 'discord.js';
+import { Message, DMChannel, MessageEmbed, MessageReaction, User, VoiceChannel, Collection, TextChannel } from 'discord.js';
 import ACMClient from '../Bot';
 import Command from '../Command';
 import { settings } from '../../botsettings';
@@ -142,6 +142,18 @@ export default class HacktoberfestService {
                 failure.push(`<@${userId}>`);
             }
         }
+
+        if (activity != 'Discord') {
+            // push update to log channel if not for general activity
+            const logChannel = this.client.channels.cache.get(settings.hacktoberfest.logChannel);
+            if (success.length < 60)
+                (logChannel as TextChannel)?.send(`Awarded ${points} points to ${success.join(', ')} for ${activity}!`,
+                {"allowedMentions": { "users" : []}});
+            else
+                (logChannel as TextChannel)?.send(`Awarded ${points} points to ${success.length} users for ${activity}!`,
+                        {"allowedMentions": { "users" : []}});
+        }
+
         console.log(`Awarded ${points} points to ${success.length}/${awardees.size} users for ${activity}`);
         return {success, failure};
     }
