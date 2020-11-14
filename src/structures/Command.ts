@@ -22,6 +22,7 @@ export interface CommandConfig {
     cooldown?: number;
     dmWorks?: boolean;
     userPermissions?: number;
+    requiredRole?: string;
 }
 
 export default abstract class Command {
@@ -33,6 +34,7 @@ export default abstract class Command {
     public cooldown: number;
     public dmWorks: boolean;
     public userPermissions: number;
+    public requiredRole: string | undefined;
 
     constructor(config: CommandConfig) {
         this.name = config.name;
@@ -43,6 +45,7 @@ export default abstract class Command {
         this.cooldown = config.cooldown || 0;
         this.dmWorks = config.dmWorks || false;
         this.userPermissions = config.userPermissions || 0;
+        this.requiredRole = config.requiredRole;
     }
 
     // TODO: Find a use for the return of the exec function
@@ -54,19 +57,19 @@ export default abstract class Command {
             .setDescription(`**${this.description}**`)
             .addField(
                 'Usage',
-                this.usage.length > 1
-                    ? this.usage.join(', ')
-                    : 'No usage cases available',
+                this.usage.length > 0 ? this.usage.join(', ') : 'No usage cases available',
                 true
             )
-            .addField(
-                'Tags',
-                this.tags.length > 1 ? this.tags.join(', ') : 'No tags',
-                true
-            )
+            .addField('Tags', this.tags.length > 1 ? this.tags.join(', ') : 'No tags', true)
             .addField('Works in DMs?', this.dmWorks ? 'Yes' : 'No', true)
             .addField('Cooldown', `${this.cooldown} seconds`, true);
 
         return embed;
+    }
+
+    getUsageText(prefix: string) {
+        return this.usage.length > 0
+            ? this.usage.map((e) => `${prefix}${e}`).join(', ')
+            : 'No usage cases available.';
     }
 }

@@ -5,11 +5,13 @@ import ResponseSchema, { Response, ResponsesType } from '../models/Response';
 import RRMessageSchema, { RRMessage } from '../models/RRMessage';
 import { Collection } from 'discord.js';
 import { settings } from '../../botsettings';
+import TaskSchema, { Task } from '../models/Task';
 
 export interface SchemaTypes {
     member: Model<Member>;
     response: Model<Response>;
     rrmessage: Model<RRMessage>;
+    task: Model<Task>;
 }
 
 export interface CacheTypes {
@@ -38,6 +40,7 @@ export default class DatabaseManager {
             member: MemberSchema,
             response: ResponseSchema,
             rrmessage: RRMessageSchema,
+            task: TaskSchema,
         };
     }
 

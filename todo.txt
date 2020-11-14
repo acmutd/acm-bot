@@ -1,0 +1,14 @@
+Managers
+- newsletter
+    Collection<id>
+    
+    weekly scheduler => sendNewsletter()
+
+sendNewsletter
+  scrape events
+  format and send to all dms
+  if(dms r blocked) rip
+
+
+dmService()
+
