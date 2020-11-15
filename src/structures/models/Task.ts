@@ -1,15 +1,16 @@
-import { Schema, model, Document } from 'mongoose';
+import mongoose from 'mongoose';
+require('mongoose-function')(mongoose);
 
-export interface Task extends Document {
+export interface Task extends mongoose.Document {
     _id: string;
     task: () => void;
     cron: string;
 }
 
-const taskSchema = new Schema({
+const taskSchema = new mongoose.Schema({
     _id: String,
     task: Function,
     cron: String,
 });
 
-export default model<Task>('task', taskSchema, 'tasks');
+export default mongoose.model<Task>('task', taskSchema, 'tasks');

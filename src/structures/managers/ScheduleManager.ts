@@ -50,11 +50,11 @@ export default class ScheduleManager {
             t.task();
         });
 
-        //await this.client.database.schemas.task.create({
-        //    _id: t.id,
-        //    cron: t.cron,
-        //    task: t.task,
-        //});
+        await this.client.database.schemas.task.create({
+            _id: t.id,
+            cron: t.cron,
+            task: t.task,
+        });
 
         t.job = job;
 
