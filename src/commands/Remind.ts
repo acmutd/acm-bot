@@ -13,10 +13,15 @@ export default class RemindCommand extends Command {
     public async exec({ msg, client, args }: CommandContext) {
         // args is alr parsed for us
         // we need to schedule a message to be sent using scheduler
+
+        if (args.length < 2) {
+            return client.response.emit(msg.channel, `Usage: \`${this.usage[0]}\``, 'invalid');
+        }
+
         const cron = args[0];
         const { id } = await client.scheduler.addTask({
             cron,
-            task: () => console.log('Task triggered'),
+            task: () => console.log(`Task triggered, message is ${args[1]}`),
         });
 
         msg.reply(`Task created with id ${id}`);
