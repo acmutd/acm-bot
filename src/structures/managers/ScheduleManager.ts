@@ -15,6 +15,8 @@ import ACMClient from '../Bot';
     └───────────────────────── second (0 - 59, OPTIONAL)
  */
 
+export type TaskType = 'reminder' | 'newsletter' | 'rsvp_reminder';
+
 export default class ScheduleManager {
     public tasks: Collection<string, Task>;
     public client: ACMClient;
@@ -31,7 +33,10 @@ export default class ScheduleManager {
         throw 'incomplete function';
     }
 
-    public async addTask(task: Task): Promise<Task> {
+    /**
+     * Creates a task. If ID is passed, that ID will be used. Otherwise, a random ID will be generated.
+     */
+    public async createTask(task: Task): Promise<Task> {
         let t: Task = { ...task };
         if (t.id) {
             if (this.tasks.has(t.id)) {
@@ -47,13 +52,13 @@ export default class ScheduleManager {
         this.tasks.set(t.id!, t);
 
         const job = schedule.scheduleJob(t.cron, () => {
-            t.task();
+            this.runTask(t);
         });
 
         await this.client.database.schemas.task.create({
             _id: t.id,
             cron: t.cron,
-            task: t.task,
+            type: t.type,
         });
 
         t.job = job;
@@ -61,20 +66,50 @@ export default class ScheduleManager {
         return t;
     }
 
-    public removeTask(id: string): boolean {
-        return this.tasks.delete(id);
+    /**
+     * Cancels a task and deletes it from memory and database
+     */
+    public async deleteTask(id: string): Promise<boolean> {
+        if (!this.hasTask(id)) return false;
+
+        this.tasks.get(id)?.job?.cancel(); // cancel the job in the task
+        this.tasks.delete(id); // remove the task itself
+        await this.client.database.schemas.task.findByIdAndDelete(id); // remove from database
+
+        return true;
     }
 
-    public searchTask(id: string): Task | undefined {
+    public hasTask(id: string): Task | undefined {
         return this.tasks.get(id);
+    }
+
+    /**
+     * Callback function that is scheduled and directs control back to the appropriate manager
+     */
+    private runTask(task: Task) {
+        switch (task.type) {
+            case 'newsletter':
+                // example: this.client.newsletter.sendLetter();
+                break;
+            case 'rsvp_reminder':
+                // example: this.client.rsvpmanager.sendRSVP(data.event_id);
+                break;
+        }
+
+        // remove from DB (unimplemented)
     }
 }
 
 interface Task {
-    task(): void;
-    cron: string;
     id?: string;
+    type: TaskType;
+    cron: string;
+    payload?: string;
     job?: Job;
+}
+
+interface RSVPTask extends Task {
+    event_id: string;
 }
 
 /**

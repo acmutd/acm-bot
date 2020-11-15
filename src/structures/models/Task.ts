@@ -1,16 +1,20 @@
 import mongoose from 'mongoose';
+import { TaskType } from '../managers/ScheduleManager';
 require('mongoose-function')(mongoose);
 
-export interface Task extends mongoose.Document {
+export interface TaskData extends mongoose.Document {
     _id: string;
-    task: () => void;
+    type: TaskType;
     cron: string;
 }
 
-const taskSchema = new mongoose.Schema({
-    _id: String,
-    task: Function,
-    cron: String,
-});
+const taskSchema = new mongoose.Schema(
+    {
+        _id: String,
+        type: String,
+        cron: String,
+    },
+    { strict: false }
+);
 
-export default mongoose.model<Task>('task', taskSchema, 'tasks');
+export default mongoose.model<TaskData>('task', taskSchema, 'tasks');

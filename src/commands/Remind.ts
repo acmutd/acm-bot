@@ -19,10 +19,16 @@ export default class RemindCommand extends Command {
         }
 
         const cron = args[0];
-        const { id } = await client.scheduler.addTask({
+        var d = 'old val';
+
+        const { id } = await client.scheduler.createTask({
             cron,
-            task: () => console.log(`Task triggered, message is ${args[1]}`),
+            task: () => console.log(`Task triggered, message is ${d}`),
         });
+
+        setTimeout(() => {
+            d = 'new val';
+        }, 10000);
 
         msg.reply(`Task created with id ${id}`);
     }
