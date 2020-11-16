@@ -14,22 +14,17 @@ export default class RemindCommand extends Command {
         // args is alr parsed for us
         // we need to schedule a message to be sent using scheduler
 
-        if (args.length < 2) {
+        if (args.length < 1) {
             return client.response.emit(msg.channel, `Usage: \`${this.usage[0]}\``, 'invalid');
         }
 
         const cron = args[0];
-        var d = 'old val';
 
-        // const { id } = await client.scheduler.createTask({
-        //     cron,
-        //     task: () => console.log(`Task triggered, message is ${d}`),
-        // });
+        const { id } = await client.scheduler.createTask({
+            type: 'newsletter',
+            cron,
+        });
 
-        setTimeout(() => {
-            d = 'new val';
-        }, 10000);
-
-        msg.reply(`Task created with id ${id}`);
+        msg.reply(`Newspaper task created with id ${id}`);
     }
 }

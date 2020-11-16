@@ -18,6 +18,7 @@ import FirestoreManager from './managers/FirestoreManager';
 import HacktoberfestService from './services/HacktoberfestService';
 import ResolveService from './services/ResolveService';
 import ActivityService from './services/ActivityService';
+import NewsletterService from './services/NewsletterService';
 
 export interface BotConfig {
     token: string;
@@ -50,6 +51,7 @@ export default class ACMClient extends Client {
     // services
     public services: {
         verification: VerificationService;
+        newsletter: NewsletterService;
         command: CommandService;
         rr: RRService;
         hacktoberfest: HacktoberfestService;
@@ -77,6 +79,7 @@ export default class ACMClient extends Client {
         this.indicators = new IndicatorManager();
         this.services = {
             verification: new VerificationService(this, settings.channels.verification),
+            newsletter: new NewsletterService(this),
             command: new CommandService(this),
             rr: new RRService(this),
             hacktoberfest: new HacktoberfestService(this),

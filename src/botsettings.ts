@@ -10,25 +10,33 @@ export interface Settings {
     sentryDNS: string;
     databaseURL: string;
     firestore: {
-        projectId: string,
-        keyFilename: string,
-    }
+        projectId: string;
+        keyFilename: string;
+    };
     express: {
-        port: number,
-        privateKey: string,
-        cert: string,
+        port: number;
+        privateKey: string;
+        cert: string;
+    };
+    // newly added
+    keys: {
+        sheets: string;
     };
     responseFormat: ResponseFormat;
     disabledCommands: string[];
     disabledCategories: string[];
     guild: string;
+    acmLogoURL: string;
+    sheets: {
+        calendarURL: string;
+    };
     hacktoberfest: {
         confirmationChannel: string;
         errorChannel: string;
         logChannel: string;
         memberRole: string;
         staffRole: string;
-    }
+    };
     channels: {
         verification: string;
         error: string;

@@ -30,7 +30,6 @@ export default class ScheduleManager {
     public setup() {
         // load in the tasks to schedule from DB and scheule them
         return;
-        throw 'incomplete function';
     }
 
     /**
@@ -90,6 +89,7 @@ export default class ScheduleManager {
         switch (task.type) {
             case 'newsletter':
                 // example: this.client.newsletter.sendLetter();
+                this.client.services.newsletter.send();
                 break;
             case 'rsvp_reminder':
                 // example: this.client.rsvpmanager.sendRSVP(data.event_id);
