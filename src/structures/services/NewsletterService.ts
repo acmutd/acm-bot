@@ -2,7 +2,7 @@ import ACMClient from '../Bot';
 import { settings } from '../../botsettings';
 import { MessageEmbed } from 'discord.js';
 import { google, sheets_v4 } from 'googleapis';
-import request from 'request';
+import axios from 'axios';
 
 export default class NewsletterService {
     public client: ACMClient;
@@ -42,9 +42,8 @@ export default class NewsletterService {
         */
 
         // fetch data from google sheets
-        const { body } = await request.get(this.url);
-        const data = await JSON.parse(body as string);
-        const events = data.sheets[0].data[0].rowData.map((row: any) => {
+        const response = await axios.get(this.url);
+        const events = response.data.sheets[0].data[0].rowData.map((row: any) => {
             return {
                 name: row.values[2].effectiveValue.stringValue,
                 date: row.values[1].effectiveValue.stringValue,
