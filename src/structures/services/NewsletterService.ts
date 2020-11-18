@@ -1,59 +1,66 @@
 import ACMClient from '../Bot';
 import { settings } from '../../botsettings';
 import { MessageEmbed } from 'discord.js';
-import { google, sheets_v4 } from 'googleapis';
-import axios from 'axios';
+import { GoogleSpreadsheet } from 'google-spreadsheet';
 
+interface Event {
+    title: string;
+    description: string;
+    division: string;
+    room: string;
+    date: Date;
+}
 export default class NewsletterService {
     public client: ACMClient;
     //private sheets: sheets_v4.Sheets;
-    private url: string;
+    private spreadsheetId: string;
 
     constructor(client: ACMClient) {
         this.client = client;
         //this.sheets = google.sheets({ version: 'v4', auth: settings.keys.sheets });
-        this.url = `https://sheets.googleapis.com/v4/spreadsheets/1a_Blxq4Cs-QStPoOIRvSgq1_9hZhRNFn2sPzPDC2-NY?key=${settings.keys.sheets}&fields=properties.title,sheets(properties,data.rowData.values(effectiveValue,effectiveFormat))`;
+        this.spreadsheetId = '1m_Y5ZgOUbAMn-T_gGTzzQ7ruiNKvs-8WFNoPfOuZL8Q';
     }
 
     //
     // Event monitoring and handling //
     //
     public async send() {
-        /*
-        this.sheets.spreadsheets.values.get(
-            {
-                spreadsheetId: '1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms',
-                range: 'Class Data!A2:E',
-            },
-            (err, res) => {
-                if (err) return console.log('The API returned an error: ' + err);
-                const rows = res.data.values;
-                if (rows.length) {
-                    console.log('Name, Major:');
-                    // Print columns A and E, which correspond to indices 0 and 4.
-                    rows.map((row) => {
-                        console.log(`${row[0]}, ${row[4]}`);
-                    });
-                } else {
-                    console.log('No data found.');
-                }
-            }
-        );
-        */
-
         // fetch data from google sheets
-        const response = await axios.get(this.url);
-        const events = response.data.sheets[0].data[0].rowData.map((row: any) => {
+
+        const doc = new GoogleSpreadsheet(this.spreadsheetId);
+
+        doc.useApiKey(settings.keys.sheets);
+
+        await doc.loadInfo();
+
+        const sheet = doc.sheetsByIndex[1];
+        const rows = await sheet.getRows();
+        const validRows = rows.filter(
+            (row: any) => row['Start Time'] != undefined && row['Start Time'] != 'TBA'
+        );
+        const allEvents: Event[] = validRows.map((row: any) => {
             return {
-                name: row.values[2].effectiveValue.stringValue,
-                date: row.values[1].effectiveValue.stringValue,
+                title: row['Event Name'],
+                description: row['Event Description'],
+                division: row['Team/Division'],
+                room: row['Room'],
+                date: new Date(row.Date + ' ' + row['Start Time']),
             };
         });
+        console.log(allEvents);
 
-        console.log(events);
+        // find the events that are for the upcoming week
+        let today = new Date();
+        const events = allEvents.filter((e) => {
+            return (
+                e.date > today &&
+                e.date < new Date(today.getFullYear(), today.getMonth(), today.getDate() + 7)
+            );
+        });
 
-        // res.json
-        // format json
+        const ed: any = {};
+        events.forEach((e) => (ed[e.division] = [...ed[e.division], e]));
+
         // create a basic embed
         let newsletter = new MessageEmbed({
             title: "📰 __ACM's Weekly Newsletter__",
@@ -67,8 +74,15 @@ export default class NewsletterService {
             footer: {
                 text: 'Newsletter',
             },
-            fields: events.map((e: any) => {
-                return { name: e.name, value: e.date, inline: false };
+            fields: Object.keys(ed).map((division: any) => {
+                let str = '';
+                ed[division].forEach(
+                    (e: Event) =>
+                        (str += `**${e.title}** on \`${
+                            e.date.toDateString().split(' ')[0]
+                        } @ ${this.formatAMPM(e.date)}\`\n`)
+                );
+                return { name: division, value: str, inline: false };
             }),
         });
 
@@ -97,5 +111,16 @@ export default class NewsletterService {
             dmChannel.send(newsletter);
         });
         //
+    }
+
+    formatAMPM(date: Date) {
+        var hours = date.getHours();
+        var minutes: any = date.getMinutes();
+        var ampm = hours >= 12 ? 'PM' : 'AM';
+        hours = hours % 12;
+        hours = hours ? hours : 12;
+        minutes = minutes < 10 ? '0' + minutes : minutes;
+        var strTime = hours + ':' + minutes + ' ' + ampm;
+        return strTime;
     }
 }
