@@ -12,7 +12,7 @@ export default class NewsletterService {
     constructor(client: ACMClient) {
         this.client = client;
         //this.sheets = google.sheets({ version: 'v4', auth: settings.keys.sheets });
-        this.url = `https://sheets.googleapis.com/v4/spreadsheets/1a_Blxq4Cs-QStPoOIRvSgq1_9hZhRNFn2sPzPDC2-NY?key=${settings.keys.sheets}`;
+        this.url = `https://sheets.googleapis.com/v4/spreadsheets/1a_Blxq4Cs-QStPoOIRvSgq1_9hZhRNFn2sPzPDC2-NY?key=${settings.keys.sheets}&fields=properties.title,sheets(properties,data.rowData.values(effectiveValue,effectiveFormat))`;
     }
 
     //
