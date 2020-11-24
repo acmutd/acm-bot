@@ -23,7 +23,13 @@ export default class NewsletterService {
         // ? the default time is sunday at 7pm (optimal time for a newsletter imo but idk)
         // TODO: make this changable via a command
         this.defaultCron = '00 01 09 * * 0';
-        this.client.scheduler.createTask({
+
+        // this.schedule();
+    }
+
+    // schedule the newsletter task
+    public async schedule() {
+        await this.client.scheduler.createTask({
             id: 'newsletter',
             type: 'newsletter',
             cron: this.defaultCron,
@@ -120,7 +126,9 @@ export default class NewsletterService {
             const dmChannel = await member.createDM();
             dmChannel.send(newsletter);
         });
-        //
+
+        // reschedule a new newsletter task
+        this.schedule();
     }
 
     formatAMPM(date: Date) {

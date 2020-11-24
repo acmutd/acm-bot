@@ -106,10 +106,9 @@ export default class ACMClient extends Client {
         await this.login(this.config.token);
 
         this.services.rr.fetchMsgs();
-        // login
 
-        // this.calendar.setup();
-        // this.express.setup();
+        this.calendar.setup();
+        this.express.setup();
         this.scheduler.setup();
 
         // this.on('debug', (e) => {

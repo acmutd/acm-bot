@@ -5,14 +5,14 @@ require('mongoose-function')(mongoose);
 export interface TaskData extends mongoose.Document {
     _id: string;
     type: TaskType;
-    cron: string;
+    cron: string | Date;
+    payload?: any;
 }
 
 const taskSchema = new mongoose.Schema(
     {
         _id: String,
         type: String,
-        cron: String,
     },
     { strict: false }
 );

@@ -24,7 +24,6 @@ export default class ScheduleManager {
     constructor(client: ACMClient) {
         this.tasks = new Collection<string, Task>();
         this.client = client;
-        // grab stuff from mongodb
     }
 
     public async setup() {
@@ -67,13 +66,13 @@ export default class ScheduleManager {
             });
         }
 
-        this.tasks.set(t.id!, t);
-
         const job = schedule.scheduleJob(t.cron, () => {
             this.runTask(t);
         });
 
         t.job = job;
+
+        this.tasks.set(t.id!, t);
 
         return t;
     }
@@ -98,11 +97,18 @@ export default class ScheduleManager {
     /**
      * Callback function that is scheduled and directs control back to the appropriate manager
      */
-    private runTask(task: Task) {
+    private async runTask(task: Task) {
         switch (task.type) {
             case 'newsletter':
                 // example: this.client.newsletter.sendLetter();
                 this.client.services.newsletter.send();
+                break;
+            case 'reminder':
+                // FOR TESTING
+                this.client.guilds.cache
+                    .first()
+                    ?.members.cache.get(task.payload.id)
+                    ?.send(task.payload.message);
                 break;
             case 'rsvp_reminder':
                 // example: this.client.rsvpmanager.sendRSVP(data.event_id);
@@ -112,20 +118,22 @@ export default class ScheduleManager {
                 break;
         }
 
-        // remove from DB (unimplemented)
+        // remove from DB
+        await this.client.database.schemas.task.remove({ _id: task.id });
+
+        // end job
+        if (task.job) {
+            task.job.cancel();
+        }
     }
 }
 
 interface Task {
     id?: string;
     type: TaskType;
-    cron: string;
-    payload?: string;
+    cron: string | Date;
+    payload?: any;
     job?: Job;
-}
-
-interface RSVPTask extends Task {
-    event_id: string;
 }
 
 /**
