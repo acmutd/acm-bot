@@ -127,7 +127,7 @@ export default class NewsletterService {
             dmChannel.send(newsletter);
         });
 
-        // reschedule a new newsletter task
+        // reschedule a new newsletter task for next week
         this.schedule();
     }
 
