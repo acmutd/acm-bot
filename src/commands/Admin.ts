@@ -43,7 +43,7 @@ export default class AdminCommand extends Command {
 async function edit(client: ACMClient, msg: Message, args: string[]) {}
 
 async function responses(client: ACMClient, msg: Message, args: string[]) {
-    var options: ResponsesType[] = ['kick', 'ban', 'mute', 'strike'];
+    var options: ResponsesType[] = ['kick', 'ban', 'mute', 'strike', 'caretaker'];
     switch (args[1]) {
         case 'kick':
             await responseAddRemove(client, msg, args, 'kick');
@@ -56,6 +56,9 @@ async function responses(client: ACMClient, msg: Message, args: string[]) {
             break;
         case 'strike':
             await responseAddRemove(client, msg, args, 'strike');
+            break;
+        case 'caretaker':
+            await responseAddRemove(client, msg, args, 'caretaker');
             break;
         default:
             var str = '';

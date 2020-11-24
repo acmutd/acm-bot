@@ -99,10 +99,10 @@ export default class ScheduleManager {
      */
     private async runTask(task: Task) {
         // remove from list
-        this.tasks.filter((t) => t.id != task.id);
+        if (task.id) this.tasks.delete(task.id);
 
         // remove from DB
-        await this.client.database.schemas.task.remove({ _id: task.id });
+        await this.client.database.schemas.task.deleteOne({ _id: task.id });
 
         // end job
         if (task.job) {
@@ -126,6 +126,7 @@ export default class ScheduleManager {
                 break;
             case 'caretaker':
                 // example: this.client.caretaker.sendLove();
+                this.client.services.caretaker.send();
                 break;
         }
     }

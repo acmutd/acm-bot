@@ -8,7 +8,15 @@ export default class CaretakerService {
 
     constructor(client: ACMClient) {
         this.client = client;
-        this.lastMsg = '0 19 * * *';
+        const now = new Date();
+        this.lastMsg = new Date(
+            now.getFullYear(),
+            now.getMonth(),
+            now.getDate(),
+            now.getHours(),
+            now.getMinutes() + 1
+        );
+        // this.schedule();
     }
 
     // schedule the caretaker task
@@ -24,29 +32,39 @@ export default class CaretakerService {
     // Caretaker msg handling //
     //
     public async send() {
+        // send them in general if you find the general channel (regex)
+        const guild = await this.client.guilds.fetch(settings.guild);
+        const generals = guild.channels.cache.filter(
+            (channel) => channel.name == 'general' && channel.type == 'text'
+        );
+
         // find caretaker messages
         const caretakerMsgs = this.client.database.cache.responses.filter(
             (res) => res.type == 'caretaker'
         );
-        if (caretakerMsgs.size == 0) return;
-        const msg = caretakerMsgs.first();
 
-        // send them in general if you find the general channel (regex)
-        const guild = await this.client.guilds.fetch(settings.guild);
-        const generals = guild.channels.cache.filter(
-            (channel) => channel.name.includes('general') && channel.type == 'text'
-        );
-        if (generals.size == 0) return;
-        const general = generals.first();
+        if (caretakerMsgs.size != 0 && generals.size != 0) {
+            const msg = caretakerMsgs.first();
+            const general = generals.first();
 
-        // craft the message
-        (general as TextChannel).send(msg?.message);
+            // craft and send the message
+            (general as TextChannel).send(msg?.message);
 
-        // remove the caretaker message from db to prevent same message twice
-        await this.client.database.responseDelete(msg?.message as string);
+            // remove the caretaker message from db to prevent same message twice
+            await this.client.database.responseDelete(msg?.message as string);
+        }
 
         // reschedule a new caretaker
-        this.schedule();
+        if (typeof this.lastMsg != 'string') {
+            this.lastMsg = new Date(
+                this.lastMsg.getFullYear(),
+                this.lastMsg.getMonth(),
+                this.lastMsg.getDate(),
+                this.lastMsg.getHours() + 12,
+                this.lastMsg.getMinutes()
+            );
+        }
+        await this.schedule();
     }
 
     formatAMPM(date: Date) {
