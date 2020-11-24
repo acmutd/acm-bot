@@ -12,13 +12,22 @@ interface Event {
 }
 export default class NewsletterService {
     public client: ACMClient;
-    //private sheets: sheets_v4.Sheets;
     private spreadsheetId: string;
+    private defaultCron: string;
 
     constructor(client: ACMClient) {
         this.client = client;
-        //this.sheets = google.sheets({ version: 'v4', auth: settings.keys.sheets });
         this.spreadsheetId = '1m_Y5ZgOUbAMn-T_gGTzzQ7ruiNKvs-8WFNoPfOuZL8Q';
+
+        // make sure the newspaper task is created/in the db with the appropriate time
+        // ? the default time is sunday at 7pm (optimal time for a newsletter imo but idk)
+        // TODO: make this changable via a command
+        this.defaultCron = '00 01 09 * * 0';
+        this.client.scheduler.createTask({
+            id: 'newsletter',
+            type: 'newsletter',
+            cron: this.defaultCron,
+        });
     }
 
     //
@@ -26,6 +35,7 @@ export default class NewsletterService {
     //
     public async send() {
         // fetch data from google sheets
+        console.log('Running newsletter.send() process!');
 
         const doc = new GoogleSpreadsheet(this.spreadsheetId);
 

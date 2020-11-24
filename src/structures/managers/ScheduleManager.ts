@@ -15,7 +15,7 @@ import ACMClient from '../Bot';
     └───────────────────────── second (0 - 59, OPTIONAL)
  */
 
-export type TaskType = 'reminder' | 'newsletter' | 'rsvp_reminder';
+export type TaskType = 'reminder' | 'newsletter' | 'rsvp_reminder' | 'caretaker';
 
 export default class ScheduleManager {
     public tasks: Collection<string, Task>;
@@ -27,8 +27,13 @@ export default class ScheduleManager {
         // grab stuff from mongodb
     }
 
-    public setup() {
+    public async setup() {
         // load in the tasks to schedule from DB and scheule them
+        let res = await this.client.database.schemas.task.find({});
+        res.forEach((el) => {
+            let element = { ...el, id: el['_id'] };
+            this.createTask(element);
+        });
         return;
     }
 
@@ -39,7 +44,8 @@ export default class ScheduleManager {
         let t: Task = { ...task };
         if (t.id) {
             if (this.tasks.has(t.id)) {
-                throw 'ID already exists!';
+                // throw 'ID already exists!';
+                return this.tasks.get(t.id)!;
             }
             // at this point we know that if the user provided an ID, it is valid
         } else {
@@ -48,16 +54,23 @@ export default class ScheduleManager {
             t.id = uuidv4();
         }
 
+        // finds out if the id is in db
+        let search = await this.client.database.schemas.task.find({ _id: t.id });
+        // if not
+        if (search.length == 0) {
+            // create the task
+            await this.client.database.schemas.task.create({
+                _id: t.id,
+                cron: t.cron,
+                type: t.type,
+                payload: t.payload,
+            });
+        }
+
         this.tasks.set(t.id!, t);
 
         const job = schedule.scheduleJob(t.cron, () => {
             this.runTask(t);
-        });
-
-        await this.client.database.schemas.task.create({
-            _id: t.id,
-            cron: t.cron,
-            type: t.type,
         });
 
         t.job = job;
@@ -93,6 +106,9 @@ export default class ScheduleManager {
                 break;
             case 'rsvp_reminder':
                 // example: this.client.rsvpmanager.sendRSVP(data.event_id);
+                break;
+            case 'caretaker':
+                // example: this.client.caretaker.sendLove();
                 break;
         }
 

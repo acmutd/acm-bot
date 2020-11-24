@@ -32,7 +32,6 @@ export default class RRService {
     public async fetchMsgs() {
         let channelIDs = this.client.database.cache.rrmessages.map((rr) => rr.channel);
         channelIDs = channelIDs.filter((a, b) => channelIDs.indexOf(a) === b);
-        console.log(channelIDs);
         for (let i = 0; i < channelIDs.length; i++) {
             let id = channelIDs[i];
             let channel;

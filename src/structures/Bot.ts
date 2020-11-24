@@ -7,7 +7,7 @@ import ExpressManager from './managers/ExpressManager';
 import CalendarManager from './managers/CalendarManager';
 import ScheduleManager from './managers/ScheduleManager';
 import * as Sentry from '@sentry/node';
-import { Client } from 'discord.js';
+import { Client, Intents } from 'discord.js';
 import LoggerUtil from '../utils/Logger';
 import CommandService from './services/CommandService';
 import ResponseUtil, { ResponseFormat } from '../utils/Responses';
@@ -61,7 +61,9 @@ export default class ACMClient extends Client {
     public config: BotConfig;
 
     constructor(config: BotConfig) {
+        const intents = new Intents([Intents.NON_PRIVILEGED, 'GUILD_MEMBERS']);
         super({
+            ws: { intents },
             partials: ['REACTION', 'MESSAGE'],
             fetchAllMembers: true,
         });
@@ -106,8 +108,8 @@ export default class ACMClient extends Client {
         this.services.rr.fetchMsgs();
         // login
 
-        this.calendar.setup();
-        this.express.setup();
+        // this.calendar.setup();
+        // this.express.setup();
         this.scheduler.setup();
 
         // this.on('debug', (e) => {
