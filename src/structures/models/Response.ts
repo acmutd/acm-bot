@@ -1,6 +1,6 @@
 import { Schema, model, Document } from 'mongoose';
 
-export type ResponsesType = 'strike' | 'kick' | 'ban' | 'mute';
+export type ResponsesType = 'strike' | 'kick' | 'ban' | 'mute' | 'caretaker';
 
 export interface Response extends Document {
     type: ResponsesType;

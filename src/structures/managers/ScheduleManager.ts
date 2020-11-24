@@ -98,6 +98,17 @@ export default class ScheduleManager {
      * Callback function that is scheduled and directs control back to the appropriate manager
      */
     private async runTask(task: Task) {
+        // remove from list
+        this.tasks.filter((t) => t.id != task.id);
+
+        // remove from DB
+        await this.client.database.schemas.task.remove({ _id: task.id });
+
+        // end job
+        if (task.job) {
+            task.job.cancel();
+        }
+
         switch (task.type) {
             case 'newsletter':
                 // example: this.client.newsletter.sendLetter();
@@ -116,14 +127,6 @@ export default class ScheduleManager {
             case 'caretaker':
                 // example: this.client.caretaker.sendLove();
                 break;
-        }
-
-        // remove from DB
-        await this.client.database.schemas.task.remove({ _id: task.id });
-
-        // end job
-        if (task.job) {
-            task.job.cancel();
         }
     }
 }
