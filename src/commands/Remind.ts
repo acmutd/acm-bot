@@ -12,32 +12,46 @@ export default class RemindCommand extends Command {
     }
 
     public async exec({ msg, client, args }: CommandContext) {
-        if (args.length < 1) {
+        if (args.length < 2) {
             return client.response.emit(msg.channel, `Usage: \`${this.usage[0]}\``, 'invalid');
         }
 
-        const minutes = parseInt(args[0]) ?? 2;
-        const now = new Date();
-        const cron = `${now.getMinutes() + (minutes % 60)} ${now.getHours() + (6 % 24)} * * *`;
-        const date = new Date(
-            now.getFullYear(),
-            now.getMonth(),
-            now.getDate(),
-            now.getHours(),
-            now.getMinutes() + minutes
-        );
+        const minutes = parseInt(args[0]);
+        const message = args[1];
+
+        if (isNaN(minutes) || minutes < 1 || minutes > 6*7*24*60) {
+            return client.response.emit(
+                msg.channel,
+                `Please set a time between ${1} and ${6*7*24*60} minutes away.`,
+                'invalid'
+            );
+        }
+
+        // calculate date with the minute offset
+        const date = new Date(Date.now() + minutes*60000);
+
+        // options for formatting date printing
+        const options = {
+            timeZone: 'America/Chicago', timeZoneName: 'short',
+            year: 'numeric', month: 'numeric', day: 'numeric', 
+            hour: 'numeric', minute: 'numeric', second: 'numeric' 
+        };
+
+        const dateStr = date.toLocaleString("en-US", options);
 
         await client.scheduler.createTask({
             cron: date,
             type: 'reminder',
             payload: {
-                message: args[1],
+                message,
                 id: msg.author.id,
             },
         });
 
-        msg.reply(
-            `Set the reminder for \`${minutes}\` minutes from now!\nCron generated: \`${cron}\``
+        return client.response.emit(
+            msg.channel,
+            `${msg.author}, I'll DM you with your reminder at \`${dateStr}\`!`,
+            'success'
         );
     }
 }
