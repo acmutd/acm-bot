@@ -29,10 +29,17 @@ export default class ScheduleManager {
     public async setup() {
         // load in the tasks to schedule from DB and scheule them
         let res = await this.client.database.schemas.task.find({});
-        res.forEach((el) => {
-            let element = { ...el, id: el['_id'] };
-            this.createTask(element);
-        });
+        for (let taskData of res) {
+            taskData = taskData.toObject();
+            let task: Task = { 
+                id: taskData['_id'],
+                type: taskData['type'],
+                cron: taskData['cron'],
+                payload: taskData['payload'],
+            };
+            await this.createTask(task);
+        }
+        this.client.logger.info(`Loaded in ${res.length} scheduled tasks!`);
         return;
     }
 
@@ -40,7 +47,8 @@ export default class ScheduleManager {
      * Creates a task. If ID is passed, that ID will be used. Otherwise, a random ID will be generated.
      */
     public async createTask(task: Task): Promise<Task> {
-        let t: Task = { ...task };
+        let t: Task = { ...task }; // make a local copy
+
         if (t.id) {
             if (this.tasks.has(t.id)) {
                 // throw 'ID already exists!';
@@ -54,6 +62,7 @@ export default class ScheduleManager {
         }
 
         // finds out if the id is in db
+        // Note from eric: our local this.tasks should contain this information already
         let search = await this.client.database.schemas.task.find({ _id: t.id });
         // if not
         if (search.length == 0) {
@@ -118,6 +127,9 @@ export default class ScheduleManager {
                 break;
         }
 
+        // note from eric: use this.deleteTask instead? See below line.
+        await this.deleteTask(task.id!);
+        /*
         // remove from DB
         await this.client.database.schemas.task.remove({ _id: task.id });
 
@@ -125,10 +137,11 @@ export default class ScheduleManager {
         if (task.job) {
             task.job.cancel();
         }
+        */
     }
 }
 
-interface Task {
+export interface Task {
     id?: string;
     type: TaskType;
     cron: string | Date;
