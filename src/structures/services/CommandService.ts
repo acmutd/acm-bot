@@ -82,8 +82,15 @@ export default class CommandService {
 
         this.client.indicators.addUser('usingCommand', msg.author);
 
-        await cmd.exec({ client: this.client, msg: msg, args: args });
-
-        this.client.indicators.removeUser('usingCommand', msg.author);
+        try {
+            await cmd.exec({ client: this.client, msg: msg, args: args });
+        }
+        catch (e) {
+            msg.reply("Command execution failed. Please contact a bot moderator for help.");
+            throw e; // note that finally will execute before we pass the error higher
+        }
+        finally {
+            this.client.indicators.removeUser('usingCommand', msg.author);
+        }
     }
 }
