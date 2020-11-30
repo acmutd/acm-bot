@@ -32,7 +32,7 @@ export default class CaretakerService {
     //
     // Caretaker msg handling //
     //
-    public async send() {
+    public async send(responseId?: string) {
         // send them in general if you find the general channel (regex)
         const guild = await this.client.guilds.fetch(settings.guild);
         const generals = guild.channels.cache.filter(
@@ -45,7 +45,10 @@ export default class CaretakerService {
         );
 
         if (caretakerMsgs.size != 0 && generals.size != 0) {
-            const msg = caretakerMsgs.first();
+            const msg =
+                responseId != undefined
+                    ? caretakerMsgs.find((r) => r.id == responseId)
+                    : caretakerMsgs.first();
             const general = generals.first();
 
             // craft and send the message
