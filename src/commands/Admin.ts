@@ -9,7 +9,7 @@ export default class AdminCommand extends Command {
         super({
             name: 'admin',
             description: 'A suite of commands for admin users.',
-            userPermissions: 8,
+            userPermissions: 8208,
         });
     }
 
