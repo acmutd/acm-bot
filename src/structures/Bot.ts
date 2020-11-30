@@ -19,6 +19,7 @@ import HacktoberfestService from './services/HacktoberfestService';
 import ResolveService from './services/ResolveService';
 import ActivityService from './services/ActivityService';
 import NewsletterService from './services/NewsletterService';
+import CaretakerService from './services/CaretakerService';
 
 export interface BotConfig {
     token: string;
@@ -52,6 +53,7 @@ export default class ACMClient extends Client {
     public services: {
         verification: VerificationService;
         newsletter: NewsletterService;
+        caretaker: CaretakerService;
         command: CommandService;
         rr: RRService;
         hacktoberfest: HacktoberfestService;
@@ -82,6 +84,7 @@ export default class ACMClient extends Client {
         this.services = {
             verification: new VerificationService(this, settings.channels.verification),
             newsletter: new NewsletterService(this),
+            caretaker: new CaretakerService(this),
             command: new CommandService(this),
             rr: new RRService(this),
             hacktoberfest: new HacktoberfestService(this),

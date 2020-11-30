@@ -40,6 +40,7 @@ export default class NewsletterService {
     // Event monitoring and handling //
     //
     public async send() {
+        return; // disable newsletter for now
         // fetch data from google sheets
         console.log('Running newsletter.send() process!');
 
@@ -111,34 +112,41 @@ export default class NewsletterService {
         console.log(unsubscribed);
         // send to every member in client.members - unsubscribed
         const members = await this.client.guilds.resolve(settings.guild)?.members.fetch();
-        const subscribed = members?.filter((member) => !unsubscribed.includes(member.id));
 
-        for (let subscriber of subscribed?.values()!) {
+        // remove everyone who is unsubscribed or is a bot
+        const subscribed = members?.filter( (member) => 
+            !unsubscribed.includes(member.id) && 
+            !member.user.bot
+        );
+
+        for (let subscriber of subscribed!.values()) {
             try {
-                subscriber.send(newsletter);
+                await subscriber.send(newsletter);
             } catch (e) {
                 console.log(
                     `Subscriber ${subscriber.user.username} has DMs blocked. Newsletter not sent`
                 );
             }
         }
+        /*
         subscribed?.forEach(async (member) => {
             const dmChannel = await member.createDM();
             dmChannel.send(newsletter);
         });
+        */
 
         // reschedule a new newsletter task for next week
         this.schedule();
     }
 
-    formatAMPM(date: Date) {
-        var hours = date.getHours();
-        var minutes: any = date.getMinutes();
-        var ampm = hours >= 12 ? 'PM' : 'AM';
-        hours = hours % 12;
-        hours = hours ? hours : 12;
-        minutes = minutes < 10 ? '0' + minutes : minutes;
-        var strTime = hours + ':' + minutes + ' ' + ampm;
-        return strTime;
+    /**
+     * Formats Date object into `HH:MM AM/PM`, in CST
+     */
+    formatAMPM(date: Date): string {
+        const options = {
+            timeZone: 'America/Chicago',
+            hour: 'numeric', minute: 'numeric'
+        }
+        return date.toLocaleString("en-US", options);
     }
 }
