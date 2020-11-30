@@ -40,6 +40,7 @@ export default class NewsletterService {
     // Event monitoring and handling //
     //
     public async send() {
+        return; // disable newsletter for now
         // fetch data from google sheets
         console.log('Running newsletter.send() process!');
 
