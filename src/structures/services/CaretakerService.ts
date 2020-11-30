@@ -16,7 +16,7 @@ export default class CaretakerService {
             now.getHours(),
             now.getMinutes() + 1
         );
-        // this.schedule();
+        this.schedule();
     }
 
     // schedule the caretaker task
@@ -24,7 +24,8 @@ export default class CaretakerService {
         await this.client.scheduler.createTask({
             id: 'caretaker',
             type: 'caretaker',
-            cron: this.lastMsg,
+            //cron: this.lastMsg,
+            cron: '15 8 1 * * *',
         });
     }
 
