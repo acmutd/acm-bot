@@ -11,7 +11,7 @@ export default class CommandService {
         this.client = client;
     }
 
-    canInvoke(msg: Message, command: Command): string | MessageEmbed | void {
+    cantInvoke(msg: Message, command: Command): string | MessageEmbed | void {
         const dm = msg.channel instanceof DMChannel;
 
         if (dm && !command.dmWorks)
@@ -77,7 +77,7 @@ export default class CommandService {
         }
 
         // this is where we check if the user can use the command
-        const response = this.canInvoke(msg, cmd);
+        const response = this.cantInvoke(msg, cmd);
         if (response) return this.client.response.emitBuild(msg.channel, response);
 
         this.client.indicators.addUser('usingCommand', msg.author);
