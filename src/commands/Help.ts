@@ -10,8 +10,8 @@ export default class HelpCommand extends Command {
         super({
             name: 'help',
             description: 'Display help text for commands',
-            longDescription: 'Display help text for commands. Don\'t include a command ' +
-                'to show all commands available to be run in the current channel by you.',
+            longDescription: 'Display help text for commands. Omit the argument ' +
+                'to show all available commands.',
             usage: ['help [command]'],
             dmWorks: true,
         });
@@ -22,6 +22,7 @@ export default class HelpCommand extends Command {
             case 0:
                 // 0 args, list commands
                 let commandsEmbed = {
+                    color: '#F67B21',
                     title: 'Commands',
                     description: '',
                     fields: [] as any[],
@@ -64,6 +65,7 @@ export default class HelpCommand extends Command {
 
                 // build embed with long description text
                 let helpEmbed = {
+                    color: '#F67B21',
                     title: `Help text for \`${cmd.name}\``,
                     description: `${cmd.longDescription}\n` + 
                         '**Usage**:\n' +
