@@ -41,6 +41,7 @@ export interface Settings {
         verification: string;
         error: string;
         bulletin: string;
+        shoutout: string;
     };
     roles: {
         member: string;
