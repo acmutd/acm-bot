@@ -16,6 +16,7 @@ export interface CommandContext {
 export interface CommandConfig {
     name: string;
     description: string;
+    longDescription?: string;
     type?: CommandType;
     usage?: string[];
     tags?: string[];
@@ -28,6 +29,7 @@ export interface CommandConfig {
 export default abstract class Command {
     public name: string;
     public description: string;
+    public longDescription: string;
     public type: CommandType;
     public usage: string[];
     public tags: string[];
@@ -39,6 +41,7 @@ export default abstract class Command {
     constructor(config: CommandConfig) {
         this.name = config.name;
         this.description = config.description;
+        this.longDescription = config.longDescription || config.description;
         this.type = config.type || CommandType.WIZARD;
         this.usage = config.usage || [];
         this.tags = config.tags || [];
