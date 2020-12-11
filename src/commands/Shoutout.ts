@@ -62,5 +62,11 @@ export default class ShoutoutCommand extends Command {
         ) as TextChannel;
         shoutoutChannel.send(embed);
         shoutoutChannel.send(msg.content.match(reg)![0].replace(settings.prefix + 'shoutout', ''));
+
+        client.response.emit(
+            msg.channel,
+            'Your shoutout has been sent to ' + shoutoutChannel + '!',
+            'success'
+        );
     }
 }
