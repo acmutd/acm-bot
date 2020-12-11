@@ -16,6 +16,7 @@ export default class ShoutoutCommand extends Command {
     public async exec({ msg, client, args }: CommandContext) {
         console.log(msg.content);
         console.log(args[0]);
+
         // make sure the first arg starts with a mention
         if (!/^<@!?[\d]{17,18}>/.test(args[0])) {
             client.response.emit(
@@ -39,6 +40,10 @@ export default class ShoutoutCommand extends Command {
         const reg = /^.*?(<@!?[\d]{17,18}>|\s)+/;
         // extract the mentions
         let text = msg.content.replace(reg, '');
+
+        if (text.length < 1) {
+            return client.response.emit(msg.channel, `Usage: \`${this.usage[0]}\``, 'invalid');
+        }
 
         const embed = new MessageEmbed({
             title,
