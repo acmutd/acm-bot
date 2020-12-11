@@ -27,7 +27,7 @@ export default class ShoutoutCommand extends Command {
         }
 
         const receivers = msg.mentions.members!.array();
-        let title = `📣 ${msg.member?.nickname ?? msg.author.username} gave a shoutout to`;
+        let title = `📣 ${msg.member?.nickname ?? msg.author.username} gave a shoutout to `;
         const last = receivers.pop();
         if (receivers.length > 0) {
             title += `${receivers.map((m) => m.nickname ?? m.user.username).join(', ')}${
