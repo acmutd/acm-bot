@@ -65,7 +65,7 @@ export default class ShoutoutCommand extends Command {
 
         client.response.emit(
             msg.channel,
-            'Your shoutout has been sent to ' + shoutoutChannel + '!',
+            'Your shoutout has been sent to <#' + shoutoutChannel + '>!',
             'success'
         );
     }
