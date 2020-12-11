@@ -9,7 +9,7 @@ export default class ShoutoutCommand extends Command {
         super({
             name: 'shoutout',
             description: 'shoutout someone special',
-            usage: ['.shoutout [list of mentions] [reason for shoutout]'],
+            usage: ['shoutout [list of mentions] [reason for shoutout]'],
         });
     }
 
@@ -42,7 +42,11 @@ export default class ShoutoutCommand extends Command {
         let text = msg.content.replace(reg, '');
 
         if (text.length < 1) {
-            return client.response.emit(msg.channel, `Usage: \`${this.usage[0]}\``, 'invalid');
+            return client.response.emit(
+                msg.channel,
+                `Usage: \`${this.getUsageText(client.settings.prefix)}\``,
+                'invalid'
+            );
         }
 
         const embed = new MessageEmbed({
