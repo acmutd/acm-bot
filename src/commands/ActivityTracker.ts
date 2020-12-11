@@ -9,7 +9,7 @@ export default class ActivityTrackerCommand extends Command {
         super({
             name: 'activitytracker',
             description: 'begin logging Hacktoberfest activity',
-            usage: ['.activitytracker [start | end]'],
+            usage: ['activitytracker [start | end]'],
             dmWorks: false,
         });
     }
@@ -18,33 +18,23 @@ export default class ActivityTrackerCommand extends Command {
         if (args.length != 1) {
             return client.response.emit(
                 msg.channel,
-                `Usage: \`${this.usage[0]}\``,
+                `Usage: \`${this.getUsageText(client.settings.prefix)}\``,
                 'invalid'
-            );        
+            );
         }
 
         if (args[0] == 'start') {
             client.services.activity.enableTracking();
-            return client.response.emit(
-                msg.channel,
-                "Activity tracking has started!",
-                "success"
-            )
-        }
-        else if (args[0] == 'end') {
+            return client.response.emit(msg.channel, 'Activity tracking has started!', 'success');
+        } else if (args[0] == 'end') {
             client.services.activity.disableTracking();
+            return client.response.emit(msg.channel, 'Activity tracking has ended!', 'success');
+        } else {
             return client.response.emit(
                 msg.channel,
-                "Activity tracking has ended!",
-                "success"
-            )
-        }
-        else {
-            return client.response.emit(
-                msg.channel,
-                `Usage: \`${this.usage[0]}\``,
+                `Usage: \`${this.getUsageText(client.settings.prefix)}\``,
                 'invalid'
-            );            
+            );
         }
     }
 }

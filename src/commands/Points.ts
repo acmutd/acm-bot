@@ -9,7 +9,7 @@ export default class PointsCommand extends Command {
         super({
             name: 'points',
             description: 'Check Hacktoberfest point balance',
-            usage: ['.points [user]'],
+            usage: ['points [user]'],
             dmWorks: false,
         });
     }
@@ -19,7 +19,7 @@ export default class PointsCommand extends Command {
 
         if (!msg.guild) {
             // shouldn't ever happen
-            return msg.reply("This command cannot be run in DMs!");
+            return msg.reply('This command cannot be run in DMs!');
         }
 
         if (args.length > 0)
@@ -32,8 +32,8 @@ export default class PointsCommand extends Command {
                 'invalid'
             );
         }
-        
-        const {exists, data} = await client.services.hacktoberfest.getData(user.id);
+
+        const { exists, data } = await client.services.hacktoberfest.getData(user.id);
         if (exists) {
             // we build a nice embed scorecard
             let scorecardEmbed = {
@@ -48,7 +48,7 @@ export default class PointsCommand extends Command {
                     text: 'ACM Hacktoberfest',
                     icon_url: 'https://i.imgur.com/u6c1gDm.png',
                 },
-            }
+            };
 
             // add score breakdown if it exists
             let userActivities = [];
@@ -61,17 +61,17 @@ export default class PointsCommand extends Command {
                     return a.toLowerCase().localeCompare(b.toLowerCase());
                 });
                 // finally, add to description
-                scorecardEmbed.description = "__**Breakdown of Points by Activity**__\n" + userActivities.join('');
+                scorecardEmbed.description =
+                    '__**Breakdown of Points by Activity**__\n' + userActivities.join('');
             }
 
-            return msg.channel.send({embed: scorecardEmbed});
-        }
-        else {
+            return msg.channel.send({ embed: scorecardEmbed });
+        } else {
             return client.response.emit(
                 msg.channel,
                 `${user.tag} doesn't seem to be registered for Hacktoberfest`,
                 'invalid'
-            )
+            );
         }
     }
 }

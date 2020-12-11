@@ -1,8 +1,8 @@
 import Command from '../structures/Command';
 import { CommandContext } from '../structures/Command';
-import { Message, MessageAttachment } from 'discord.js'
-import ACMClient from '../structures/Bot'
-import axios from 'axios'
+import { Message, MessageAttachment } from 'discord.js';
+import ACMClient from '../structures/Bot';
+import axios from 'axios';
 import { settings } from '../botsettings';
 
 export default class AwardCommand extends Command {
@@ -10,7 +10,7 @@ export default class AwardCommand extends Command {
         super({
             name: 'award',
             description: 'Manually award Hacktoberfest points to users',
-            usage: ['.award [amount] [activity-id] [user1, user 2, user3...]'],
+            usage: ['award [amount] [activity-id] [user1, user 2, user3...]'],
             dmWorks: false,
             requiredRole: settings.hacktoberfest.staffRole,
         });
@@ -23,7 +23,7 @@ export default class AwardCommand extends Command {
         if (args.length < 2) {
             return client.response.emit(
                 msg.channel,
-                `Usage: \`${this.usage[0]}\``,
+                `Usage: \`${this.getUsageText(client.settings.prefix)}\``,
                 'invalid'
             );
         }
@@ -53,24 +53,41 @@ export default class AwardCommand extends Command {
             }
         }
 
-        const {success, failure} = await client.services.hacktoberfest.awardPoints(points, activityId, awardees);
+        const { success, failure } = await client.services.hacktoberfest.awardPoints(
+            points,
+            activityId,
+            awardees
+        );
 
         // send back our results with mentions but not pings
-        msg.reply(`Awarded **${points}** points to **${success.length}** users for completing **${activityId}**:\n${success.join(' ')}\n` +
-                (failure.length ? `${failure.length} users were not registered: ${failure.join(' ')}` : ''), 
-                {"allowedMentions": { "users" : []}});
+        msg.reply(
+            `Awarded **${points}** points to **${
+                success.length
+            }** users for completing **${activityId}**:\n${success.join(' ')}\n` +
+                (failure.length
+                    ? `${failure.length} users were not registered: ${failure.join(' ')}`
+                    : ''),
+            { allowedMentions: { users: [] } }
+        );
     }
 }
 
-async function processAttachments(client: ACMClient, msg: Message, points: number, activityId: string) {
+async function processAttachments(
+    client: ACMClient,
+    msg: Message,
+    points: number,
+    activityId: string
+) {
     let awardees = new Set<string>();
-    if(msg.attachments.size == 0) return;
-    await Promise.all(msg.attachments.map(async (val) => {
-        let attachmentAwardees = await processCSV(client, val)
-        attachmentAwardees?.forEach((id) => {
-            awardees.add(id)
-        });
-    }));
+    if (msg.attachments.size == 0) return;
+    await Promise.all(
+        msg.attachments.map(async (val) => {
+            let attachmentAwardees = await processCSV(client, val);
+            attachmentAwardees?.forEach((id) => {
+                awardees.add(id);
+            });
+        })
+    );
     return awardees;
 }
 
@@ -84,11 +101,10 @@ async function processCSV(client: ACMClient, attachment: MessageAttachment) {
             let email = line.split(',')[1];
             emails.add(email);
         }
-    }
-    catch (error) {
+    } catch (error) {
         return;
     }
 
-    let res =  await client.services.hacktoberfest.emailsToSnowflakes(emails);
+    let res = await client.services.hacktoberfest.emailsToSnowflakes(emails);
     return res;
 }

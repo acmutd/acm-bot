@@ -10,9 +10,11 @@ export default class ReactionEventCommand extends Command {
         super({
             name: 'reactionevent',
             description: 'start and stop and text events in the current channel',
-            usage: ['.reactionevent [start | stop]',
-                    '.reactionevent start [activity-id] [reaction] [points]',
-                    '.reactionevent stop'],
+            usage: [
+                'reactionevent [start | stop]',
+                'reactionevent start [activity-id] [reaction] [points]',
+                'reactionevent stop',
+            ],
             dmWorks: false,
             requiredRole: settings.hacktoberfest.staffRole,
         });
@@ -24,14 +26,10 @@ export default class ReactionEventCommand extends Command {
                 msg.channel,
                 'Hacktoberfest is not currently in session',
                 'invalid'
-            )
+            );
         }
         if (args.length < 1 || (args[0] != 'start' && args[0] != 'stop')) {
-            return client.response.emit(
-                msg.channel,
-                `Usage: \`${this.usage[0]}\``,
-                'invalid'
-            );
+            return client.response.emit(msg.channel, `Usage: \`${this.usage[0]}\``, 'invalid');
         }
 
         // start event in the current channel
@@ -46,7 +44,9 @@ export default class ReactionEventCommand extends Command {
             if (client.indicators.hasKey('reactionEvent', channelId)) {
                 return client.response.emit(
                     msg.channel,
-                    `<@${client.indicators.getValue('reactionEvent', channelId).moderatorId}> is already running an event in this channel.`,
+                    `<@${
+                        client.indicators.getValue('reactionEvent', channelId).moderatorId
+                    }> is already running an event in this channel.`,
                     'invalid'
                 );
             }
@@ -55,7 +55,7 @@ export default class ReactionEventCommand extends Command {
             if (args.length < 4) {
                 return client.response.emit(
                     msg.channel,
-                    `Usage: \`${this.usage[1]}\``,
+                    `Usage: \`${this.getUsageText(client.settings.prefix)}\``,
                     'invalid'
                 );
             }
@@ -71,9 +71,9 @@ export default class ReactionEventCommand extends Command {
 
             // populate the args
             activityId = args[1];
-            args[2].match(/:(\d*)>/)?.forEach((match => {
+            args[2].match(/:(\d*)>/)?.forEach((match) => {
                 reactionId = match;
-            }));
+            });
             points = +args[3];
 
             // invalid award amount
@@ -86,36 +86,28 @@ export default class ReactionEventCommand extends Command {
             }
 
             // start reaction event and confirm
-            client.services.hacktoberfest.startReactionEvent(channelId, activityId, reactionId!, moderatorId, points);
-            return client.response.emit(
-                msg.channel,
-                "Reaction event has started!",
-                "success"
-            )
-        }
-        else if (args[0] == 'stop') {
+            client.services.hacktoberfest.startReactionEvent(
+                channelId,
+                activityId,
+                reactionId!,
+                moderatorId,
+                points
+            );
+            return client.response.emit(msg.channel, 'Reaction event has started!', 'success');
+        } else if (args[0] == 'stop') {
             // purposely allows other mods to stop text channel events
             // attempt to disable the reaction event
             if (client.services.hacktoberfest.stopReactionEvent(msg.channel.id))
-                return client.response.emit(
-                    msg.channel,
-                    "Reaction event has stopped!",
-                    "success"
-                );
+                return client.response.emit(msg.channel, 'Reaction event has stopped!', 'success');
             // if no reaction event exists, error
             else
                 return client.response.emit(
                     msg.channel,
-                    "There is no reaction event running in this channel.",
-                    "invalid"
+                    'There is no reaction event running in this channel.',
+                    'invalid'
                 );
-        }
-        else {
-            return client.response.emit(
-                msg.channel,
-                `Usage: \`${this.usage[0]}\``,
-                'invalid'
-            );
+        } else {
+            return client.response.emit(msg.channel, `Usage: \`${this.usage[0]}\``, 'invalid');
         }
     }
 }

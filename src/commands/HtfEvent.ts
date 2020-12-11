@@ -10,7 +10,7 @@ export default class TextEventCommand extends Command {
         super({
             name: 'htfevent',
             description: 'enable/disable the entire hacktoberfest event',
-            usage: ['.htfevent [start | stop]'],
+            usage: ['htfevent [start | stop]'],
             dmWorks: false,
             requiredRole: settings.hacktoberfest.staffRole,
         });
@@ -20,47 +20,45 @@ export default class TextEventCommand extends Command {
         if (args.length != 1) {
             return client.response.emit(
                 msg.channel,
-                `Usage: \`${this.usage[0]}\``,
+                `Usage: \`${this.getUsageText(client.settings.prefix)}\``,
                 'invalid'
-            );        
+            );
         }
 
         if (args[0] == 'start') {
             if (client.services.activity.enabled) {
                 return client.response.emit(
                     msg.channel,
-                    "Hacktoberfest and activity tracking already enabled.",
-                    "warning"
-                )
+                    'Hacktoberfest and activity tracking already enabled.',
+                    'warning'
+                );
             }
 
             client.services.activity.enableTracking();
             return client.response.emit(
                 msg.channel,
-                "Hacktoberfest and activity tracking has started!",
-                "success"
-            )
-        }
-        else if (args[0] == 'stop') {
+                'Hacktoberfest and activity tracking has started!',
+                'success'
+            );
+        } else if (args[0] == 'stop') {
             if (!client.services.activity.enabled) {
                 return client.response.emit(
                     msg.channel,
-                    "Hacktoberfest and activity tracking already disabled.",
-                    "warning"
-                )
+                    'Hacktoberfest and activity tracking already disabled.',
+                    'warning'
+                );
             }
-            
+
             client.services.activity.disableTracking();
             return client.response.emit(
                 msg.channel,
-                "Hacktoberfest and activity tracking has stopped!",
-                "success"
-            )
-        }
-        else {
+                'Hacktoberfest and activity tracking has stopped!',
+                'success'
+            );
+        } else {
             return client.response.emit(
                 msg.channel,
-                `Usage: \`${this.usage[0]}\``,
+                `Usage: \`${this.getUsageText(client.settings.prefix)}\``,
                 'invalid'
             );
         }
