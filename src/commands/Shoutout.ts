@@ -9,12 +9,15 @@ export default class ShoutoutCommand extends Command {
         super({
             name: 'shoutout',
             description: 'shoutout someone special',
+            usage: ['.shoutout [list of mentions] [reason for shoutout]'],
         });
     }
 
     public async exec({ msg, client, args }: CommandContext) {
+        console.log(msg.content);
+        console.log(args[0]);
         // make sure the first arg starts with a mention
-        if (!/^<@![\d]{17,18}>/.test(args[0])) {
+        if (!/^<@!?[\d]{17,18}>/.test(args[0])) {
             client.response.emit(
                 msg.channel,
                 "You didn't mention a user to give the shoutout to!",
@@ -27,13 +30,13 @@ export default class ShoutoutCommand extends Command {
         let title = `📣 ${msg.member?.nickname ?? msg.author.username} gave a shoutout to`;
         const last = receivers.pop();
         if (receivers.length > 0) {
-            title += `${receivers.map((m) => m.nickname ?? m.user.username).join(', ')}, and ${
-                last?.nickname ?? last?.user.username
-            }`;
+            title += `${receivers.map((m) => m.nickname ?? m.user.username).join(', ')}${
+                receivers.length > 0 ? ', and ' : ''
+            }${last?.nickname ?? last?.user.username}`;
         } else title += `${last?.nickname ?? last?.user.username}`;
 
         // this matches everything up until the first group of mentions stop
-        const reg = /^.*?(<@![\d]{17,18}>|\s)+/;
+        const reg = /^.*?(<@!?[\d]{17,18}>|\s)+/;
         // extract the mentions
         let text = msg.content.replace(reg, '');
 
@@ -42,7 +45,7 @@ export default class ShoutoutCommand extends Command {
             fields: [
                 {
                     name: 'Given to:',
-                    value: `${receivers.join(', ')}, and ${last}`,
+                    value: msg.content.match(reg)![0].replace(settings.prefix + 'shoutout', ''),
                 },
                 { name: 'For:', value: text },
             ],

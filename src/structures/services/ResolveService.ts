@@ -30,7 +30,7 @@ export default class ResolveService {
             user = guild?.members.cache.find(gm => gm.user.id == toResolve)?.user;
         }
         // user mention
-        if (!user && (strategies.size == 0 || strategies.has('mention')) && /^<@![\d]{17,18}>$/.test(toResolve)) {
+        if (!user && (strategies.size == 0 || strategies.has('mention')) && /^<@!?[\d]{17,18}>$/.test(toResolve)) {
             let newToResolve = toResolve.slice(3, -1);
             user = guild?.members.cache.find(gm => gm.user.id == newToResolve)?.user;
         }
