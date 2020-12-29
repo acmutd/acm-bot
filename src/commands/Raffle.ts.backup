@@ -41,40 +41,41 @@ export default class RaffleCommand extends Command {
             numWinners = 1;
         }
 
-        // first, we want to find the sum of all points
-        allUsers.forEach( (user) => {
-            if (user.points > 0)
-                sum += user.points;
-            else
-                allUsers.delete(user);
-        });
-
-        // now we want to generate random numbers accordingly
-        for(let i = 0; i < numWinners; i ++) {
-            winningNumbers.add(Math.random()*sum);
-        }
-
-        // pick out winners
-        for (let [snowflake, user] of allUsers) {
-            let winnerCount = 0;
-            processedTickets += user.points;
-            // count up all the winning tickets
-            winningNumbers.forEach( (ticket) => {
-                if (ticket < processedTickets) {
-                    winnerCount++;
-                    winningNumbers.delete(ticket);
-                }
-            });
-
-            // add the winning count to the person's stats
-            if (winnerCount > 0) winningUsers.push(`<@${snowflake}>: ${winnerCount}`);
-
-            // stop processing once all the winning numbers are gone
-            if (winningNumbers.size == 0) break;
-        }
-
-
-
-        msg.reply(`here are the winners:\n${winningUsers.join('\n')}`, {"allowedMentions": { "users" : []}});
+        //// first, we want to find the sum of all points
+        //allUsers.forEach( (user) => {
+        //    if (user.points > 0)
+        //        sum += user.points;
+        //    else
+        //        allUsers.delete(user);
+        //});
+//
+        //// now we want to generate random numbers accordingly
+        //for(let i = 0; i < numWinners; i ++) {
+        //    winningNumbers.add(Math.random()*sum);
+        //}
+//
+        //// pick out winners
+        //for (let [snowflake, user] of allUsers) {
+        //    let winnerCount = 0;
+        //    processedTickets += user.points;
+        //    // count up all the winning tickets
+        //    winningNumbers.forEach( (ticket) => {
+        //        if (ticket < processedTickets) {
+        //            winnerCount++;
+        //            winningNumbers.delete(ticket);
+        //        }
+        //    });
+//
+        //    // add the winning count to the person's stats
+        //    if (winnerCount > 0) winningUsers.push(`<@${snowflake}>: ${winnerCount}`);
+//
+        //    // stop processing once all the winning numbers are gone
+        //    if (winningNumbers.size == 0) break;
+        //}
+//
+//
+//
+        //msg.reply(`here are the winners:\n${winningUsers.join('\n')}`, {"allowedMentions": { "users" : []}});
     }
 }
+

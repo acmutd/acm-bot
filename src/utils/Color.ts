@@ -1,5 +1,3 @@
-import * as colorChecker from 'css-color-checker';
-
 export default class CheckerUtils {
     static colors = [
         'DEFAULT',
@@ -33,7 +31,12 @@ export default class CheckerUtils {
         'NOT_QUITE_BLACK',
         'RANDOM',
     ];
-    static color = colorChecker;
+    static isHexColor(value?: unknown | null): boolean {
+        return (
+            typeof value === 'string' &&
+            value.match(/^#(?:[0-9a-f]{3}|[0-9a-f]{6}|[0-9a-f]{8})$/i) !== null
+        );
+    };
     static isMediaURL(str: string): boolean {
         return false;
     }

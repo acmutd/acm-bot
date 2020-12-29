@@ -346,7 +346,7 @@ export class ColorWizardNode extends WizardNode {
     async preSendCB(details: MessageEmbedOptions) {}
 
     async validationCB(response: Message) {
-        if (CheckerUtils.color.isHexColor(response.content)) {
+        if (CheckerUtils.isHexColor(response.content)) {
             return response.content;
         }
     }

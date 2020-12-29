@@ -200,11 +200,12 @@ export default class HacktoberfestService {
     }
 
     /**
-     * Retrieve the ENTIRE user list. Could be expensive!
-     * @param limit Number of users to retrieve, default 0/invalid (all users)
+     * Retrieve the user list. Could be expensive!
+     * @param limit Number of users to retrieve, default 0 (all users)
      */
     async getLeaderboard(limit: number = 0) {
-        let res: Map<string, any> = new Map<string, any>();
+        //let res: Map<string, any> = new Map<string, any>();
+        let res: FirebaseFirestore.DocumentData[] = []
         let snapshot: FirebaseFirestore.QuerySnapshot<FirebaseFirestore.DocumentData> | undefined;
         if (limit > 0) {
             snapshot = await this.client.firestore.firestore?.collection('htf_leaderboard/snowflake_to_all/mapping')
@@ -219,7 +220,7 @@ export default class HacktoberfestService {
         }
 
         snapshot?.forEach( (doc) => {
-            res.set(doc.id, doc.data());
+            res.push({...doc.data(), snowflake: doc.id});
         });
 
         return res;

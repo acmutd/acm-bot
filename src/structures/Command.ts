@@ -70,9 +70,17 @@ export default abstract class Command {
         return embed;
     }
 
+    sendInvalidUsage(msg: Message, client: ACMClient) {
+        return client.response.emit(
+            msg.channel,
+            this.getUsageText(client.settings.prefix),
+            "invalid"
+        );
+    }
+
     getUsageText(prefix: string) {
         return this.usage.length > 0
-            ? this.usage.map((e) => `${prefix}${e}`).join(', ')
+            ? 'Usage\n' + this.usage.map((e) => `${prefix}${e}`).join('\n')
             : 'No usage cases available.';
     }
 }
