@@ -6,8 +6,7 @@ import { FieldValue } from '@google-cloud/firestore';
 
 export default class PointsSystemService {
     public client: ACMClient;
-    pointsFormID = "dhn2basr";
-    confirmationChannelId = "792947617835384872";
+    notifChannelId = "792947617835384872";
 
     constructor(client: ACMClient) {
         this.client = client;
@@ -34,14 +33,10 @@ export default class PointsSystemService {
      * Handles a json from typeform webhook (should be called by the /typeform endpoint handler)
      * @param typeformData unaltered, posted JSON from typeform webhook
      */
-    async handleTypeform(typeformData: any) {
-        // fail silently if the form isn't correct
-        const formID: string | undefined = typeformData.form_response?.form_id;
-        if (formID != this.pointsFormID) return;
-
+    async handlePointsTypeform(typeformData: any) {
         const pointsToAdd: number = typeformData.form_response.calculated.score;
 
-        /*
+        /* a bunch of logic thats more work than is worth rn
         const response: Map<string, string> = new Map<string, string>();
         typeformData.form_response.definition.fields.forEach( (field: any, index: number) => {
             const title: string = field.title;
@@ -90,8 +85,7 @@ export default class PointsSystemService {
         */
 
         const answers: any = typeformData.form_response.answers;
-
-        const confirmationChannel = (await this.client.channels.fetch(this.confirmationChannelId)) as TextChannel
+        const confirmationChannel = (await this.client.channels.fetch(this.notifChannelId)) as TextChannel
         await confirmationChannel.send(new MessageEmbed({
             title: `Response for ${answers[0].text} ${answers[1].text} (${answers[2].email})`,
             description: `**Activity**: ${answers[3].choice.label}\n**Proof**:`,
@@ -102,6 +96,59 @@ export default class PointsSystemService {
                 text: `${pointsToAdd} points will be awarded.`
             }
         }));
+    }
+
+    async handleRegistrationTypeform(typeformData: any) {
+        const answers: any = typeformData.form_response.answers;
+        const notifChannel = (await this.client.channels.fetch(this.notifChannelId)) as TextChannel
+
+        // data object to pass into firestore
+        let data = {
+            first_name: answers[0].text,
+            last_name: answers[1].text,
+            full_name: answers[0].text + ' ' + answers[1].text,
+            email: answers[2].email,
+            tag: answers[3].text,
+            snowflake: '',
+        }
+
+        // resolve user using a lenient search with the tag
+        const ACMGuild = await this.client.guilds.fetch(settings.guild);
+        if (!ACMGuild)  return;
+
+        const user = await this.client.services.resolver.ResolveGuildUser(
+            data.tag, 
+            ACMGuild,
+            new Set<string>(['tag']),
+            true
+        );
+
+        // handle user not found
+        if (!user) {
+            return notifChannel.send(`Couldn't find user called "${data.tag}" (${data.full_name})`);
+        };
+
+        // now that we have the user, we can set their snowflake
+        data.snowflake = user.id;
+
+        console.log(data);
+
+        // maybe they just want to update info. If that's the case, don't overwrite their points!
+        await this.client.firestore.firestore?.collection("points_system")
+            .doc(data.snowflake)
+            .set(data, { merge: true });
+
+        // send confirmation
+        user.send(new MessageEmbed({
+            color: '#EC7621',
+            title: 'Registration Confirmed',
+            description: `Hi **${data.full_name}**, thank you for registering!\n`,
+            footer: {
+                text: 'If you did not recently request this action, please contact an ACM staff member.',
+            },
+        })).catch(
+            (e) => notifChannel.send(`DMs are off for "${data.tag}" (${data.full_name})`)
+        )
     }
     
     startReactionEvent(channelId: string, activityId: string, reactionId: string, moderatorId: string, points: number) {

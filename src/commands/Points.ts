@@ -20,7 +20,7 @@ export default class PointsCommand extends Command {
                 "`raffle`: `r`",
             usage: [
                 "points check [user]",
-                "points award <amount> <activity-id> [user1 [user 2 [user3 ...]]]",
+                "points award <amount> <activity-id> [user1 [user2 [user3 ...]]]",
                 "points leaderboard [limit=10]",
                 "points raffle [winners=1]"
             ],
