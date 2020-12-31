@@ -15,7 +15,7 @@ import { settings } from '../botsettings';
 import ErrorManager from './managers/ErrorManager';
 import RRService from './services/RRService';
 import FirestoreManager from './managers/FirestoreManager';
-import HacktoberfestService from './services/HacktoberfestService';
+import PointsSystemService from './services/PointsSystemService';
 import ResolveService from './services/ResolveService';
 import ActivityService from './services/ActivityService';
 import NewsletterService from './services/NewsletterService';
@@ -56,7 +56,7 @@ export default class ACMClient extends Client {
         caretaker: CaretakerService;
         command: CommandService;
         rr: RRService;
-        hacktoberfest: HacktoberfestService;
+        points: PointsSystemService;
         activity: ActivityService;
         resolver: ResolveService;
     };
@@ -87,7 +87,7 @@ export default class ACMClient extends Client {
             caretaker: new CaretakerService(this),
             command: new CommandService(this),
             rr: new RRService(this),
-            hacktoberfest: new HacktoberfestService(this),
+            points: new PointsSystemService(this),
             activity: new ActivityService(this),
             resolver: new ResolveService(this),
         };

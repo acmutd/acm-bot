@@ -33,7 +33,7 @@ export default class PointsCommand extends Command {
             );
         }
 
-        const { exists, data } = await client.services.hacktoberfest.getData(user.id);
+        const { exists, data } = await client.services.points.getUser(user.id);
         if (exists) {
             // we build a nice embed scorecard
             let scorecardEmbed = {

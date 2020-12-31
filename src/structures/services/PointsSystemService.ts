@@ -4,8 +4,10 @@ import Command from '../Command';
 import { settings } from '../../botsettings';
 import { FieldValue } from '@google-cloud/firestore';
 
-export default class HacktoberfestService {
+export default class PointsSystemService {
     public client: ACMClient;
+    pointsFormID = "dhn2basr";
+    confirmationChannelId = "792947617835384872";
 
     constructor(client: ACMClient) {
         this.client = client;
@@ -25,7 +27,81 @@ export default class HacktoberfestService {
             reaction.emoji.id != reactionEvent.reactionId ||
             user.id != reactionEvent.moderatorId) return;
         
-        await this.client.services.hacktoberfest.awardPoints(reactionEvent.points, reactionEvent.activityId, new Set<string>([reaction.message.author.id]));
+        await this.client.services.points.awardPoints(reactionEvent.points, reactionEvent.activityId, new Set<string>([reaction.message.author.id]));
+    }
+
+    /**
+     * Handles a json from typeform webhook (should be called by the /typeform endpoint handler)
+     * @param typeformData unaltered, posted JSON from typeform webhook
+     */
+    async handleTypeform(typeformData: any) {
+        // fail silently if the form isn't correct
+        const formID: string | undefined = typeformData.form_response?.form_id;
+        if (formID != this.pointsFormID) return;
+
+        const pointsToAdd: number = typeformData.form_response.calculated.score;
+
+        /*
+        const response: Map<string, string> = new Map<string, string>();
+        typeformData.form_response.definition.fields.forEach( (field: any, index: number) => {
+            const title: string = field.title;
+            const answer_type: string = typeformData.form_response.answers[index].type;
+            let answer: string | undefined;
+
+            switch(answer_type) {
+                case 'text':
+                case 'email':
+                case 'date':
+                case 'url':
+                case 'file_url':
+                    answer = typeformData.form_response.answers[index][answer_type]
+                    break
+                case 'choice':
+                    answer = typeformData.form_response.answers[index].choice.label
+                    break
+                default:
+                    this.client.logger.warn(`Unhandled typeform answer type: '${answer_type}'`);
+            }
+
+            if (answer !== undefined) {
+                response.set(title, answer);
+            }
+        })
+
+        // at this point, we have our typeform q/a all nice and tidy.
+
+        let firstName, lastName, email, event, evidence: string = '';
+        for (const [q, a] of response) {
+            if (q.search("first name")) firstName = a;
+            else if (q.search("last name")) lastName = a;
+            else if (q.search("email address")) email = a;
+            else if (q.search("event did u attend")) event = a;
+            else if (q.search("evidence")) evidence = a;
+        }
+
+        const confirmationChannel = (await this.client.channels.fetch(this.confirmationChannelId)) as TextChannel
+        await confirmationChannel.send(new MessageEmbed({
+            title: `Response for ${firstName} ${lastName} (${email})`,
+            description: event,
+            image: {
+                url: evidence,
+            }
+        }))
+        */
+
+        const answers: any = typeformData.form_response.answers;
+
+        const confirmationChannel = (await this.client.channels.fetch(this.confirmationChannelId)) as TextChannel
+        await confirmationChannel.send(new MessageEmbed({
+            title: `Response for ${answers[0].text} ${answers[1].text} (${answers[2].email})`,
+            description: `**Activity**: ${answers[3].choice.label}\n**Proof**:`,
+            image: {
+                url: answers[4].file_url,
+            },
+            footer: {
+                text: `${pointsToAdd} points will be awarded.`
+            }
+        }));
     }
     
     startReactionEvent(channelId: string, activityId: string, reactionId: string, moderatorId: string, points: number) {
@@ -161,7 +237,7 @@ export default class HacktoberfestService {
     /**
      * Function for retrieving data for user from firestore
      */
-    async getData(userId: string) {
+    async getUser(userId: string) {
         let exists: boolean | undefined;
         let data: FirebaseFirestore.DocumentData | undefined;
         await this.client.firestore.firestore?.collection("htf_leaderboard/snowflake_to_all/mapping")

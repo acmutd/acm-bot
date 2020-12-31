@@ -58,7 +58,7 @@ export default class PointsCommand extends Command {
                     }
                 }
 
-                const { exists, data } = await client.services.hacktoberfest.getData(user.id);
+                const { exists, data } = await client.services.points.getUser(user.id);
                 if (exists) {
                     // we build a nice embed scorecard
                     let scorecardEmbed = {
@@ -140,7 +140,7 @@ export default class PointsCommand extends Command {
                     }
                 }
         
-                const { success, failure } = await client.services.hacktoberfest.awardPoints(
+                const { success, failure } = await client.services.points.awardPoints(
                     points,
                     activityId,
                     awardees
@@ -177,7 +177,7 @@ export default class PointsCommand extends Command {
                     }
                 }
 
-                const allUsers = await client.services.hacktoberfest.getLeaderboard(numUsers);
+                const allUsers = await client.services.points.getLeaderboard(numUsers);
 
                 let descriptionArr: string[] = []
                 allUsers.forEach( (user, i) => {
@@ -194,7 +194,7 @@ export default class PointsCommand extends Command {
             case "raffle":
             case "r":
             {
-                const allUsers = await client.services.hacktoberfest.getLeaderboard();
+                const allUsers = await client.services.points.getLeaderboard();
                 const unresolvedNumWinners = args[1];
                 let sum = 0;
                 let numWinners: number;
@@ -296,6 +296,6 @@ async function processCSV(client: ACMClient, attachment: MessageAttachment) {
         return;
     }
 
-    let res = await client.services.hacktoberfest.emailsToSnowflakes(emails);
+    let res = await client.services.points.emailsToSnowflakes(emails);
     return res;
 }

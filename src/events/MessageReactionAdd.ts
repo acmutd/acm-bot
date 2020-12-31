@@ -9,6 +9,6 @@ export default class MessageReactionAddEvent extends Event {
 
     public async emit(client: ACMClient, reaction: MessageReaction, user: User) {
         client.services.rr.handle(reaction, user);
-        client.services.hacktoberfest.handleReactionAdd(reaction, user);
+        client.services.points.handleReactionAdd(reaction, user);
     }
 }
