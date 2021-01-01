@@ -4,6 +4,16 @@ import Command from '../Command';
 import { settings } from '../../botsettings';
 import { FieldValue } from '@google-cloud/firestore';
 
+interface UserPointsData {
+    first_name: string;
+    last_name: string;
+    full_name: string;
+    email: string;
+    tag: string;
+    snowflake?: string;
+    points?: string
+}
+
 export default class PointsSystemService {
     public client: ACMClient;
     notifChannelId = "792947617835384872";
@@ -85,39 +95,78 @@ export default class PointsSystemService {
         */
 
         const answers: any = typeformData.form_response.answers;
-        const confirmationChannel = (await this.client.channels.fetch(this.notifChannelId)) as TextChannel
-        await confirmationChannel.send(new MessageEmbed({
-            title: `Response for ${answers[0].text} ${answers[1].text} (${answers[2].email})`,
-            description: `**Activity**: ${answers[3].choice.label}\n**Proof**:`,
+        const confirmationChannel = (await this.client.channels.fetch(this.notifChannelId)) as TextChannel;
+
+        // fetch user data
+        const resolvedSnowflakes: string[] = await this.emailsToSnowflakes(new Set<string>([answers[0].email]))
+
+        // handle user not resolvable based on email
+        if (resolvedSnowflakes.length == 0)
+            return confirmationChannel.send(new MessageEmbed({
+                description: `**Unknown email**: \`${answers[0].email}\``
+            }));
+        
+        
+        const userData = await this.getUser(resolvedSnowflakes[0]) as UserPointsData;
+        
+        const message = await confirmationChannel.send(new MessageEmbed({
+            title: `Response for ${userData.full_name}`,
+            description: `**Discord**: <@${userData.snowflake}>\n` + 
+                `**Email**: \`${userData.email}\`\n` +     
+                `**Activity**: \`${answers[1].choice.label}\`\n` +
+                `**Proof**:`,
             image: {
-                url: answers[4].file_url,
+                url: answers[2].file_url,
             },
             footer: {
-                text: `${pointsToAdd} points will be awarded.`
+                text: `${pointsToAdd} points will be awarded upon approval.`
             }
         }));
+
+        await message.react("✅");
     }
 
     async handleRegistrationTypeform(typeformData: any) {
         const answers: any = typeformData.form_response.answers;
-        const notifChannel = (await this.client.channels.fetch(this.notifChannelId)) as TextChannel
 
-        // data object to pass into firestore
-        let data = {
+        // data objects to pass into firestore
+        let mentorData: UserPointsData = {
             first_name: answers[0].text,
             last_name: answers[1].text,
             full_name: answers[0].text + ' ' + answers[1].text,
             email: answers[2].email,
             tag: answers[3].text,
-            snowflake: '',
         }
 
-        // resolve user using a lenient search with the tag
-        const ACMGuild = await this.client.guilds.fetch(settings.guild);
-        if (!ACMGuild)  return;
+        let menteeData: UserPointsData = {
+            first_name: answers[4].text,
+            last_name: answers[5].text,
+            full_name: answers[4].text + ' ' + answers[5].text,
+            email: answers[6].email,
+            tag: answers[7].text,
+        }
 
+        // send both users off to be registered
+        const mentorSnowflake = await this.registerUser(mentorData);
+        const menteeSnowflake = await this.registerUser(menteeData, false);
+
+        // finally, link the two profiles together
+        if (mentorSnowflake && menteeSnowflake)
+            await this.client.firestore.firestore?.collection("points_system")
+                .doc('pairs')
+                .set({
+                    [menteeSnowflake]: mentorSnowflake
+                });
+    }
+
+    async registerUser(data: UserPointsData, notify: boolean = true) {
+        const notifChannel = (await this.client.channels.fetch(this.notifChannelId)) as TextChannel;
+        const ACMGuild = await this.client.guilds.fetch(settings.guild);
+        if (!ACMGuild) return;
+
+        // use the user resolver on most lenient settings
         const user = await this.client.services.resolver.ResolveGuildUser(
-            data.tag, 
+            data.tag,
             ACMGuild,
             new Set<string>(['tag']),
             true
@@ -125,30 +174,38 @@ export default class PointsSystemService {
 
         // handle user not found
         if (!user) {
-            return notifChannel.send(`Couldn't find user called "${data.tag}" (${data.full_name})`);
-        };
+            notifChannel.send(`Err: Couldn't find user called "${data.tag}" (${data.full_name})`);
+            return;
+        }
 
-        // now that we have the user, we can set their snowflake
+        // now that we have the user, we can set their snowflake and fix their tag
         data.snowflake = user.id;
+        data.tag = user.tag;
 
-        console.log(data);
-
-        // maybe they just want to update info. If that's the case, don't overwrite their points!
-        await this.client.firestore.firestore?.collection("points_system")
+        // maybe they just want to update info. If that's the case, don't overwrite their points! (so we use merge true)
+        await this.client.firestore.firestore?.collection("points_system/users/profiles")
             .doc(data.snowflake)
             .set(data, { merge: true });
 
+        // also map the email to snowflake so we find them later
+        await this.client.firestore.firestore?.collection("points_system")
+            .doc('email_to_discord')
+            .set({[data.email]: data.snowflake}, {merge: true});
+
         // send confirmation
-        user.send(new MessageEmbed({
-            color: '#EC7621',
-            title: 'Registration Confirmed',
-            description: `Hi **${data.full_name}**, thank you for registering!\n`,
-            footer: {
-                text: 'If you did not recently request this action, please contact an ACM staff member.',
-            },
-        })).catch(
-            (e) => notifChannel.send(`DMs are off for "${data.tag}" (${data.full_name})`)
-        )
+        if (notify)
+            await user.send(new MessageEmbed({
+                color: '#EC7621',
+                title: 'Mentor/Mentee Registration Confirmed',
+                description: `Hi **${data.full_name}**, thank you for registering!\n`,
+                footer: {
+                    text: 'If you did not recently request this action, please contact an ACM staff member.',
+                },
+            })).catch(
+                (e) => notifChannel.send(`DMs are off for "${data.tag}" (${data.full_name})`)
+            )
+
+        return data.snowflake;
     }
     
     startReactionEvent(channelId: string, activityId: string, reactionId: string, moderatorId: string, points: number) {
@@ -284,30 +341,27 @@ export default class PointsSystemService {
     /**
      * Function for retrieving data for user from firestore
      */
-    async getUser(userId: string) {
+    async getUser(snowflake: string) {
         let exists: boolean | undefined;
         let data: FirebaseFirestore.DocumentData | undefined;
-        await this.client.firestore.firestore?.collection("htf_leaderboard/snowflake_to_all/mapping")
-                .doc(userId)
+        await this.client.firestore.firestore?.collection("points_system/users/profiles")
+                .doc(snowflake)
                 .get().then(async (doc) => {
             exists = doc.exists;
             data = doc.data();
         });
-        return {
-            exists, 
-            data
-        }
+        return data;
     }
 
     /**
      * Get snowflakes from email addresses
      */
-    async emailsToSnowflakes(emails: Set<string>): Promise<string[] | null> {
+    async emailsToSnowflakes(emails: Set<string>): Promise<string[]> {
         let snowflakes: string[] = [];
-        await this.client.firestore.firestore?.collection("htf_leaderboard")
-                .doc("email_to_snowflake")
+        await this.client.firestore.firestore?.collection("points_system")
+                .doc("email_to_discord")
                 .get().then(async (doc) => {
-            if (!doc.exists || !doc.data()) return null;
+            if (!doc.exists || !doc.data()) return [];
 
             let data = doc.data()!;
 

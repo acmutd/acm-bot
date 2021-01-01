@@ -58,8 +58,8 @@ export default class PointsCommand extends Command {
                     }
                 }
 
-                const { exists, data } = await client.services.points.getUser(user.id);
-                if (exists) {
+                const data = await client.services.points.getUser(user.id);
+                if (data != undefined) {
                     // we build a nice embed scorecard
                     let scorecardEmbed = {
                         color: "#93c2db",
