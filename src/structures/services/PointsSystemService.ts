@@ -3,6 +3,7 @@ import ACMClient from '../Bot';
 import Command from '../Command';
 import { settings } from '../../botsettings';
 import { FieldValue } from '@google-cloud/firestore';
+import { stringify } from 'uuid';
 
 interface UserPointsData {
     first_name: string;
@@ -11,12 +12,24 @@ interface UserPointsData {
     email: string;
     tag: string;
     snowflake?: string;
-    points?: string
+    points?: number;
+    activities?: any;
+}
+
+interface PairPointsData {
+    mentorData: UserPointsData;
+    menteeData: UserPointsData;
+    points: number; 
 }
 
 export default class PointsSystemService {
     public client: ACMClient;
     notifChannelId = "792947617835384872";
+    publicNotifChannelId = "744488968338276440";
+
+    moderators = [
+        "312383932870033408"
+    ]
 
     constructor(client: ACMClient) {
         this.client = client;
@@ -31,12 +44,60 @@ export default class PointsSystemService {
      * This will run when a reaction changes.
      */
     async handleReactionAdd(reaction: MessageReaction, user: User) {
+        // fetch everything to ensure all the data is complete
+        if (reaction.partial) await reaction.fetch();
+        await reaction.users.fetch();
+        const msg = await reaction.message.fetch();
+
+        // regex to parse encoded data
+        const re = /\[\u200B\]\(http:\/\/fake\.fake\?data=(.*?)\)/;
+
+        // Ignore if the message isn't something we care about
+        if (user.id === this.client.user?.id ||                 // bot is the one who reacted
+            msg.channel.id !== this.notifChannelId ||           // wrong channel
+            msg.author.id !== this.client.user?.id ||           // author is not bot
+            !reaction.users.cache.has(this.client.user?.id) ||  // bot check mark react is not there
+            reaction.emoji.name !== "✅" ||                     // wrong emote
+            msg.embeds.length !== 1 ||                          // # of embeds not 1
+            !msg.embeds[0].title ||                             // no title
+            !msg.embeds[0].title!.startsWith("Response for") || // wrong title
+            !msg.embeds[0].description ||                       // no description
+            !re.test(msg.embeds[0].description)                 // desc doesn't contain our embedded data
+
+        )
+            return;
+
+        // If reactor is not a mod, remove their reaction and rat them out.
+        if (this.moderators.indexOf(user.id) === -1) {
+            reaction.users.remove(user.id);
+            return this.client.response.emit(
+                msg.channel,
+                `${user}, you are not authorized to approve points!`,
+                "invalid"
+            )
+        }
+
+        // Award the points, clear reactions, react with 🎉, print success
+        console.log(decodeURIComponent(msg.embeds[0].description.match(re)![1]))
+        const encodedData = JSON.parse(decodeURIComponent(msg.embeds[0].description.match(re)![1]))
+        this.awardPoints(encodedData.points, encodedData.activity, new Set<string>([encodedData.snowflake]));
+        reaction.message.reactions.removeAll()
+            .then(() => reaction.message.react("🎉"));
+        return this.client.response.emit(
+            msg.channel,
+            `${user} has approved \`${encodedData.activity}\` for <@${encodedData.snowflake}>!`,
+            "success"
+        )
+            
+            
+        /*
         let reactionEvent = this.client.indicators.getValue('reactionEvent', reaction.message.channel.id);
         if (!reactionEvent || 
             reaction.emoji.id != reactionEvent.reactionId ||
             user.id != reactionEvent.moderatorId) return;
         
         await this.client.services.points.awardPoints(reactionEvent.points, reactionEvent.activityId, new Set<string>([reaction.message.author.id]));
+        */
     }
 
     /**
@@ -103,15 +164,23 @@ export default class PointsSystemService {
         // handle user not resolvable based on email
         if (resolvedSnowflakes.length == 0)
             return confirmationChannel.send(new MessageEmbed({
-                description: `**Unknown email**: \`${answers[0].email}\``
+                description: `**Submission received with unregistered email**: \`${answers[0].email}\``
             }));
         
         
         const userData = await this.getUser(resolvedSnowflakes[0]) as UserPointsData;
+        const encodedData = {
+            snowflake: userData.snowflake,
+            activity: answers[1].choice.label,
+            points: pointsToAdd,
+        };
         
         const message = await confirmationChannel.send(new MessageEmbed({
             title: `Response for ${userData.full_name}`,
-            description: `**Discord**: <@${userData.snowflake}>\n` + 
+            description: 
+                // we'll sneakily hide some data here :)
+                `[\u200B](http://fake.fake?data=${encodeURIComponent(JSON.stringify(encodedData))})` +
+                `**Discord**: <@${userData.snowflake}>\n` + 
                 `**Email**: \`${userData.email}\`\n` +     
                 `**Activity**: \`${answers[1].choice.label}\`\n` +
                 `**Proof**:`,
@@ -156,7 +225,7 @@ export default class PointsSystemService {
                 .doc('pairs')
                 .set({
                     [menteeSnowflake]: mentorSnowflake
-                });
+                }, {merge: true});
     }
 
     async registerUser(data: UserPointsData, notify: boolean = true) {
@@ -271,7 +340,7 @@ export default class PointsSystemService {
      * Increments points for many users
      * @param points 
      * @param activity 
-     * @param awardees 
+     * @param awardees set of snowflakes
      */
     async awardPoints(points: number, activity: string, awardees: Set<string>) {
         let success: string[] = [];
@@ -283,55 +352,89 @@ export default class PointsSystemService {
         const increment = FieldValue.increment(points);
 
         // increment points on firestore
-        for (let userId of awardees.values()) {
-            try {
-                let docRef = this.client.firestore.firestore?.collection("htf_leaderboard/snowflake_to_all/mapping").doc(userId);
-                await docRef?.get().then(async (doc) => {
-                    if (!doc.exists) {
-                        throw new Error(`User with ID ${userId} does not exist!`);
-                    }
+        for (let snowflake of awardees.values()) {
+            const docRef = this.client.firestore.firestore?.collection("points_system/users/profiles").doc(snowflake);
+            const doc = await docRef?.get();
 
-                    // update the main points storage
-                    let activities: any = doc.data()?.activities;
-                    if (!activities) {
-                        activities = {
-                            [activity]: points
-                        }
-                    }
-                    else {
-                        activities[activity] = (activities.hasOwnProperty(activity) ? activities[activity]+points : points);
-                    }
-                    
-                    await docRef?.update({
-                        points: increment,
-                        activities: activities,
-                    });
-                    // add ledger entry
-                    await this.client.firestore.firestore?.collection("htf_leaderboard/transactions/ledger").add({
-                        created_at: FieldValue.serverTimestamp(),
-                        name: doc.data()?.name,
-                        reason: activity,
-                        change: points,
-                        new_points: doc.data()?.points + points,
-                    });
-                })
+            // handle doc doesn't exist
+            if (doc == undefined || !doc.exists) {
+                failure.push(snowflake);
+                continue;
+            }
 
-                success.push(`<@${userId}>`);
+            // modify the doc data
+            let userData = doc.data()! as UserPointsData;
+            // add activity
+            if (!userData.activities) {
+                userData.activities = {
+                    [activity]: points
+                }
             }
-            catch (error) {
-                failure.push(`<@${userId}>`);
+            else {
+                //userData.activities[activity] = (
+                //    userData.activities.hasOwnProperty(activity) ? 
+                //    userData.activities[activity]+points : 
+                //    points
+                //);
+                userData.activities[activity] = (userData.activities[activity] || 0) + points;
             }
+            userData.points = (userData.points || 0) + points;
+
+            await docRef?.set(userData);
+            success.push(`<@${snowflake}>`);
+
+            //try {
+            //    let docRef = this.client.firestore.firestore?.collection("points_system/users/profiles").doc(userId);
+            //    await docRef?.get().then(async (doc) => {
+            //        if (!doc.exists) {
+            //            throw new Error(`User with ID ${userId} does not exist!`);
+            //        }
+//
+            //        // update the main points storage
+            //        let activities: any = doc.data()?.activities;
+            //        if (!activities) {
+            //            activities = {
+            //                [activity]: points
+            //            }
+            //        }
+            //        else {
+            //            activities[activity] = (activities.hasOwnProperty(activity) ? activities[activity]+points : points);
+            //        }
+            //        
+            //        await docRef?.update({
+            //            points: increment,
+            //            activities: activities,
+            //        });
+            //        // add ledger entry
+            //        await this.client.firestore.firestore?.collection("htf_leaderboard/transactions/ledger").add({
+            //            created_at: FieldValue.serverTimestamp(),
+            //            name: doc.data()?.name,
+            //            reason: activity,
+            //            change: points,
+            //            new_points: doc.data()?.points + points,
+            //        });
+            //    })
+//
+            //    success.push(`<@${userId}>`);
+            //}
+            //catch (error) {
+            //    failure.push(`<@${userId}>`);
+            //}
         }
 
         if (activity != 'Discord') {
             // push update to log channel if not for general activity
-            const logChannel = this.client.channels.cache.get(settings.hacktoberfest.logChannel);
+            const logChannel = await this.client.channels.fetch(this.publicNotifChannelId) as TextChannel;
             if (success.length < 60)
-                (logChannel as TextChannel)?.send(`Awarded ${points} points to ${success.join(', ')} for ${activity}!`,
-                {"allowedMentions": { "users" : []}});
+                logChannel.send(
+                    `Awarded ${points} points to ${success.join(', ')} for ${activity}!`,
+                    {"allowedMentions": { "users" : []}}
+                );
             else
-                (logChannel as TextChannel)?.send(`Awarded ${points} points to ${success.length} users for ${activity}!`,
-                        {"allowedMentions": { "users" : []}});
+                logChannel.send(
+                    `Awarded ${points} points to ${success.length} users for ${activity}!`,
+                    {"allowedMentions": { "users" : []}}
+                );
         }
 
         console.log(`Awarded ${points} points to ${success.length}/${awardees.size} users for ${activity}`);
@@ -367,39 +470,47 @@ export default class PointsSystemService {
 
             for (let email of emails.values()) {
                 if (email in doc.data()!) {
-                    console.log(`Pushing snowflake ${data[email]}`);
                     snowflakes.push(data[email]);
                 }
             }
         });
-        console.log(`Snowflakes: ${snowflakes}`)
         return snowflakes;
     }
 
     /**
      * Retrieve the user list. Could be expensive!
-     * @param limit Number of users to retrieve, default 0 (all users)
+     * @param limit Number of users to return
      */
-    async getLeaderboard(limit: number = 0) {
-        //let res: Map<string, any> = new Map<string, any>();
-        let res: FirebaseFirestore.DocumentData[] = []
-        let snapshot: FirebaseFirestore.QuerySnapshot<FirebaseFirestore.DocumentData> | undefined;
-        if (limit > 0) {
-            snapshot = await this.client.firestore.firestore?.collection('htf_leaderboard/snowflake_to_all/mapping')
-                    .orderBy('points', 'desc')
-                    .limit(limit)
-                    .get();
-        }
-        else {
-            snapshot = await this.client.firestore.firestore?.collection('htf_leaderboard/snowflake_to_all/mapping')
-                    .orderBy('points', 'desc')
-                    .get();
-        }
+    async getLeaderboard(limit = 0) {
+        let res: PairPointsData[] = [];
 
+        // build a map of individual data, keyed by ID
+        let individualData: Map<string, UserPointsData> = new Map<string, UserPointsData>();
+        let snapshot = await this.client.firestore.firestore?.collection("points_system/users/profiles").get();
         snapshot?.forEach( (doc) => {
-            res.push({...doc.data(), snowflake: doc.id});
+            individualData.set(doc.id, doc.data() as UserPointsData);
         });
 
-        return res;
+        // create mapping of mentor+mentee → combined points
+        let pairs = await (await this.client.firestore.firestore?.collection("points_system").doc("pairs").get()!).data();
+
+        for (const menteeSnowflake in pairs) {
+            const mentorData = individualData.get(pairs[menteeSnowflake]);
+            const menteeData = individualData.get(menteeSnowflake);
+
+            if (!mentorData || !menteeData) continue;
+
+            res.push({
+                mentorData,
+                menteeData,
+                points: (menteeData?.points || 0) + (mentorData?.points || 0)
+            });
+        }
+
+        // sort descending by points
+        res.sort( (a, b) => b.points - a.points )
+
+        // return slice if limit requested
+        return limit > 0 ? res.slice(0, limit) : res;
     }
 }

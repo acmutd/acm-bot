@@ -8,14 +8,12 @@ import { settings } from '../../botsettings';
 module.exports = (app: Express, client: ACMClient) => {
     // Activities form endpoint for typeform
     app.post('/points-form', async (req: Request, res: Response) => {
-        client.services.points.handlePointsTypeform(req.body);
-        console.log(JSON.stringify(req.body));
         res.status(200).end();
+        client.services.points.handlePointsTypeform(req.body);
     });
     // Registration form endpoint for typeform to hit
     app.post('/registration-form', async (req: Request, res: Response) => {
-        client.services.points.handleRegistrationTypeform(req.body);
-        console.log(JSON.stringify(req.body));
         res.status(200).end();
+        client.services.points.handleRegistrationTypeform(req.body);
     });
 };

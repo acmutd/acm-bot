@@ -70,8 +70,8 @@ export default class PointsCommand extends Command {
                         title: `${data?.points} points`,
                         description: "\n",
                         footer: {
-                            text: "ACM Hacktoberfest",
-                            icon_url: "https://i.imgur.com/u6c1gDm.png",
+                            text: "ACM Education",
+                            icon_url: "https://i.imgur.com/THllTFL.png",
                         },
                     };
         
@@ -79,7 +79,7 @@ export default class PointsCommand extends Command {
                     let userActivities = [];
                     if (data?.activities) {
                         for (let activity in data?.activities) {
-                            userActivities.push(`**${activity}**: ${data?.activities[activity]}\n`);
+                            userActivities.push(`**${activity}**: ${data?.activities[activity]}`);
                         }
                         // now we sort userActivities, case-insensitive
                         userActivities.sort((a, b) => {
@@ -87,7 +87,7 @@ export default class PointsCommand extends Command {
                         });
                         // finally, add to description
                         scorecardEmbed.description =
-                            "__**Breakdown of Points by Activity**__\n" + userActivities.join("");
+                            "__**Activities**__\n" + userActivities.join("\n");
                     }
         
                     return msg.channel.send({ embed: scorecardEmbed });
@@ -177,12 +177,12 @@ export default class PointsCommand extends Command {
                     }
                 }
 
-                const allUsers = await client.services.points.getLeaderboard(numUsers);
+                const allPairs = await client.services.points.getLeaderboard(numUsers);
 
                 let descriptionArr: string[] = []
-                allUsers.forEach( (user, i) => {
-                    if (user.points > 0)
-                        descriptionArr.push(`${i+1}. <@${user.snowflake}>: ${user.points} points`);
+                allPairs.forEach( (pair, i) => {
+                    if (pair.points > 0)
+                        descriptionArr.push(`\`${i+1}\`. <@${pair.menteeData.snowflake}>+<@${pair.mentorData.snowflake}>: ${pair.points} points`);
                 });
 
                 return msg.channel.send(new MessageEmbed({
@@ -194,7 +194,7 @@ export default class PointsCommand extends Command {
             case "raffle":
             case "r":
             {
-                const allUsers = await client.services.points.getLeaderboard();
+                const allPairs = await client.services.points.getLeaderboard();
                 const unresolvedNumWinners = args[1];
                 let sum = 0;
                 let numWinners: number;
@@ -219,10 +219,10 @@ export default class PointsCommand extends Command {
                     numWinners = 1;
                 }
         
-                // first, we want to find the sum of all points for users with > 0 points
-                const filteredUsers = allUsers.filter(user => user.points > 0);
-                filteredUsers.forEach( (user) => {
-                    sum += user.points;
+                // first, we want to find the sum of all points for pairs with > 0 points
+                const filteredPairs = allPairs.filter(pair => pair.points > 0);
+                filteredPairs.forEach( (pair) => {
+                    sum += pair.points;
                 });
         
                 // now we want to generate random numbers accordingly
@@ -231,9 +231,9 @@ export default class PointsCommand extends Command {
                 }
         
                 // pick out winners
-                for (let user of filteredUsers) {
+                for (let pair of filteredPairs) {
                     let winnerCount = 0;
-                    processedTickets += user.points;
+                    processedTickets += pair.points;
                     // count up all the winning tickets
                     winningNumbers.forEach( (ticket) => {
                         if (ticket < processedTickets) {
@@ -243,7 +243,7 @@ export default class PointsCommand extends Command {
                     });
         
                     // add the winning count to the person's stats
-                    if (winnerCount > 0) winningUsers.push(`<@${user.snowflake}>: ${winnerCount}`);
+                    if (winnerCount > 0) winningUsers.push(`<@${pair.menteeData.snowflake}>+<@${pair.mentorData.snowflake}>: ${winnerCount}`);
         
                     // stop processing once all the winning numbers are gone
                     if (winningNumbers.size == 0) break;
@@ -258,8 +258,6 @@ export default class PointsCommand extends Command {
             default:
                 return this.sendInvalidUsage(msg, client);
         }
-
-        
     }
 }
 
