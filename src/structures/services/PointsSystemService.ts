@@ -358,7 +358,7 @@ export default class PointsSystemService {
 
             // handle doc doesn't exist
             if (doc == undefined || !doc.exists) {
-                failure.push(snowflake);
+                failure.push(`<@${snowflake}>`);
                 continue;
             }
 
