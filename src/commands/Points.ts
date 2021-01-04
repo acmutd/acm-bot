@@ -218,7 +218,7 @@ export default class PointsCommand extends Command {
                         "invalid"
                     )
                 }
-                
+
                 const allPairs = await client.services.points.getLeaderboard();
                 const unresolvedNumWinners = args[1];
                 let sum = 0;
@@ -311,8 +311,14 @@ async function processCSV(client: ACMClient, attachment: MessageAttachment) {
 
     try {
         csvRaw = (await axios.get(attachment.url)).data;
-        for (let line of csvRaw.split('\n')) {
-            let email = line.split(',')[1];
+        const csvLines = csvRaw.split('\n');
+        // determine email column
+        const headers = csvLines[0].split(',');
+        const emailColNum = headers.indexOf('Email');
+
+        // extract emails from remaining csv
+        for (let lineNum = 1; lineNum < csvLines.length; lineNum++) {
+            let email = csvLines[lineNum].split(',')[emailColNum];
             emails.add(email);
         }
     } catch (error) {

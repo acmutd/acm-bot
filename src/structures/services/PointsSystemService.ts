@@ -430,16 +430,16 @@ export default class PointsSystemService {
         if (activity != 'Discord') {
             // push update to log channel if not for general activity
             const logChannel = await this.client.channels.fetch(this.publicChannelId) as TextChannel;
-            if (success.length < 60)
-                logChannel.send(
-                    `Awarded ${points} points to ${success.join(', ')} for ${activity}!`,
-                    {"allowedMentions": { "users" : []}}
-                );
-            else
+            if (success.length > 60)
                 logChannel.send(
                     `Awarded ${points} points to ${success.length} users for ${activity}!`,
                     {"allowedMentions": { "users" : []}}
                 );
+            else if (success.length != 0)
+                logChannel.send(
+                `Awarded ${points} points to ${success.join(', ')} for ${activity}!`,
+                {"allowedMentions": { "users" : []}}
+            );
         }
 
         console.log(`Awarded ${points} points to ${success.length}/${awardees.size} users for ${activity}`);
