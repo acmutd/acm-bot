@@ -5,6 +5,7 @@ import ACMClient from "../structures/Bot";
 import Command from "../structures/Command";
 import { CommandContext } from "../structures/Command";
 import Wizard, { ConfirmationWizardNode } from "../utils/Wizard";
+import { settings } from '../botsettings';
 
 export default class PointsCommand extends Command {
     constructor() {
@@ -103,6 +104,14 @@ export default class PointsCommand extends Command {
             case "award":
             case "a":
             {
+                if (!msg.member!.roles.cache.has(settings.points.staffRole)) {
+                    return client.response.emit(
+                        msg.channel,
+                        `${msg.member}, you are unauthorized!`,
+                        "invalid"
+                    )
+                }
+        
                 if (args.length < 3) {
                     return client.response.emit(
                         msg.channel,
@@ -161,6 +170,14 @@ export default class PointsCommand extends Command {
             case "leaderboard":
             case "lb":
             {
+                if (!msg.member!.roles.cache.has(settings.points.staffRole)) {
+                    return client.response.emit(
+                        msg.channel,
+                        `${msg.member}, you are unauthorized!`,
+                        "invalid"
+                    )
+                }
+
                 const unresolvedNumUsers = args[1];
                 let numUsers = 0; // default to all
 
@@ -194,6 +211,14 @@ export default class PointsCommand extends Command {
             case "raffle":
             case "r":
             {
+                if (!msg.member!.roles.cache.has(settings.points.staffRole)) {
+                    return client.response.emit(
+                        msg.channel,
+                        `${msg.member}, you are unauthorized!`,
+                        "invalid"
+                    )
+                }
+                
                 const allPairs = await client.services.points.getLeaderboard();
                 const unresolvedNumWinners = args[1];
                 let sum = 0;

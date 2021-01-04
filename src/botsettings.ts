@@ -27,14 +27,10 @@ export interface Settings {
     disabledCategories: string[];
     guild: string;
     acmLogoURL: string;
-    sheets: {
-        calendarURL: string;
-    };
-    hacktoberfest: {
-        confirmationChannel: string;
-        errorChannel: string;
-        logChannel: string;
-        memberRole: string;
+    points: {
+        privateChannel: string;
+        publicChannel: string;
+        //memberRole: string;
         staffRole: string;
     };
     channels: {

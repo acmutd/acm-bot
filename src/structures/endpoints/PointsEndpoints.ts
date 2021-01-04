@@ -11,9 +11,16 @@ module.exports = (app: Express, client: ACMClient) => {
         res.status(200).end();
         client.services.points.handlePointsTypeform(req.body);
     });
+
     // Registration form endpoint for typeform to hit
     app.post('/registration-form', async (req: Request, res: Response) => {
         res.status(200).end();
         client.services.points.handleRegistrationTypeform(req.body);
+    });
+
+    // any point end point for typeform to hit. It just needs to arrive with a score and the email as q1. 
+    app.post('/generic-form', async (req: Request, res: Response) => {
+        res.status(200).end();
+        client.services.points.handleGenericTypeform(req.body);
     });
 };

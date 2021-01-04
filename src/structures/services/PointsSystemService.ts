@@ -24,15 +24,16 @@ interface PairPointsData {
 
 export default class PointsSystemService {
     public client: ACMClient;
-    notifChannelId = "792947617835384872";
-    publicNotifChannelId = "744488968338276440";
-
-    moderators = [
-        "312383932870033408"
-    ]
+    privateChannelId: string;
+    publicChannelId: string;
+    staffRoleId: string;
+    
 
     constructor(client: ACMClient) {
         this.client = client;
+        this.privateChannelId = settings.points.privateChannel;
+        this.publicChannelId = settings.points.publicChannel;
+        this.staffRoleId = settings.points.staffRole;
     }
 
     //
@@ -49,12 +50,16 @@ export default class PointsSystemService {
         await reaction.users.fetch();
         const msg = await reaction.message.fetch();
 
+        // resolve user into guild member (so that we can check their roles later)
+        const ACMGuild = await this.client.guilds.fetch(settings.guild);
+        const member = await ACMGuild.members.fetch(user.id);
+
         // regex to parse encoded data
         const re = /\[\u200B\]\(http:\/\/fake\.fake\?data=(.*?)\)/;
 
         // Ignore if the message isn't something we care about
         if (user.id === this.client.user?.id ||                 // bot is the one who reacted
-            msg.channel.id !== this.notifChannelId ||           // wrong channel
+            msg.channel.id !== this.privateChannelId ||         // wrong channel
             msg.author.id !== this.client.user?.id ||           // author is not bot
             !reaction.users.cache.has(this.client.user?.id) ||  // bot check mark react is not there
             reaction.emoji.name !== "✅" ||                     // wrong emote
@@ -68,7 +73,7 @@ export default class PointsSystemService {
             return;
 
         // If reactor is not a mod, remove their reaction and rat them out.
-        if (this.moderators.indexOf(user.id) === -1) {
+        if (!member.roles.cache.has(this.staffRoleId)) {
             reaction.users.remove(user.id);
             return this.client.response.emit(
                 msg.channel,
@@ -78,7 +83,6 @@ export default class PointsSystemService {
         }
 
         // Award the points, clear reactions, react with 🎉, print success
-        console.log(decodeURIComponent(msg.embeds[0].description.match(re)![1]))
         const encodedData = JSON.parse(decodeURIComponent(msg.embeds[0].description.match(re)![1]))
         this.awardPoints(encodedData.points, encodedData.activity, new Set<string>([encodedData.snowflake]));
         reaction.message.reactions.removeAll()
@@ -101,11 +105,13 @@ export default class PointsSystemService {
     }
 
     /**
-     * Handles a json from typeform webhook (should be called by the /typeform endpoint handler)
+     * Handles a json from typeform webhook (should be called by the /points-form endpoint handler)
      * @param typeformData unaltered, posted JSON from typeform webhook
      */
     async handlePointsTypeform(typeformData: any) {
         const pointsToAdd: number = typeformData.form_response.calculated.score;
+        const title: string = typeformData.form_response.definition.title;
+
 
         /* a bunch of logic thats more work than is worth rn
         const response: Map<string, string> = new Map<string, string>();
@@ -156,17 +162,18 @@ export default class PointsSystemService {
         */
 
         const answers: any = typeformData.form_response.answers;
-        const confirmationChannel = (await this.client.channels.fetch(this.notifChannelId)) as TextChannel;
+        const confirmationChannel = (await this.client.channels.fetch(this.privateChannelId)) as TextChannel;
 
         // fetch user data
         const resolvedSnowflakes: string[] = await this.emailsToSnowflakes(new Set<string>([answers[0].email]))
 
         // handle user not resolvable based on email
         if (resolvedSnowflakes.length == 0)
-            return confirmationChannel.send(new MessageEmbed({
-                description: `**Submission received with unregistered email**: \`${answers[0].email}\``
-            }));
-        
+            return this.client.response.emit(
+                confirmationChannel,
+                `⚠ **Submission received for \`${title}\`with unregistered email**: \`${answers[0].email}\``,
+                'warning'
+            )
         
         const userData = await this.getUser(resolvedSnowflakes[0]) as UserPointsData;
         const encodedData = {
@@ -229,7 +236,7 @@ export default class PointsSystemService {
     }
 
     async registerUser(data: UserPointsData, notify: boolean = true) {
-        const notifChannel = (await this.client.channels.fetch(this.notifChannelId)) as TextChannel;
+        const notifChannel = (await this.client.channels.fetch(this.privateChannelId)) as TextChannel;
         const ACMGuild = await this.client.guilds.fetch(settings.guild);
         if (!ACMGuild) return;
 
@@ -275,6 +282,31 @@ export default class PointsSystemService {
             )
 
         return data.snowflake;
+    }
+
+    async handleGenericTypeform(typeformData: any) {
+        const pointsToAdd: number = typeformData.form_response.calculated.score;
+        const answers: any = typeformData.form_response.answers;
+        const errChannel = (await this.client.channels.fetch(this.privateChannelId)) as TextChannel;
+        const title: string = typeformData.form_response.definition.title;
+
+        // fetch user's snowflake
+        const resolvedSnowflakes: string[] = await this.emailsToSnowflakes(new Set<string>([answers[0].email]))
+
+        // handle user not resolvable based on email
+        if (resolvedSnowflakes.length == 0)
+            return this.client.response.emit(
+                errChannel,
+                `⚠ **Submission received for \`${title}\`with unregistered email**: \`${answers[0].email}\``,
+                'warning'
+            )
+        
+        // award points
+        await this.awardPoints(
+            pointsToAdd, 
+            title, 
+            new Set<string>([resolvedSnowflakes[0]])
+        );
     }
     
     startReactionEvent(channelId: string, activityId: string, reactionId: string, moderatorId: string, points: number) {
@@ -424,7 +456,7 @@ export default class PointsSystemService {
 
         if (activity != 'Discord') {
             // push update to log channel if not for general activity
-            const logChannel = await this.client.channels.fetch(this.publicNotifChannelId) as TextChannel;
+            const logChannel = await this.client.channels.fetch(this.publicChannelId) as TextChannel;
             if (success.length < 60)
                 logChannel.send(
                     `Awarded ${points} points to ${success.join(', ')} for ${activity}!`,
