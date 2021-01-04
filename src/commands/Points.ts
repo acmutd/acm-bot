@@ -1,6 +1,6 @@
 import { FieldValue } from "@google-cloud/firestore";
 import axios from "axios";
-import { Guild, GuildMember, Message, MessageAttachment, MessageEmbed, User } from "discord.js";
+import { Guild, GuildMember, Message, MessageAttachment, MessageEmbed, User, VoiceChannel } from "discord.js";
 import ACMClient from "../structures/Bot";
 import Command from "../structures/Command";
 import { CommandContext } from "../structures/Command";
@@ -18,12 +18,14 @@ export default class PointsCommand extends Command {
                 "`check`: `c`\b" +
                 "`award`: `a`\b" +
                 "`leaderboard`: `lb`\b" +
-                "`raffle`: `r`",
+                "`raffle`: `r`" +
+                "`vcevent`: `vc`",
             usage: [
                 "points check [user]",
                 "points award <amount> <activity-id> [user1 [user2 [user3 ...]]]",
                 "points leaderboard [limit=10]",
-                "points raffle [winners=1]"
+                "points raffle [winners=1]",
+                "points vcevent <amount> <activity-id>"
             ],
             dmWorks: false,
         });
@@ -65,7 +67,7 @@ export default class PointsCommand extends Command {
                     let scorecardEmbed = {
                         color: "#93c2db",
                         author: {
-                            name: user.tag,
+                            name: `${user.tag} (${data.full_name})`,
                             icon_url: user.avatarURL(),
                         },
                         title: `${data?.points} points`,
@@ -278,6 +280,73 @@ export default class PointsCommand extends Command {
                     title: "🎉 The winners (and how many times they won)",
                     description: winningUsers.join('\n')
                 }));
+            }
+
+            case "vcevent":
+            case "vc":
+            {
+                if (!msg.member!.roles.cache.has(settings.points.staffRole)) {
+                    return client.response.emit(
+                        msg.channel,
+                        `${msg.member}, you are unauthorized!`,
+                        "invalid"
+                    )
+                }
+
+                if (args.length < 3) {
+                    return client.response.emit(
+                        msg.channel,
+                        `Award some points to user(s) in your current voice channel.\n` +
+                        `Usage: \`${client.settings.prefix}${this.usage[4]}\`\n`,
+                        'invalid'
+                    );
+                }
+        
+                const unresolvedPoints = args[1];
+                const activityId = args[2];
+                let attendees = new Set<string>();
+                let voiceChannel: VoiceChannel | null | undefined;
+                const points = +unresolvedPoints;
+
+                // invalid award amount
+                if (isNaN(points)) {
+                    return client.response.emit(
+                        msg.channel,
+                        `\`${unresolvedPoints}\` is not a valid number.`,
+                        'invalid'
+                    );
+                }
+
+                // attempt to resolve the vc
+                voiceChannel = msg.member?.voice.channel;
+                if (!voiceChannel) {
+                    return client.response.emit(
+                        msg.channel,
+                        `Please join a voice channel!`,
+                        'invalid'
+                    );
+                }
+        
+                for (const [, member] of voiceChannel.members) {
+                    if (member.user.bot) continue;
+                    attendees.add(member.id);
+                }
+
+                const { success, failure } = await client.services.points.awardPoints(
+                    points,
+                    activityId,
+                    attendees
+                )
+        
+                return msg.reply(
+                    `Awarded **${points}** points to **${
+                        success.length
+                    }** users for completing **${activityId}**:\n${success.join(' ')}\n` +
+                        (failure.length
+                            ? `${failure.length} users were not registered: ${failure.join(' ')}`
+                            : ''),
+                    { allowedMentions: { users: [] } }
+                );
             }
 
             default:
