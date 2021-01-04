@@ -20,9 +20,7 @@ export default class ExpressManager {
     public client: ACMClient;
     public app: Express;
     public port: number;
-    public confirmationChannelID: string;
-    public errorChannelID: string;
-    public hacktoberfestRoleID: string;
+
     public path: string = '../endpoints/';
     public server: http.Server | null = null;
     // move to config
@@ -37,10 +35,6 @@ export default class ExpressManager {
         this.port = settings.express.port;
         this.privateKeyFile = settings.express.privateKey;
         this.certFile = settings.express.cert;
-
-        this.confirmationChannelID = settings.hacktoberfest.confirmationChannel;
-        this.errorChannelID = settings.hacktoberfest.errorChannel;
-        this.hacktoberfestRoleID = settings.hacktoberfest.memberRole;
     }
 
 

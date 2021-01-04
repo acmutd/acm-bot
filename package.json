@@ -5,8 +5,11 @@
     "main": "main.js",
     "scripts": {
         "test": "echo \"Error: no test specified\" && exit 1",
-        "update": "git pull && rm -r dist && tsc",
-        "start": "node dist/main.js"
+        "update": "git pull",
+        "clean": "rm -rf dist",
+        "build": "tsc",
+        "boot": "node dist/main.js",
+        "start": "npm run clean && npm run build && npm run boot"
     },
     "repository": {
         "type": "git",
@@ -30,7 +33,6 @@
         "axios": "^0.21.0",
         "body-parser": "^1.19.0",
         "colorthief": "^2.3.0",
-        "css-color-checker": "^1.6.1",
         "csv-parser": "^2.3.3",
         "date-and-time": "^0.13.1",
         "discord.js": "^12.3.1",

@@ -87,7 +87,7 @@ export default class VoiceEventCommand extends Command {
             }
 
             // start voice event and confirm
-            client.services.hacktoberfest.startVoiceEvent(
+            client.services.points.startVoiceEvent(
                 voiceChannel,
                 activityId,
                 moderatorId,
@@ -121,9 +121,9 @@ export default class VoiceEventCommand extends Command {
             }
 
             // attempt to close off the event. If that is successful, award
-            let voiceEvent = client.services.hacktoberfest.stopVoiceEvent(voiceChannel);
+            let voiceEvent = client.services.points.stopVoiceEvent(voiceChannel);
             if (voiceEvent) {
-                let { success, failure } = await client.services.hacktoberfest.awardPoints(
+                let { success, failure } = await client.services.points.awardPoints(
                     voiceEvent.points,
                     voiceEvent.activityId,
                     voiceEvent.attendees

@@ -86,7 +86,7 @@ export default class ReactionEventCommand extends Command {
             }
 
             // start reaction event and confirm
-            client.services.hacktoberfest.startReactionEvent(
+            client.services.points.startReactionEvent(
                 channelId,
                 activityId,
                 reactionId!,
@@ -97,7 +97,7 @@ export default class ReactionEventCommand extends Command {
         } else if (args[0] == 'stop') {
             // purposely allows other mods to stop text channel events
             // attempt to disable the reaction event
-            if (client.services.hacktoberfest.stopReactionEvent(msg.channel.id))
+            if (client.services.points.stopReactionEvent(msg.channel.id))
                 return client.response.emit(msg.channel, 'Reaction event has stopped!', 'success');
             // if no reaction event exists, error
             else
