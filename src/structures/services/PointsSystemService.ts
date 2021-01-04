@@ -203,6 +203,7 @@ export default class PointsSystemService {
     }
 
     async handleRegistrationTypeform(typeformData: any) {
+        const notifChannel = (await this.client.channels.fetch(this.privateChannelId)) as TextChannel;
         const answers: any = typeformData.form_response.answers;
 
         // data objects to pass into firestore
@@ -226,13 +227,28 @@ export default class PointsSystemService {
         const mentorSnowflake = await this.registerUser(mentorData);
         const menteeSnowflake = await this.registerUser(menteeData, false);
 
-        // finally, link the two profiles together
-        if (mentorSnowflake && menteeSnowflake)
+        // if success, notify & link
+        if (mentorSnowflake && menteeSnowflake) {
+            this.client.response.emit(
+                notifChannel,
+                `Registration completed for <@${mentorSnowflake}> (mentor) & <@${menteeSnowflake}> (mentee)`,
+                'success'
+            );
             await this.client.firestore.firestore?.collection("points_system")
                 .doc('pairs')
                 .set({
                     [menteeSnowflake]: mentorSnowflake
                 }, {merge: true});
+        }
+        // otherwise, send error
+        else {
+            this.client.response.emit(
+                notifChannel,
+                `Registration failed for \`${mentorData.full_name}\` (mentor) & \`${menteeData.full_name}\` (mentee)\n` +
+                `Please ensure that \`${mentorData.tag}\` and \`${menteeData.tag}\` are in this server and resubmit.`,
+                'invalid'
+            );
+        }
     }
 
     async registerUser(data: UserPointsData, notify: boolean = true) {
