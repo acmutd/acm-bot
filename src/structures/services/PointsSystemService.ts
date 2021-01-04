@@ -403,55 +403,12 @@ export default class PointsSystemService {
                 }
             }
             else {
-                //userData.activities[activity] = (
-                //    userData.activities.hasOwnProperty(activity) ? 
-                //    userData.activities[activity]+points : 
-                //    points
-                //);
                 userData.activities[activity] = (userData.activities[activity] || 0) + points;
             }
             userData.points = (userData.points || 0) + points;
 
             await docRef?.set(userData);
             success.push(`<@${snowflake}>`);
-
-            //try {
-            //    let docRef = this.client.firestore.firestore?.collection("points_system/users/profiles").doc(userId);
-            //    await docRef?.get().then(async (doc) => {
-            //        if (!doc.exists) {
-            //            throw new Error(`User with ID ${userId} does not exist!`);
-            //        }
-//
-            //        // update the main points storage
-            //        let activities: any = doc.data()?.activities;
-            //        if (!activities) {
-            //            activities = {
-            //                [activity]: points
-            //            }
-            //        }
-            //        else {
-            //            activities[activity] = (activities.hasOwnProperty(activity) ? activities[activity]+points : points);
-            //        }
-            //        
-            //        await docRef?.update({
-            //            points: increment,
-            //            activities: activities,
-            //        });
-            //        // add ledger entry
-            //        await this.client.firestore.firestore?.collection("htf_leaderboard/transactions/ledger").add({
-            //            created_at: FieldValue.serverTimestamp(),
-            //            name: doc.data()?.name,
-            //            reason: activity,
-            //            change: points,
-            //            new_points: doc.data()?.points + points,
-            //        });
-            //    })
-//
-            //    success.push(`<@${userId}>`);
-            //}
-            //catch (error) {
-            //    failure.push(`<@${userId}>`);
-            //}
         }
 
         if (activity != 'Discord') {
@@ -478,13 +435,16 @@ export default class PointsSystemService {
      */
     async getUser(snowflake: string) {
         let exists: boolean | undefined;
-        let data: FirebaseFirestore.DocumentData | undefined;
+        let data: UserPointsData | undefined;
         await this.client.firestore.firestore?.collection("points_system/users/profiles")
-                .doc(snowflake)
-                .get().then(async (doc) => {
-            exists = doc.exists;
-            data = doc.data();
-        });
+            .doc(snowflake)
+            .get().then(async (doc) => {
+                exists = doc.exists;
+                data = doc.data() as UserPointsData;
+            });
+        if (data != undefined && data.points == undefined)
+            data.points = 0;
+
         return data;
     }
 
