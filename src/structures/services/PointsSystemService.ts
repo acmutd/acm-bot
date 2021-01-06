@@ -87,21 +87,15 @@ export default class PointsSystemService {
         this.awardPoints(encodedData.points, encodedData.activity, new Set<string>([encodedData.snowflake]));
         reaction.message.reactions.removeAll()
             .then(() => reaction.message.react("🎉"));
-        return this.client.response.emit(
-            msg.channel,
-            `${user} has approved \`${encodedData.activity}\` for <@${encodedData.snowflake}>!`,
-            "success"
-        )
-            
-            
-        /*
-        let reactionEvent = this.client.indicators.getValue('reactionEvent', reaction.message.channel.id);
-        if (!reactionEvent || 
-            reaction.emoji.id != reactionEvent.reactionId ||
-            user.id != reactionEvent.moderatorId) return;
-        
-        await this.client.services.points.awardPoints(reactionEvent.points, reactionEvent.activityId, new Set<string>([reaction.message.author.id]));
-        */
+
+        let embed = new MessageEmbed({
+            color: 'GREEN',
+            description: `**${user} has approved \`${encodedData.activity}\` for <@${encodedData.snowflake}>!**\n` +
+                `[link to original message](${msg.url})`,
+        });
+
+        return msg.channel.send(embed);
+
     }
 
     /**
@@ -181,23 +175,28 @@ export default class PointsSystemService {
             activity: answers[1].choice.label,
             points: pointsToAdd,
         };
-        
-        const message = await confirmationChannel.send(new MessageEmbed({
+
+        let embed = new MessageEmbed({
             title: `Response for ${userData.full_name}`,
             description: 
                 // we'll sneakily hide some data here :)
                 `[\u200B](http://fake.fake?data=${encodeURIComponent(JSON.stringify(encodedData))})` +
                 `**Discord**: <@${userData.snowflake}>\n` + 
                 `**Email**: \`${userData.email}\`\n` +     
-                `**Activity**: \`${answers[1].choice.label}\`\n` +
+                `**Activity**: \`${answers[1].choice.label}\`\n\n` +
                 `**Proof**:`,
-            image: {
-                url: answers[2].file_url,
-            },
             footer: {
                 text: `${pointsToAdd} points will be awarded upon approval.`
             }
-        }));
+        });
+
+        // set proof depending on proof type
+        if (answers[3].type == "text")
+            embed.description += "\n*" + answers[3].text + "*";
+        else
+            embed.image = {url: answers[3].file_url}
+        
+        const message = await confirmationChannel.send(embed);
 
         await message.react("✅");
     }
