@@ -34,11 +34,11 @@ export default class CircleService {
 
         // generate description
         c.send(`
-            > :yellow_circle: Circles are interest groups made by the community!
+            > :yellow_circle: Circles are interest groups made by the community!\n\n
 
-            > :door: Join one by reacting to the emoji attached to each.
+            > :door: Join one by reacting to the emoji attached to each.\n\n
         
-            > :crown: You can apply to make your own Circle by filling out this application: <https://apply.acmutd.co/circles>
+            > :crown: You can apply to make your own Circle by filling out this application: <https://apply.acmutd.co/circles>\n\n
         `);
         // generate the embeds
         const circles = this.client.database.cache.circles.array();
