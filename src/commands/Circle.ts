@@ -43,7 +43,7 @@ async function addCircle(client: ACMClient, msg: Message, args: string[]) {
     wizard.addNodes([
         new UserMentionWizardNode(wizard, {
             title: 'Owner',
-            description: `Who's the owner of the circle?`,
+            description: `Who's the owner of the circle? (mention them)`,
         }),
         new TextWizardNode(wizard, {
             title: 'Name',
