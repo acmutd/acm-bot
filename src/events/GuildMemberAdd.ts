@@ -7,7 +7,7 @@ export default class GuildMemberAddEvent extends Event {
         super(client, 'guildMemberAdd');
     }
 
-    public async emit(member: GuildMember) {
+    public async emit(client: ACMClient, member: GuildMember) {
         const embed = new MessageEmbed({
             title: `**Welcome to the ACM Discord Server!** 🎉`,
             author: {
@@ -18,20 +18,20 @@ export default class GuildMemberAddEvent extends Event {
             color: `EC7621`,
             footer: {
                 text: `Powered by ACM`,
-                iconURL: this.client.user!.avatarURL() as string,
+                iconURL: client.user!.avatarURL() as string,
             },
             fields: [
                 {
-                    name: `Step 1: Verify!`,
-                    value: `<#692430824712437840>`,
+                    name: `Step 1: Verify! The links below will become active once you verify.`,
+                    value: `<#${client.settings.channels.verification}>`,
                 },
                 {
                     name: `Step 2: Get roles!`,
-                    value: `<#761133757536796692>`,
+                    value: `<#${client.settings.channels.roles}>`,
                 },
                 {
                     name: `Step 3: Join Circles (interest groups)!`,
-                    value: `<#804826523034451998>`,
+                    value: `<#${client.settings.channels.circles}>`,
                 },
             ],
         });
