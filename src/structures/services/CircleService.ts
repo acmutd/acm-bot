@@ -31,6 +31,15 @@ export default class CircleService {
         c.send(
             'https://cdn.discordapp.com/attachments/804826523034451998/804835027169968218/circle_banner.png'
         );
+
+        // generate description
+        c.send(`
+            > :yellow_circle: Circles are interest groups made by the community!
+
+            > :door: Join one by reacting to the emoji attached to each.
+        
+            > :crown: You can apply to make your own Circle by filling out this application: <https://apply.acmutd.co/circles>
+        `);
         // generate the embeds
         const circles = this.client.database.cache.circles.array();
         for (const circle of circles) {
