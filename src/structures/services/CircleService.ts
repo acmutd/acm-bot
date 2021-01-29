@@ -1,4 +1,4 @@
-import { Guild, Message, MessageEmbed, MessageReaction, TextChannel, User } from 'discord.js';
+import { CategoryChannel, Guild, Message, MessageEmbed, MessageReaction, TextChannel, User } from 'discord.js';
 import { settings } from '../../botsettings';
 import ACMClient from '../Bot';
 
@@ -9,17 +9,11 @@ export default class CircleService {
         this.client = client;
     }
 
-    public async repost(c: TextChannel) {
+    public async repost() {
         // get circle channel reference
-        // const guild = await this.client.guilds.fetch('744488967465992225');
-        // console.log(guild.channels.cache.size);
-        // const channel = guild.channels.resolve('801307242640703518');
-        // // clear the channel messages
-        // if (!channel) {
-        //     this.client.logger.error('could not get the thing');
-        //     return;
-        // }
-        // const c = channel as TextChannel;
+        const channel = this.client.channels.resolve('801307242640703518');
+        const c = channel as TextChannel;
+
         // clear the channel
         await c.bulkDelete(50);
         // generate the title
@@ -31,9 +25,13 @@ export default class CircleService {
             let count = await this.findMemberCount(circle._id);
             let role = await c.guild.roles.fetch(circle._id);
 
-            let encodedData: any = { circle: circle._id, reactions: {} };
+            let encodedData: any = {
+                name: circle.name,
+                circle: circle._id, 
+                reactions: {},
+                category: circle.category,
+            };
             encodedData.reactions[`${circle.emoji}`] = circle._id;
-            console.log(count);
             let embed = new MessageEmbed({
                 title: `${circle.emoji} ${circle.name} ${circle.emoji}`,
                 description: `${encode(encodedData)}${circle.description}`,
@@ -126,13 +124,29 @@ export default class CircleService {
 
         if (!reactionRes) return;
 
+        // retrieve guild member who reacted
         const guild = await this.client.guilds.fetch(settings.guild);
         const member = guild.members.resolve(user.id);
         if (!member) return;
 
-        if (!member.roles.cache.has(reactionRes)) await member.roles.add(reactionRes);
-        else await member.roles.remove(reactionRes);
+        // toggle their membership
+        if (!member.roles.cache.has(reactionRes)) {
+            await member.roles.add(reactionRes);
+            // send a join message
+            const unresolvedCategory = await this.client.channels.resolve(obj.category);
+            if (unresolvedCategory?.type === "category") {
+                const category = unresolvedCategory as CategoryChannel;
+                const chan = category.children.find( 
+                    chan => chan.name === obj.name.toLowerCase().replace(/\s/, '-') && chan.type == 'text'
+                );
+                await (chan as TextChannel | undefined)?.send(`${member}, welcome to ${obj.name}!`);
+            }
+        }
+        else {
+            await member.roles.remove(reactionRes);
+        }
 
+        // update the message
         this.update(reaction.message.channel as TextChannel, reactionRes);
     }
 }

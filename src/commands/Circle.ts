@@ -17,6 +17,7 @@ export default class CircleCommand extends Command {
             name: 'circle',
             description: 'A suite of commands that help manage ACM Community Circles.',
             dmWorks: false,
+            userPermissions: 268443664,
         });
     }
     public async exec({ msg, client, args }: CommandContext) {
@@ -25,11 +26,11 @@ export default class CircleCommand extends Command {
                 await addCircle(client, msg, args);
                 break;
             case 'repost':
-                await client.services.circles.repost(msg.channel as TextChannel);
+                await client.services.circles.repost();
                 break;
             default:
                 msg.channel.send(
-                    `Use \'${settings.prefix}project help\' to show a list of commands`
+                    `Use \'${settings.prefix}circle help\' to show a list of commands`
                 );
                 break;
         }
