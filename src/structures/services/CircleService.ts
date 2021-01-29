@@ -128,7 +128,6 @@ export default class CircleService {
         await reaction.users.fetch();
 
         if (user.bot) return;
-        reaction.users.remove(user.id);
         if (reaction.message.embeds.length == 0) return;
         if (!reaction.message.embeds[0].description) return;
 
@@ -143,6 +142,8 @@ export default class CircleService {
         });
 
         if (!reactionRes) return;
+
+        reaction.users.remove(user.id);
 
         // retrieve guild member who reacted
         const guild = await this.client.guilds.fetch(settings.guild);
