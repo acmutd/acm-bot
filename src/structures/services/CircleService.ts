@@ -1,4 +1,12 @@
-import { CategoryChannel, Guild, Message, MessageEmbed, MessageReaction, TextChannel, User } from 'discord.js';
+import {
+    CategoryChannel,
+    Guild,
+    Message,
+    MessageEmbed,
+    MessageReaction,
+    TextChannel,
+    User,
+} from 'discord.js';
 import { settings } from '../../botsettings';
 import ACMClient from '../Bot';
 
@@ -14,13 +22,15 @@ export default class CircleService {
     public async repost() {
         // get circle channel reference
         //const channel = this.client.channels.resolve('801307242640703518');
-        const channel = this.client.channels.resolve(this.circleChannelId)
+        const channel = this.client.channels.resolve(this.circleChannelId);
         const c = channel as TextChannel;
 
         // clear the channel
         await c.bulkDelete(50);
         // generate the title
-        c.send('CIRCLES:');
+        c.send(
+            'https://cdn.discordapp.com/attachments/804826523034451998/804835027169968218/circle_banner.png'
+        );
         // generate the embeds
         const circles = this.client.database.cache.circles.array();
         for (const circle of circles) {
@@ -30,7 +40,7 @@ export default class CircleService {
 
             let encodedData: any = {
                 name: circle.name,
-                circle: circle._id, 
+                circle: circle._id,
                 reactions: {},
                 category: circle.category,
             };
@@ -137,15 +147,16 @@ export default class CircleService {
             await member.roles.add(reactionRes);
             // send a join message
             const unresolvedCategory = await this.client.channels.resolve(obj.category);
-            if (unresolvedCategory?.type === "category") {
+            if (unresolvedCategory?.type === 'category') {
                 const category = unresolvedCategory as CategoryChannel;
-                const chan = category.children.find( 
-                    chan => chan.name === obj.name.toLowerCase().replace(/\s/, '-') && chan.type == 'text'
+                const chan = category.children.find(
+                    (chan) =>
+                        chan.name === obj.name.toLowerCase().replace(/\s/, '-') &&
+                        chan.type == 'text'
                 );
                 await (chan as TextChannel | undefined)?.send(`${member}, welcome to ${obj.name}!`);
             }
-        }
-        else {
+        } else {
             await member.roles.remove(reactionRes);
         }
 
