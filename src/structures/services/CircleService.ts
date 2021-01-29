@@ -34,7 +34,7 @@ export default class CircleService {
 
         // generate description
         c.send(`
-            > :yellow_circle: Circles are interest groups made by the community!\n\n
+            > :yellow_circle: Circles are interest groups made by the community!\n
 
             > :door: Join one by reacting to the emoji attached to each.\n\n
         
