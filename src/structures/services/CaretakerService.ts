@@ -52,7 +52,7 @@ export default class CaretakerService {
             const general = generals.first();
 
             // craft and send the message
-            (general as TextChannel).send(msg?.message);
+            (general as TextChannel).send(`${msg?.message}`);
 
             // remove the caretaker message from db to prevent same message twice
             await this.client.database.responseDelete(msg?.message as string);

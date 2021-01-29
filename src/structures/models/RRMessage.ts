@@ -1,5 +1,12 @@
 import { Schema, model, Document } from 'mongoose';
-
+export interface RRMessageData {
+    _id: string;
+    guild: string;
+    channel: string;
+    type: string;
+    // object of emotes mapped to id of role { 🎲: "123123123123123" }
+    reactionRoles: any;
+}
 export interface RRMessage extends Document {
     _id: string;
     guild: string;

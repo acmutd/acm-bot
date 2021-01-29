@@ -1,3 +1,5 @@
+const isURL = require('is-url');
+
 export default class CheckerUtils {
     static colors = [
         'DEFAULT',
@@ -36,8 +38,22 @@ export default class CheckerUtils {
             typeof value === 'string' &&
             value.match(/^#(?:[0-9a-f]{3}|[0-9a-f]{6}|[0-9a-f]{8})$/i) !== null
         );
-    };
-    static isMediaURL(str: string): boolean {
-        return false;
+    }
+
+    static async isMediaURL(link: string) {
+        if (await !isURL(link)) return false;
+        if (
+            !link.toLowerCase().endsWith('.gif') &&
+            !link.toLowerCase().endsWith('.jpg') &&
+            !link.toLowerCase().endsWith('.png') &&
+            !link.toLowerCase().endsWith('.jpeg') &&
+            !link.toLowerCase().endsWith('.gif/') &&
+            !link.toLowerCase().endsWith('.jpg/') &&
+            !link.toLowerCase().endsWith('.png/') &&
+            !link.toLowerCase().endsWith('.jpeg/')
+        ) {
+            return false;
+        }
+        return true;
     }
 }

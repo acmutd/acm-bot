@@ -1,6 +1,6 @@
 import Command from '../structures/Command';
 import { CommandContext } from '../structures/Command';
-import { Message, MessageAttachment } from 'discord.js';
+import { Message, MessageAttachment, MessageEmbed } from 'discord.js';
 import ACMClient from '../structures/Bot';
 import axios from 'axios';
 import { settings } from '../botsettings';
@@ -47,7 +47,7 @@ export default class HelpCommand extends Command {
                 } available.`;
 
                 // send the embed!
-                await msg.channel.send({ embed: commandsEmbed });
+                await msg.channel.send(new MessageEmbed(commandsEmbed));
 
                 return;
 
@@ -77,7 +77,7 @@ export default class HelpCommand extends Command {
                 };
 
                 // send the embed!
-                await msg.channel.send({ embed: helpEmbed });
+                await msg.channel.send(new MessageEmbed(helpEmbed));
 
                 return;
 

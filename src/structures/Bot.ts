@@ -20,6 +20,7 @@ import ResolveService from './services/ResolveService';
 import ActivityService from './services/ActivityService';
 import NewsletterService from './services/NewsletterService';
 import CaretakerService from './services/CaretakerService';
+import CircleService from './services/CircleService';
 
 export interface BotConfig {
     token: string;
@@ -59,6 +60,7 @@ export default class ACMClient extends Client {
         points: PointsSystemService;
         activity: ActivityService;
         resolver: ResolveService;
+        circles: CircleService;
     };
     public config: BotConfig;
 
@@ -66,7 +68,7 @@ export default class ACMClient extends Client {
         const intents = new Intents([Intents.NON_PRIVILEGED, 'GUILD_MEMBERS']);
         super({
             ws: { intents },
-            partials: ['REACTION', 'MESSAGE'],
+            partials: ['REACTION', 'MESSAGE', 'CHANNEL'],
             fetchAllMembers: true,
         });
         this.settings = settings;
@@ -90,6 +92,7 @@ export default class ACMClient extends Client {
             points: new PointsSystemService(this),
             activity: new ActivityService(this),
             resolver: new ResolveService(this),
+            circles: new CircleService(this),
         };
         this.config = config;
     }
@@ -98,7 +101,8 @@ export default class ACMClient extends Client {
      * Initializes and sets up the ACMClient instance
      */
     async start() {
-        Sentry.init({ dsn: this.config.sentryDSN });
+        // ! enable when done w testing
+        // Sentry.init({ dsn: this.config.sentryDSN });
         await this.database.connect();
         await this.database.setup();
         this.firestore.setup();
@@ -109,7 +113,6 @@ export default class ACMClient extends Client {
         await this.login(this.config.token);
 
         this.services.rr.fetchMsgs();
-
         this.calendar.setup();
         this.express.setup();
         this.scheduler.setup();
@@ -117,6 +120,8 @@ export default class ACMClient extends Client {
         // this.on('debug', (e) => {
         //     console.error(e);
         // });
+
+        // await this.services.circles.repost();
 
         // await this.services.rr.fetchMsgs();
     }

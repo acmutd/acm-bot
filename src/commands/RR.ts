@@ -9,6 +9,7 @@ import Wizard, {
 } from '../utils/Wizard';
 import { Message, MessageEmbed, TextChannel } from 'discord.js';
 import ACMClient from '../structures/Bot';
+import { RRMessageData } from '../structures/models/RRMessage';
 
 export default class RRCommand extends Command {
     constructor() {
@@ -281,49 +282,60 @@ async function rrCreate(msg: Message, client: ACMClient, args: string[]) {
     reactionRole.reactionRoles = rrObject;
 
     try {
-        // const guild = await client.guilds.fetch(guildID);
-        const channel = await client.channels.fetch(channelID);
-        if (channel instanceof TextChannel) {
-            var message = await (channel as TextChannel).messages.fetch(messageID);
-        } else {
-            client.response.emit(
-                msg.channel,
-                "The channel referenced wasn't a text channel. This technically shouldn't ever happen if you provided a proper message link",
-                'error'
-            );
-            throw Error;
-        }
-    } catch (e) {
-        client.response.emit(
-            msg.channel,
-            'There was an issue add a reaction role to the DB',
-            'error'
-        );
-        console.log(e);
-
-        return;
-    }
-
-    Object.keys(rrObject).forEach((key) => {
-        if (key.match(emojiRegEx)) message.react(key);
-        else message.react(msg.guild!.emojis.resolve(key)!);
-    });
-
-    try {
-        await client.database.rrmsgAdd(reactionRole);
+        await client.services.rr.create(reactionRole);
         client.response.emit(
             msg.channel,
             'Successfully created a reaction role message!',
             'success'
         );
-    } catch (err) {
-        client.logger.error(err);
-        client.response.emit(
-            msg.channel,
-            'There was an issue add a reaction role to the DB',
-            'error'
-        );
+    } catch (e) {
+        client.response.emit(msg.channel, e, 'error');
     }
+
+    // try {
+    //     // const guild = await client.guilds.fetch(guildID);
+    //     const channel = await client.channels.fetch(channelID);
+    //     if (channel instanceof TextChannel) {
+    //         var message = await (channel as TextChannel).messages.fetch(messageID);
+    //     } else {
+    //         client.response.emit(
+    //             msg.channel,
+    //             "The channel referenced wasn't a text channel. This technically shouldn't ever happen if you provided a proper message link",
+    //             'error'
+    //         );
+    //         throw Error;
+    //     }
+    // } catch (e) {
+    //     client.response.emit(
+    //         msg.channel,
+    //         'There was an issue add a reaction role to the DB',
+    //         'error'
+    //     );
+    //     console.log(e);
+
+    //     return;
+    // }
+
+    // Object.keys(rrObject).forEach((key) => {
+    //     if (key.match(emojiRegEx)) message.react(key);
+    //     else message.react(msg.guild!.emojis.resolve(key)!);
+    // });
+
+    // try {
+    //     await client.database.rrmsgAdd(reactionRole);
+    //     client.response.emit(
+    //         msg.channel,
+    //         'Successfully created a reaction role message!',
+    //         'success'
+    //     );
+    // } catch (err) {
+    //     client.logger.error(err);
+    //     client.response.emit(
+    //         msg.channel,
+    //         'There was an issue add a reaction role to the DB',
+    //         'error'
+    //     );
+    // }
 }
 
 async function rrDelete(msg: Message, client: ACMClient, args: string[]) {}

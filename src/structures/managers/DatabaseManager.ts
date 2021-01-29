@@ -2,21 +2,24 @@ import ACMClient, { BotConfig } from '../Bot';
 import mongoose, { Model } from 'mongoose';
 import MemberSchema, { Member } from '../models/Member';
 import ResponseSchema, { Response, ResponsesType } from '../models/Response';
-import RRMessageSchema, { RRMessage } from '../models/RRMessage';
+import RRMessageSchema, { RRMessage, RRMessageData } from '../models/RRMessage';
 import { Collection } from 'discord.js';
 import { settings } from '../../botsettings';
 import TaskSchema, { TaskData } from '../models/Task';
+import CircleSchema, { Circle, CircleData } from '../models/Circle';
 
 export interface SchemaTypes {
     member: Model<Member>;
     response: Model<Response>;
     rrmessage: Model<RRMessage>;
     task: Model<TaskData>;
+    circle: Model<Circle>;
 }
 
 export interface CacheTypes {
     responses: Collection<string, Response>;
     rrmessages: Collection<string, RRMessage>;
+    circles: Collection<string, Circle>;
 }
 
 export default class DatabaseManager {
@@ -34,6 +37,7 @@ export default class DatabaseManager {
         this.cache = {
             responses: new Collection(),
             rrmessages: new Collection(),
+            circles: new Collection(),
         };
         this.url = config.dbUrl;
         this.schemas = {
@@ -41,6 +45,7 @@ export default class DatabaseManager {
             response: ResponseSchema,
             rrmessage: RRMessageSchema,
             task: TaskSchema,
+            circle: CircleSchema,
         };
     }
 
@@ -64,6 +69,7 @@ export default class DatabaseManager {
         try {
             await this.recache('response');
             await this.recache('rrmessage');
+            await this.recache('circle');
         } catch (err) {
             this.client.logger.error(err);
         }
@@ -84,6 +90,8 @@ export default class DatabaseManager {
     }
 
     // * Abstraction
+
+    // event responses
     public async responseAdd(type: ResponsesType, message: string): Promise<boolean> {
         try {
             await this.schemas.response.create({ type, message });
@@ -103,12 +111,40 @@ export default class DatabaseManager {
         }
     }
 
-    public async rrmsgAdd(newData: any) {
+    // reaction role messages
+    public async rrmsgAdd(newData: RRMessageData) {
         await this.schemas.rrmessage.create(newData);
         await this.recache('rrmessage');
-        await this.recache('response');
     }
     public async rrmsgDelete(id: string) {}
 
-    public async strikeAdd(amount: number, id: string) {}
+    // circles
+    public async circleAdd(circleData: CircleData): Promise<boolean> {
+        try {
+            console.log(circleData);
+            await this.schemas.circle.create(circleData);
+            await this.recache('circle');
+            return true;
+        } catch (err) {
+            return false;
+        }
+    }
+    public async circleRemove(circleId: string): Promise<boolean> {
+        try {
+            await this.schemas.circle.findByIdAndDelete(circleId);
+            await this.recache('circle');
+            return true;
+        } catch (err) {
+            return false;
+        }
+    }
+    public async circleUpdate(circleId: string, newData: CircleData): Promise<boolean> {
+        try {
+            await this.schemas.circle.findByIdAndUpdate(circleId, newData);
+            await this.recache('circle');
+            return true;
+        } catch (err) {
+            return false;
+        }
+    }
 }
