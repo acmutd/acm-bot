@@ -4,14 +4,17 @@ import ACMClient from '../Bot';
 
 export default class CircleService {
     public client: ACMClient;
+    private circleChannelId: string;
 
     constructor(client: ACMClient) {
         this.client = client;
+        this.circleChannelId = this.client.settings.channels.circles;
     }
 
     public async repost() {
         // get circle channel reference
-        const channel = this.client.channels.resolve('801307242640703518');
+        //const channel = this.client.channels.resolve('801307242640703518');
+        const channel = this.client.channels.resolve(this.circleChannelId)
         const c = channel as TextChannel;
 
         // clear the channel

@@ -36,8 +36,8 @@ export interface Settings {
     channels: {
         verification: string;
         error: string;
-        bulletin: string;
         shoutout: string;
+        circles: string;
     };
     roles: {
         member: string;
