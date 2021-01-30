@@ -159,7 +159,7 @@ export default class CircleService {
                 const category = unresolvedCategory as CategoryChannel;
                 const chan = category.children.find(
                     (chan) =>
-                        chan.name === obj.name.toLowerCase().replace(/\s/, '-') &&
+                        chan.name === obj.name.toLowerCase().replace(/\s/g, '-') &&
                         chan.type == 'text'
                 );
                 await (chan as TextChannel | undefined)?.send(`${member}, welcome to ${obj.name}!`);
