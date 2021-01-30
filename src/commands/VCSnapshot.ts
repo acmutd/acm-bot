@@ -52,11 +52,29 @@ export default class VCSnapshot extends Command {
             attendees.push(`<@${member.id}>`);
         }
 
+        try {
         msg.channel.send(
             `**VC Snapshot for \`${voiceChannel.name}\` requested by ${msg.author}**:\n` + 
             `Member list: ${attendees.join(" ")}\n` + 
             `Copyable list: \` ${attendees.join("` `")}\``,
             {allowedMentions: {users: []}}
         );
+        }
+        catch {
+            try {
+            msg.channel.send(
+                `**VC Snapshot for \`${voiceChannel.name}\` requested by ${msg.author}**:\n` + 
+                `Member list: ${attendees.join(" ")}\n`,
+                {allowedMentions: {users: []}}
+            );
+            }
+            catch {
+                msg.channel.send(
+                    `**VC Snapshot for \`${voiceChannel.name}\` requested by ${msg.author}**:\n` + 
+                    `${attendees.length} members\n` + 
+                    {allowedMentions: {users: []}}
+                );
+            }
+        }
     }
 }
