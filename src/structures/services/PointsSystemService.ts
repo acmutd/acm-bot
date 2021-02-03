@@ -165,14 +165,14 @@ export default class PointsSystemService {
         if (resolvedSnowflakes.length == 0)
             return this.client.response.emit(
                 confirmationChannel,
-                `⚠ **Submission received for \`${title}\`with unregistered email**: \`${answers[0].email}\``,
-                'warning'
+                `\`${answers[1].text}\` submitted \`${title}\` with an unknown email: \`${answers[0].email}\``,
+                'error'
             )
         
         const userData = await this.getUser(resolvedSnowflakes[0]) as UserPointsData;
         const encodedData = {
             snowflake: userData.snowflake,
-            activity: answers[1].choice.label,
+            activity: answers[2].choice.label,
             points: pointsToAdd,
         };
 
@@ -183,7 +183,7 @@ export default class PointsSystemService {
                 `[\u200B](http://fake.fake?data=${encodeURIComponent(JSON.stringify(encodedData))})` +
                 `**Discord**: <@${userData.snowflake}>\n` + 
                 `**Email**: \`${userData.email}\`\n` +     
-                `**Activity**: \`${answers[1].choice.label}\`\n\n` +
+                `**Activity**: \`${answers[2].choice.label}\`\n\n` +
                 `**Proof**:`,
             footer: {
                 text: `${pointsToAdd} points will be awarded upon approval.`
@@ -191,10 +191,10 @@ export default class PointsSystemService {
         });
 
         // set proof depending on proof type
-        if (answers[3].type == "text")
-            embed.description += "\n*" + answers[3].text + "*";
+        if (answers[4].type == "text")
+            embed.description += "\n*" + answers[4].text + "*";
         else
-            embed.image = {url: answers[3].file_url}
+            embed.image = {url: answers[4].file_url}
         
         const message = await confirmationChannel.send(embed);
 
@@ -312,8 +312,8 @@ export default class PointsSystemService {
         if (resolvedSnowflakes.length == 0)
             return this.client.response.emit(
                 errChannel,
-                `⚠ **Submission received for \`${title}\`with unregistered email**: \`${answers[0].email}\``,
-                'warning'
+                `\`${answers[1].text}\` submitted \`${title}\` with an unknown email: \`${answers[0].email}\``,
+                'error'
             )
         
         // award points
