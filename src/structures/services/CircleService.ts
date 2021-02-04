@@ -29,14 +29,14 @@ export default class CircleService {
         await c.bulkDelete(50);
         // generate the title
         c.send(
-            'https://cdn.discordapp.com/attachments/804826523034451998/804835027169968218/circle_banner.png'
+            'https://cdn.discordapp.com/attachments/537776612238950410/806744701579165747/circle_banner.png'
         );
 
         // generate description
         c.send(
             `> :yellow_circle: Circles are interest groups made by the community!\n` +
-            `> :door: Join one by reacting to the emoji attached to each.\n` +
-            `> :crown: You can apply to make your own Circle by filling out this application: <https://apply.acmutd.co/circles>\n`
+                `> :door: Join one by reacting to the emoji attached to each.\n` +
+                `> :crown: You can apply to make your own Circle by filling out this application: <https://apply.acmutd.co/circles>\n`
         );
         // generate the embeds
         const circles = this.client.database.cache.circles.array();
