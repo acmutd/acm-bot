@@ -52,15 +52,29 @@ export default class PointsCommand extends Command {
             case 'check':
             case 'c': {
                 // default to the author if arg not included
-                let user: User | undefined = msg.author;
+                let user: User | undefined | null = msg.author;
 
                 if (args.length > 1) {
                     const unresolvedUser = args[1];
-                    user = await client.services.resolver.ResolveGuildUser(
-                        unresolvedUser,
-                        msg.guild
-                    );
+                    user = undefined;
 
+                    if (/.+@.+\..+/.test(unresolvedUser)) {
+                        // email resolve
+                        const users = await client.services.points.emailsToSnowflakes(
+                            new Set([unresolvedUser]));
+                        if (users.length == 1) {
+                            // email find, now resolve by userID
+                            user = await client.users.resolve(users[0]);
+                        }
+                    }
+                    else {
+                        // discord resolve (nickname, username, id, etc)
+                        user = await client.services.resolver.ResolveGuildUser(
+                            unresolvedUser,
+                            msg.guild
+                        );
+                    }
+                    
                     if (!user) {
                         return client.response.emit(
                             msg.channel,
