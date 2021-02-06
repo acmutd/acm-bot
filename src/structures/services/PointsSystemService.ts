@@ -210,7 +210,7 @@ export default class PointsSystemService {
             first_name: answers[0].text,
             last_name: answers[1].text,
             full_name: answers[0].text + ' ' + answers[1].text,
-            email: answers[2].email,
+            email: answers[2].email.toLowerCase(),
             tag: answers[3].text,
         }
 
@@ -218,7 +218,7 @@ export default class PointsSystemService {
             first_name: answers[4].text,
             last_name: answers[5].text,
             full_name: answers[4].text + ' ' + answers[5].text,
-            email: answers[6].email,
+            email: answers[6].email.toLowerCase(),
             tag: answers[7].text,
         }
 
@@ -473,10 +473,16 @@ export default class PointsSystemService {
                 .get().then(async (doc) => {
             if (!doc.exists || !doc.data()) return [];
 
-            let data = doc.data()!;
+            let rawData = doc.data()!;
+            let data: any = {};
+
+            for (let email in rawData) {
+                data[email.toLowerCase()] = rawData[email];
+            }
 
             for (let email of emails.values()) {
-                if (email in doc.data()!) {
+                email = email.toLowerCase();
+                if (email in data) {
                     snowflakes.push(data[email]);
                 }
             }
