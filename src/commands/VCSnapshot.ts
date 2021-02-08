@@ -54,19 +54,18 @@ export default class VCSnapshot extends Command {
 
         msg.channel.send(
             `**VC Snapshot for \`${voiceChannel.name}\` requested by ${msg.author}**:\n` + 
-            `Member list: ${attendees.join(" ")}\n` + 
-            `Copyable list: \` ${attendees.join("` `")}\``,
+            `Members (${attendees.length}): ${attendees.join(" ")}\n` + 
+            `Copyable: \` ${attendees.join("` `")}\``,
             {allowedMentions: {users: []}}
         ).catch(() => 
             msg.channel.send(
                 `**VC Snapshot for \`${voiceChannel!.name}\` requested by ${msg.author}**:\n` + 
-                `Member list: ${attendees.join(" ")}\n`,
+                `Members (${attendees.length}): ${attendees.join(" ")}\n`,
                 {allowedMentions: {users: []}}
             ).catch(() => 
                 msg.channel.send(
                     `**VC Snapshot for \`${voiceChannel!.name}\` requested by ${msg.author}**:\n` + 
-                    `${attendees.length} \n` + 
-                    `Copyable list: \` ${attendees.join("` `")}\``,
+                    `${attendees.length} members\n` + 
                     {allowedMentions: {users: []}}
                 )
             )
