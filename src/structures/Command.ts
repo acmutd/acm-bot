@@ -52,7 +52,7 @@ export default abstract class Command {
     }
 
     // TODO: Find a use for the return of the exec function
-    public abstract async exec(context: CommandContext): Promise<any>;
+    public abstract exec(context: CommandContext): Promise<any>;
 
     infoEmbed() {
         var embed = new MessageEmbed()

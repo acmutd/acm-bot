@@ -166,6 +166,18 @@ export default class PointsCommand extends Command {
                     awardees.add(userId);
                 });
 
+                // also scan message for usernames
+                for (const arg of args) {
+                    const user = await client.services.resolver.ResolveGuildUser(
+                        arg, 
+                        msg.guild!, 
+                        new Set<string>(['tag']), 
+                        false
+                    );
+                    if (user) awardees.add(user.id);
+                }
+
+                // process awardees inn the attachment
                 let attachmentAwardees = await processAttachments(client, msg, points, activityId);
                 if (attachmentAwardees) {
                     for (let id of attachmentAwardees) {
