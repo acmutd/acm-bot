@@ -94,8 +94,8 @@ export default class VCEvent extends Command {
                         'error'
                     );
                 } else {
-                    const str = JSON.stringify(Array.from(data.entries()), null, 2);
-                    console.log(str); // TODO: remove after done implementing
+                    //const str = JSON.stringify(Array.from(data.entries()), null, 2);
+                    //console.log(str); // TODO: remove after done implementing
 
                     //let table = new Table({head: ['User', 'Minutes'], colors: false});
                     let tableData = [['User', 'Minutes']]; 

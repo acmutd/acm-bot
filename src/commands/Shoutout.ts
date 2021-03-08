@@ -14,8 +14,8 @@ export default class ShoutoutCommand extends Command {
     }
 
     public async exec({ msg, client, args }: CommandContext) {
-        console.log(msg.content);
-        console.log(args[0]);
+        //console.log(msg.content);
+        //console.log(args[0]);
 
         // make sure the first arg starts with a mention
         if (!/^<@!?[\d]{17,18}>/.test(args[0])) {

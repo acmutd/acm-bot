@@ -73,7 +73,7 @@ export default class ActivityManager {
         if (!this.voiceLog.has(voiceChannel.id)) return undefined;
         const voiceData = this.voiceLog.get(voiceChannel.id)!;
         const now = Date.now();
-        console.log(JSON.stringify(voiceData, null, 2));
+        //console.log(JSON.stringify(voiceData, null, 2));
 
         for (const id of voiceChannel.members.keys()) {
             voiceData.push({
@@ -87,7 +87,7 @@ export default class ActivityManager {
         const joinTime = new Map<string, number>();
         for (const data of voiceData) {
             const id = data.userID;
-            console.log(id);
+            //console.log(id);
             const time = data.time;
             if (joinTime.has(id)) {
                 if (!stats.has(id)) stats.set(id, 0);
