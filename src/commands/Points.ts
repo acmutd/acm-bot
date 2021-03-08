@@ -14,6 +14,7 @@ import Command from '../structures/Command';
 import { CommandContext } from '../structures/Command';
 import Wizard, { ConfirmationWizardNode } from '../utils/Wizard';
 import { settings } from '../botsettings';
+import { table } from 'table';
 
 export default class PointsCommand extends Command {
     constructor() {
@@ -23,18 +24,18 @@ export default class PointsCommand extends Command {
             longDescription:
                 'Suite of commands to manage the points system.\n' +
                 'You can check and award points, display the leaderboard, or hold a weighted raffle.\n' +
-                'Each option also has an alias for ease of use:\n' +
-                '`check`: `c`\b' +
-                '`award`: `a`\b' +
-                '`leaderboard`: `lb`\b' +
-                '`raffle`: `r`' +
-                '`vcevent`: `vc`',
+                'Most options also have an alias for ease of use:\n' +
+                '`check`: `c`\n' +
+                '`award`: `a`\n' +
+                '`leaderboard`: `lb`\n' +
+                '`raffle`: `r`',
             usage: [
                 'points check [user]',
                 'points award <amount> <activity-id> [user1 [user2 [user3 ...]]]',
                 'points leaderboard [limit=10]',
                 'points raffle [winners=1]',
-                'points vcevent <amount> <activity-id>',
+                'points vcevent <amount> <activity-id> <threshold-minutes>',
+                'points vcsnapshot <amount> <activity-id>',
             ],
             dmWorks: false,
         });
@@ -69,10 +70,11 @@ export default class PointsCommand extends Command {
                     }
                     else {
                         // discord resolve (nickname, username, id, etc)
-                        user = await client.services.resolver.ResolveGuildUser(
+                        const member = await client.services.resolver.ResolveGuildMember(
                             unresolvedUser,
                             msg.guild
                         );
+                        user = member?.user;
                     }
                     
                     if (!user) {
@@ -168,7 +170,7 @@ export default class PointsCommand extends Command {
 
                 // also scan message for usernames
                 for (const arg of args) {
-                    const user = await client.services.resolver.ResolveGuildUser(
+                    const user = await client.services.resolver.ResolveGuildMember(
                         arg, 
                         msg.guild!, 
                         new Set<string>(['tag']), 
@@ -323,9 +325,102 @@ export default class PointsCommand extends Command {
                     })
                 );
             }
-
             case 'vcevent':
-            case 'vc': {
+                if (!msg.member!.roles.cache.has(settings.points.staffRole)) {
+                    return client.response.emit(
+                        msg.channel,
+                        `${msg.member}, you are unauthorized!`,
+                        'invalid'
+                    );
+                }
+
+                if (args.length < 4) {
+                    return client.response.emit(
+                        msg.channel,
+                        `Stop a vc event and award points to users who stay for some duration.\n` +
+                            `Usage: \`${client.settings.prefix}${this.usage[4]}\`\n`,
+                        'invalid'
+                    );
+                }
+
+                const unresolvedPoints = args[1];
+                const unresolvedThreshold = args[3];
+                const activityId = args[2];
+                let attendees = new Set<string>();
+                let voiceChannel: VoiceChannel | null | undefined;
+                const points = +unresolvedPoints;
+                const threshold = +unresolvedThreshold
+
+                // invalid award amount
+                if (isNaN(points)) {
+                    return client.response.emit(
+                        msg.channel,
+                        `\`${unresolvedPoints}\` is not a valid number.`,
+                        'invalid'
+                    );
+                }
+                // invalid threshold amount
+                if (isNaN(points)) {
+                    return client.response.emit(
+                        msg.channel,
+                        `\`${unresolvedThreshold}\` is not a valid number.`,
+                        'invalid'
+                    );
+                }
+                // attempt to resolve the vc
+                voiceChannel = msg.member?.voice.channel;
+                if (!voiceChannel) {
+                    return client.response.emit(
+                        msg.channel,
+                        `Please join a voice channel!`,
+                        'invalid'
+                    );
+                }
+                const data = client.activity.stopVoiceEvent(voiceChannel);
+                if (!data) {
+                    return client.response.emit(
+                        msg.channel,
+                        `No VC Event is running in ${voiceChannel}`,
+                        'error'
+                    );
+                } else {
+                    const str = JSON.stringify(Array.from(data.entries()), null, 2);
+                    console.log(str); // TODO: remove after done implementing
+
+                    //let table = new Table({head: ['User', 'Minutes'], colors: false});
+                    let tableData = [['User', 'Minutes']];
+                    for (const [userID, time] of data) {
+                        const mbr = await client.services.resolver.ResolveGuildMember(userID, msg.guild!);
+                        if (mbr) {
+                            tableData.push([
+                                mbr.displayName,
+                                Math.round(time / 60000).toString()
+                            ]);
+                            if (time / 60000 >= threshold) attendees.add(mbr.id);
+                        }
+                    }
+
+                    const { success, failure } = await client.services.points.awardPoints(
+                        points,
+                        activityId,
+                        attendees
+                    );
+
+                    await msg.channel.send(
+                        `Event Participation for ${voiceChannel.name}\n\`\`\`${table(tableData)}\`\`\``
+                    );
+                    return msg.reply(
+                        `Awarded **${points}** points to **${
+                            success.length
+                        }** users for completing **${activityId}**:\n${success.join(' ')}\n` +
+                            (failure.length
+                                ? `${failure.length} users were not registered: ${failure.join(' ')}`
+                                : ''),
+                        { allowedMentions: { users: [] } }
+                    );
+                }
+
+            case 'vcsnapshot': {
                 if (!msg.member!.roles.cache.has(settings.points.staffRole)) {
                     return client.response.emit(
                         msg.channel,
@@ -338,7 +433,7 @@ export default class PointsCommand extends Command {
                     return client.response.emit(
                         msg.channel,
                         `Award some points to user(s) in your current voice channel.\n` +
-                            `Usage: \`${client.settings.prefix}${this.usage[4]}\`\n`,
+                            `Usage: \`${client.settings.prefix}${this.usage[5]}\`\n`,
                         'invalid'
                     );
                 }

@@ -15,6 +15,8 @@ export default class ActivityTrackerCommand extends Command {
     }
 
     public async exec({ msg, client, args }: CommandContext) {
+        return msg.reply("This command is unavailable.");
+        /*
         if (args.length != 1) {
             return client.response.emit(
                 msg.channel,
@@ -36,5 +38,6 @@ export default class ActivityTrackerCommand extends Command {
                 'invalid'
             );
         }
+        */
     }
 }

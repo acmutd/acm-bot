@@ -17,7 +17,7 @@ import RRService from './services/RRService';
 import FirestoreManager from './managers/FirestoreManager';
 import PointsSystemService from './services/PointsSystemService';
 import ResolveService from './services/ResolveService';
-import ActivityService from './services/ActivityService';
+import ActivityManager from './managers/ActivityManager';
 import NewsletterService from './services/NewsletterService';
 import CaretakerService from './services/CaretakerService';
 import CircleService from './services/CircleService';
@@ -48,6 +48,7 @@ export default class ACMClient extends Client {
     public express: ExpressManager;
     public indicators: IndicatorManager;
     public scheduler: ScheduleManager;
+    public activity: ActivityManager;
     // public express: ExpressManager;
     // public calendar: CalendarManager;
     // services
@@ -58,7 +59,6 @@ export default class ACMClient extends Client {
         command: CommandService;
         rr: RRService;
         points: PointsSystemService;
-        activity: ActivityService;
         resolver: ResolveService;
         circles: CircleService;
     };
@@ -83,6 +83,7 @@ export default class ACMClient extends Client {
         this.error = new ErrorManager(this);
         this.scheduler = new ScheduleManager(this);
         this.indicators = new IndicatorManager();
+        this.activity = new ActivityManager(this);
         this.services = {
             verification: new VerificationService(this, settings.channels.verification),
             newsletter: new NewsletterService(this),
@@ -90,7 +91,6 @@ export default class ACMClient extends Client {
             command: new CommandService(this),
             rr: new RRService(this),
             points: new PointsSystemService(this),
-            activity: new ActivityService(this),
             resolver: new ResolveService(this),
             circles: new CircleService(this),
         };

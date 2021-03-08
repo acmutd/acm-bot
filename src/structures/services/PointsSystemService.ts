@@ -256,7 +256,7 @@ export default class PointsSystemService {
         if (!ACMGuild) return;
 
         // use the user resolver on most lenient settings
-        const user = await this.client.services.resolver.ResolveGuildUser(
+        const member = await this.client.services.resolver.ResolveGuildMember(
             data.tag,
             ACMGuild,
             new Set<string>(['tag']),
@@ -264,14 +264,14 @@ export default class PointsSystemService {
         );
 
         // handle user not found
-        if (!user) {
+        if (!member) {
             notifChannel.send(`Err: Couldn't find user called "${data.tag}" (${data.full_name})`);
             return;
         }
 
         // now that we have the user, we can set their snowflake and fix their tag
-        data.snowflake = user.id;
-        data.tag = user.tag;
+        data.snowflake = member.user.id;
+        data.tag = member.user.tag;
 
         // maybe they just want to update info. If that's the case, don't overwrite their points! (so we use merge true)
         await this.client.firestore.firestore?.collection("points_system/users/profiles")
@@ -285,7 +285,7 @@ export default class PointsSystemService {
 
         // send confirmation
         if (notify)
-            await user.send(new MessageEmbed({
+            await member.send(new MessageEmbed({
                 color: '#EC7621',
                 title: 'Mentor/Mentee Registration Confirmed',
                 description: `Hi **${data.full_name}**, thank you for registering!\n`,
@@ -293,7 +293,7 @@ export default class PointsSystemService {
                     text: 'If you did not recently request this action, please contact an ACM staff member.',
                 },
             })).catch(
-                (e) => notifChannel.send(`DMs are off for "${data.tag}" (${data.full_name})`)
+                (e: any) => notifChannel.send(`DMs are off for "${data.tag}" (${data.full_name})`)
             )
 
         return data.snowflake;

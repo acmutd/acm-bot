@@ -20,50 +20,50 @@ export default class ResolveService {
      * @param {boolean} [lenient=true] - Lenient search. Default true, disregards whitespace and capitalization.
      * 
      */
-    async ResolveGuildUser(toResolve: string, guild: Guild, strategies: Set<string> = new Set<string>(), lenient: boolean = true): Promise<User | undefined> {
-        let user: User | undefined;
+    async ResolveGuildMember(toResolve: string, guild: Guild, strategies: Set<string> = new Set<string>(), lenient: boolean = true): Promise<GuildMember | undefined> {
+        let member: GuildMember | undefined;
         // Go through each strategy in order if it is an allowed strategy.
         // All strategies are enabled if we don't specify any
 
         // user ID
-        if (!user && (strategies.size == 0 || strategies.has('id')) && /^[\d]{17,18}$/.test(toResolve)) {
-            user = guild?.members.cache.find(gm => gm.user.id == toResolve)?.user;
+        if (!member && (strategies.size == 0 || strategies.has('id')) && /^[\d]{17,18}$/.test(toResolve)) {
+            member = guild?.members.cache.find(gm => gm.user.id == toResolve);
         }
         // user mention
-        if (!user && (strategies.size == 0 || strategies.has('mention')) && /^<@!?[\d]{17,18}>$/.test(toResolve)) {
+        if (!member && (strategies.size == 0 || strategies.has('mention')) && /^<@!?[\d]{17,18}>$/.test(toResolve)) {
             let newToResolve = toResolve.slice(3, -1);
-            user = guild?.members.cache.find(gm => gm.user.id == newToResolve)?.user;
+            member = guild?.members.cache.find(gm => gm.user.id == newToResolve);
         }
         // full tag, strict
-        if (!user && (strategies.size == 0 || strategies.has('tag')) && /#\d{4}$/.test(toResolve)) {
-            user = guild?.members.cache.find(gm => gm.user.tag == toResolve)?.user;
+        if (!member && (strategies.size == 0 || strategies.has('tag')) && /#\d{4}$/.test(toResolve)) {
+            member = guild?.members.cache.find(gm => gm.user.tag == toResolve);
         }
         // username, strict
-        if (!user && (strategies.size == 0 || strategies.has('username'))) {
-            user = guild?.members.cache.find(gm => gm.user.username == toResolve)?.user;
+        if (!member && (strategies.size == 0 || strategies.has('username'))) {
+            member = guild?.members.cache.find(gm => gm.user.username == toResolve);
         }        
         // nickname, strict
-        if (!user && (strategies.size == 0 || strategies.has('nickname'))) {
-            user = guild?.members.cache.find(gm => gm.nickname == toResolve)?.user;
+        if (!member && (strategies.size == 0 || strategies.has('nickname'))) {
+            member = guild?.members.cache.find(gm => gm.nickname == toResolve);
         }
         // lenient matching: string manipulation potentially expensive!
         if (lenient) {
             toResolve = this.makeLenient(toResolve);
             // full tag, lenient
-            if (!user && (strategies.size == 0 || strategies.has('tag')) && /#\d{4}$/.test(toResolve)) {
-                user = guild?.members.cache.find(gm => this.makeLenient(gm.user.tag) == toResolve)?.user;
+            if (!member && (strategies.size == 0 || strategies.has('tag')) && /#\d{4}$/.test(toResolve)) {
+                member = guild?.members.cache.find(gm => this.makeLenient(gm.user.tag) == toResolve);
             }
             // username, lenient
-            if (!user && (strategies.size == 0 || strategies.has('username'))) {
-                user = guild?.members.cache.find(gm => this.makeLenient(gm.user.username) == toResolve)?.user;
+            if (!member && (strategies.size == 0 || strategies.has('username'))) {
+                member = guild?.members.cache.find(gm => this.makeLenient(gm.user.username) == toResolve);
             }
             // nickname, lenient
-            if (!user && (strategies.size == 0 || strategies.has('nickname'))) {
-                user = guild?.members.cache.find(gm => this.makeLenient(gm.nickname? gm.nickname : '') == toResolve)?.user;
+            if (!member && (strategies.size == 0 || strategies.has('nickname'))) {
+                member = guild?.members.cache.find(gm => this.makeLenient(gm.nickname? gm.nickname : '') == toResolve);
             }
         }
 
-        return user;
+        return member;
     }
 
     /**
