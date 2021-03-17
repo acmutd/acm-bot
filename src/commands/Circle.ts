@@ -1,6 +1,6 @@
 import Command, { CommandContext } from '../structures/Command';
 import ACMClient from '../structures/Bot';
-import { Message, OverwriteResolvable, TextChannel } from 'discord.js';
+import { CategoryChannel, Message, OverwriteResolvable, TextChannel } from 'discord.js';
 import Wizard, {
     TextWizardNode,
     UserMentionWizardNode,
@@ -90,7 +90,8 @@ async function addCircle(client: ACMClient, msg: Message, args: string[]) {
         data: { name: `${circle.emoji} ${circle.name}`, mentionable: true, color: res[3] },
     });
     owner.roles.add(circleRole);
-    // 2. category
+    // 2. channel
+    // set perms
     var permissions: OverwriteResolvable[] = [
         {
             id: msg.guild!.id,
@@ -103,26 +104,27 @@ async function addCircle(client: ACMClient, msg: Message, args: string[]) {
             type: 'role',
         },
     ];
-    var circleCategory = await msg.guild!.channels.create(`${circle.emoji} | ${circle.name}`, {
-        type: 'category',
-        permissionOverwrites: permissions,
-    });
-    // 3. channel
+    // find the circles category
+    var circleCategory = msg.guild!.channels.cache.get(settings.channels.circlesCategory) as CategoryChannel;
+    // set channel topic
     var desc = `🎗️: ${circleRole.name}`;
-    var circleChannel = await msg.guild!.channels.create(`${circle.name}`, {
+    // create channel. Note that the name passed will not be the final name because of discord naming.
+    var circleChannel = await msg.guild!.channels.create(`${circle.emoji} ${circle.name}`, {
         type: 'text',
         topic: desc,
         parent: circleCategory,
         permissionOverwrites: permissions,
     });
+    /*
     var circleVoiceChannel = await msg.guild!.channels.create(`${circle.name}` + ' VC', {
         type: 'voice',
         parent: circleCategory,
         permissionOverwrites: permissions,
     });
+    */
 
     circle['_id'] = circleRole.id;
-    circle.category = circleCategory.id;
+    circle.channel = circleChannel.id;
     circle.owner = owner.id;
 
     // add circle
@@ -131,9 +133,7 @@ async function addCircle(client: ACMClient, msg: Message, args: string[]) {
         client.response.emit(msg.channel, `Could not add circle to the database!`, 'error');
         // delete the created stuff
         circleRole.delete();
-        circleCategory.delete();
         circleChannel.delete();
-        circleVoiceChannel.delete();
         return;
     }
 
