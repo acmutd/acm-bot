@@ -38,6 +38,7 @@ export interface Settings {
         error: string;
         shoutout: string;
         circles: string;
+        circlesCategory: string;
         roles: string;
     };
     roles: {

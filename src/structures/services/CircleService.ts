@@ -49,7 +49,7 @@ export default class CircleService {
                 name: circle.name,
                 circle: circle._id,
                 reactions: {},
-                category: circle.category,
+                channel: circle.channel,
             };
             encodedData.reactions[`${circle.emoji}`] = circle._id;
             let embed = new MessageEmbed({
@@ -154,16 +154,8 @@ export default class CircleService {
         if (!member.roles.cache.has(reactionRes)) {
             await member.roles.add(reactionRes);
             // send a join message
-            const unresolvedCategory = await this.client.channels.resolve(obj.category);
-            if (unresolvedCategory?.type === 'category') {
-                const category = unresolvedCategory as CategoryChannel;
-                const chan = category.children.find(
-                    (chan) =>
-                        chan.name === obj.name.toLowerCase().replace(/\s/g, '-') &&
-                        chan.type == 'text'
-                );
-                await (chan as TextChannel | undefined)?.send(`${member}, welcome to ${obj.name}!`);
-            }
+            const chan = guild.channels.cache.get(obj.channel) as TextChannel;
+            chan.send(`${member}, welcome to ${obj.name}!`); // TODO: customizable welcome message
         } else {
             await member.roles.remove(reactionRes);
         }

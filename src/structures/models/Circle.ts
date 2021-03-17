@@ -11,7 +11,7 @@ export interface CircleData {
     emoji?: string;
     createdOn?: Date;
     // ids
-    category?: string;
+    channel?: string;
     owner?: string;
 }
 
@@ -22,7 +22,7 @@ export interface Circle extends Document {
     imageUrl: string;
     emoji: string;
     createdOn: Date;
-    category: string;
+    channel: string;
     owner: string;
 }
 
@@ -33,7 +33,7 @@ const circleSchema = new Schema({
     imageUrl: String,
     emoji: String,
     createdOn: Date,
-    category: String,
+    channel: String,
     owner: String,
 });
 
