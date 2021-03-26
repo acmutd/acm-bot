@@ -18,6 +18,10 @@ export default class VerificationService {
                     msg.member.setNickname(msg.content);
                     msg.member.roles.add(settings.roles.member);
                     msg.delete();
+                    // add to firebase
+                    let map: any = {};
+                    map[msg.member.id] = msg.content;
+                    this.client.firestore.firestore?.collection('discord').doc('snowflake_to_name').set(map, {merge: true})
                     return;
                 } catch (err) {
                     this.client.logger.error(err);
