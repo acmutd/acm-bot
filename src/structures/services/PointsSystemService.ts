@@ -16,9 +16,8 @@ interface UserPointsData {
     activities?: any;
 }
 
-interface PairPointsData {
-    mentorData: UserPointsData;
-    menteeData: UserPointsData;
+interface LeaderboardData {
+    users: Array<string>;
     points: number; 
 }
 
@@ -494,8 +493,8 @@ export default class PointsSystemService {
      * Retrieve the user list. Could be expensive!
      * @param limit Number of users to return
      */
-    async getLeaderboard(limit = 0) {
-        let res: PairPointsData[] = [];
+    async getLeaderboard(type: 'mentee'|'mentor'|'both' = 'both', limit = 0) {
+        let res: LeaderboardData[] = [];
 
         // build a map of individual data, keyed by ID
         let individualData: Map<string, UserPointsData> = new Map<string, UserPointsData>();
@@ -507,17 +506,46 @@ export default class PointsSystemService {
         // create mapping of mentor+mentee → combined points
         let pairs = await (await this.client.firestore.firestore?.collection("points_system").doc("pairs").get()!).data();
 
-        for (const menteeSnowflake in pairs) {
-            const mentorData = individualData.get(pairs[menteeSnowflake]);
-            const menteeData = individualData.get(menteeSnowflake);
+        switch(type) {
+            case 'mentee':
+                res = Object.keys(pairs!)
+                        .map(mentee => ({
+                            users: [mentee],
+                            points: individualData.get(mentee)!.points || 0
+                        }));
+                break;
 
-            if (!mentorData || !menteeData) continue;
+            case 'mentor':
+                // build mentor points. 
+                // Can't use .map() here because multiple mentees can map to one mentor
+                for (const mentor of Object.values(pairs!))
+                    if (!res.find(data => data.users[0] == mentor))
+                        res.push({
+                            users: [mentor],
+                            points: individualData.get(mentor)!.points || 0
+                        });
 
-            res.push({
-                mentorData,
-                menteeData,
-                points: (menteeData?.points || 0) + (mentorData?.points || 0)
-            });
+                // add points for meetings, stored in mentee data
+                for (const [mentee, mentor] of Object.entries(pairs!)) {
+                    let mentorData = res.find(data => data.users[0] == mentor)!;
+                    const activities = individualData.get(mentee)!.activities;
+                    mentorData.points += activities ? activities['Mentor/ Mentee Meeting'] : 0;
+                }
+                break;
+            
+            case 'both':
+                res = Object.entries(pairs!)
+                        .map(([mentee, mentor]) => {
+                            const menteeData = individualData.get(mentee)!;
+                            const mentorData = individualData.get(mentor)!;
+                                
+                            return {
+                                users: [mentee, mentor],
+                                points: (menteeData?.points || 0) + (mentorData?.points || 0)
+                            };
+                        })
+
+                break;
         }
 
         // sort descending by points

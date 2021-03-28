@@ -32,12 +32,13 @@ export default class PointsCommand extends Command {
             usage: [
                 'points check [user]',
                 'points award <amount> <activity-id> [user1 [user2 [user3 ...]]]',
-                'points leaderboard [limit=10]',
+                'points leaderboard <mentee|mentor|both> [limit=0 (all)]',
                 'points raffle [winners=1]',
                 'points vcevent <amount> <activity-id> <threshold-minutes>',
                 'points vcsnapshot <amount> <activity-id>',
             ],
             dmWorks: false,
+            requiredRole: settings.points.staffRole,
         });
     }
 
@@ -130,14 +131,6 @@ export default class PointsCommand extends Command {
 
             case 'award':
             case 'a': {
-                if (!msg.member!.roles.cache.has(settings.points.staffRole)) {
-                    return client.response.emit(
-                        msg.channel,
-                        `${msg.member}, you are unauthorized!`,
-                        'invalid'
-                    );
-                }
-
                 if (args.length < 3) {
                     return client.response.emit(
                         msg.channel,
@@ -207,15 +200,16 @@ export default class PointsCommand extends Command {
 
             case 'leaderboard':
             case 'lb': {
-                if (!msg.member!.roles.cache.has(settings.points.staffRole)) {
+                if (args.length < 2 || args[1] != 'mentee' && args[1] != 'mentor' && args[1] != 'both') {
                     return client.response.emit(
                         msg.channel,
-                        `${msg.member}, you are unauthorized!`,
+                        `Usage: \`${client.settings.prefix}${this.usage[2]}\`\n`,
                         'invalid'
                     );
                 }
 
-                const unresolvedNumUsers = args[1];
+                const filter = args[1];
+                const unresolvedNumUsers = args[2];
                 let numUsers = 0; // default to all
 
                 if (unresolvedNumUsers) {
@@ -231,15 +225,13 @@ export default class PointsCommand extends Command {
                     }
                 }
 
-                const allPairs = await client.services.points.getLeaderboard(numUsers);
+                const allPairs = await client.services.points.getLeaderboard(filter, numUsers);
 
                 let descriptionArr: string[] = [];
                 allPairs.forEach((pair, i) => {
                     if (pair.points > 0)
                         descriptionArr.push(
-                            `\`${i + 1}\`. <@${pair.menteeData.snowflake}>+<@${
-                                pair.mentorData.snowflake
-                            }>: ${pair.points} points`
+                            `\`${i + 1}\`. <@${pair.users.join('>+<@')}>: ${pair.points} points`
                         );
                 });
 
@@ -253,15 +245,7 @@ export default class PointsCommand extends Command {
 
             case 'raffle':
             case 'r': {
-                if (!msg.member!.roles.cache.has(settings.points.staffRole)) {
-                    return client.response.emit(
-                        msg.channel,
-                        `${msg.member}, you are unauthorized!`,
-                        'invalid'
-                    );
-                }
-
-                const allPairs = await client.services.points.getLeaderboard();
+                const allPairs = await client.services.points.getLeaderboard('both');
                 const unresolvedNumWinners = args[1];
                 let sum = 0;
                 let numWinners: number;
@@ -311,7 +295,7 @@ export default class PointsCommand extends Command {
                     // add the winning count to the person's stats
                     if (winnerCount > 0)
                         winningUsers.push(
-                            `<@${pair.menteeData.snowflake}>+<@${pair.mentorData.snowflake}>: ${winnerCount}`
+                            `<@${pair.users.join('>+<@')}>: ${winnerCount}`
                         );
 
                     // stop processing once all the winning numbers are gone
@@ -326,14 +310,6 @@ export default class PointsCommand extends Command {
                 );
             }
             case 'vcevent':
-                if (!msg.member!.roles.cache.has(settings.points.staffRole)) {
-                    return client.response.emit(
-                        msg.channel,
-                        `${msg.member}, you are unauthorized!`,
-                        'invalid'
-                    );
-                }
-
                 if (args.length < 4) {
                     return client.response.emit(
                         msg.channel,
@@ -421,14 +397,6 @@ export default class PointsCommand extends Command {
                 }
 
             case 'vcsnapshot': {
-                if (!msg.member!.roles.cache.has(settings.points.staffRole)) {
-                    return client.response.emit(
-                        msg.channel,
-                        `${msg.member}, you are unauthorized!`,
-                        'invalid'
-                    );
-                }
-
                 if (args.length < 3) {
                     return client.response.emit(
                         msg.channel,
