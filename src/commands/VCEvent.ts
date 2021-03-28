@@ -1,5 +1,5 @@
 import { FieldValue } from '@google-cloud/firestore';
-import { Guild, GuildMember, User, VoiceChannel } from 'discord.js';
+import { DMChannel, Guild, GuildMember, MessageEmbed, NewsChannel, TextChannel, User, VoiceChannel } from 'discord.js';
 import Command from '../structures/Command';
 import { CommandContext } from '../structures/Command';
 import Wizard, { ConfirmationWizardNode } from '../utils/Wizard';
@@ -25,10 +25,11 @@ export default class VCEvent extends Command {
             longDescription: "Records user statistics for your current voice channel.\n" +
                 "You can also pass in a voice channel ID to use this command without having to join.",
             usage: [
-                "vcevent <start|stop>",
-                "vcevent <start|stop> [channel-id]"
+                "vcevent <start|stop|stats|list>",
+                "vcevent <start|stop|stats> [channel-id]"
             ],
             dmWorks: false,
+            requiredRoles: [settings.roles.staff, settings.points.staffRole]
         });
     }
 
@@ -57,7 +58,7 @@ export default class VCEvent extends Command {
         }
         else {
             voiceChannel = msg.member?.voice.channel;
-            if (!voiceChannel) {
+            if (!voiceChannel && action != 'list') {
                 return client.response.emit(
                     msg.channel,
                     `Please join a voice channel!`,
@@ -69,7 +70,8 @@ export default class VCEvent extends Command {
         switch(action) {
             case 'start':
             case 'begin':
-                if(client.activity.startVoiceEvent(voiceChannel)) {
+            {
+                if(client.activity.startVoiceEvent(voiceChannel!)) {
                     return client.response.emit(
                         msg.channel,
                         `VC Event started for ${voiceChannel}`,
@@ -83,10 +85,12 @@ export default class VCEvent extends Command {
                         'error'
                     )
                 }
+            }
 
             case 'stop':
-            case 'end':
-                const data = client.activity.stopVoiceEvent(voiceChannel);
+            case 'end': 
+            {
+                const data = client.activity.stopVoiceEvent(voiceChannel!);
                 if (!data) {
                     return client.response.emit(
                         msg.channel,
@@ -94,28 +98,61 @@ export default class VCEvent extends Command {
                         'error'
                     );
                 } else {
-                    //const str = JSON.stringify(Array.from(data.entries()), null, 2);
-                    //console.log(str); // TODO: remove after done implementing
-
-                    //let table = new Table({head: ['User', 'Minutes'], colors: false});
-                    let tableData = [['User', 'Minutes']]; 
-                    for (const [userID, time] of data) {
-                        const mbr = await client.services.resolver.ResolveGuildMember(userID, msg.guild!);
-                        if (mbr) tableData.push([
-                            mbr.displayName, 
-                            Math.round(time / 60000).toString()
-                        ]);
-                    }
-
-                    msg.channel.send(
-                        `Event Participation for ${voiceChannel.name}\n\`\`\`${table(tableData)}\`\`\``
-                    );
+                    this.printStats(msg.channel, data);
                 }
                 break;
+            }
+
+            case 'stats': 
+            {
+                const data = client.activity.voiceEventStats(voiceChannel!);
+                if (!data) {
+                    return client.response.emit(
+                        msg.channel,
+                        `No VC Event is running in ${voiceChannel}`,
+                        'error'
+                    );
+                } else {
+                    this.printStats(msg.channel, data);
+                }
+                break;
+            }
+
+            case 'list':
+            {
+                let channels = Array.from(client.activity.voiceLog.keys()).map(id => `<#${id}>`);
+                await msg.channel.send(
+                    new MessageEmbed({
+                        title: 'VC Events currently running',
+                        description: channels.length > 0 ? channels.join('\n') : 'none',
+                    })
+                );
+                break;
+            }
 
             default:
                 return this.sendInvalidUsage(msg, client);
         }
         
+    }
+
+    async printStats(channel: TextChannel | DMChannel | NewsChannel, data: Map<string, number>) {
+        let sorted = Array.from(data.keys()).sort((a, b) => data.get(b)! - data.get(a)!);
+        let descriptionArr: string[] = [];
+
+        sorted.forEach((userID, i) => {
+            const time = Math.round(data.get(userID)! / 60000);
+            descriptionArr.push(
+                `\`${i + 1}\`. <@${userID}>: ${time} minute${time == 1 ? '' : 's'}`
+            );
+        })
+
+      
+        await channel.send(
+            new MessageEmbed({
+                title: 'Time spent in VC',
+                description: descriptionArr.join('\n'),
+            })
+        );
     }
 }

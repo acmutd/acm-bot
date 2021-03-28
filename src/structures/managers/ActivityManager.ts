@@ -1,4 +1,4 @@
-import { Collection, GuildMember, Message, VoiceChannel, VoiceState } from 'discord.js';
+import { Collection, GuildMember, Message, TextChannel, VoiceChannel, VoiceState } from 'discord.js';
 import ACMClient from '../Bot';
 import { settings } from '../../botsettings';
 
@@ -67,9 +67,22 @@ export default class ActivityManager {
     /**
      * Stops logging for a new VC Event
      * @param voiceChannel 
-     * @returns True if successful. False otherwise.
+     * @returns stats if successful. undefined otherwise.
      */
-    stopVoiceEvent(voiceChannel: VoiceChannel): Map<string, number> | undefined {
+     stopVoiceEvent(voiceChannel: VoiceChannel): Map<string, number> | undefined {
+        if (!this.voiceLog.has(voiceChannel.id)) return undefined;
+
+        const stats = this.voiceEventStats(voiceChannel);
+        this.voiceLog.delete(voiceChannel.id);
+        return stats;
+    }
+
+    /**
+     * Gets stats for a running VC Event without stopping it
+     * @param voiceChannel 
+     * @returns stats if successful. undefined otherwise.
+     */
+     voiceEventStats(voiceChannel: VoiceChannel): Map<string, number> | undefined {
         if (!this.voiceLog.has(voiceChannel.id)) return undefined;
         const voiceData = this.voiceLog.get(voiceChannel.id)!;
         const now = Date.now();
@@ -99,7 +112,6 @@ export default class ActivityManager {
             }
         }
     
-        this.voiceLog.delete(voiceChannel.id);
         return stats;
     }
 

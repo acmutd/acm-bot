@@ -38,7 +38,7 @@ export default class PointsCommand extends Command {
                 'points vcsnapshot <amount> <activity-id>',
             ],
             dmWorks: false,
-            requiredRole: settings.points.staffRole,
+            requiredRoles: [settings.points.staffRole],
         });
     }
 
@@ -360,31 +360,30 @@ export default class PointsCommand extends Command {
                         'error'
                     );
                 } else {
-                    //const str = JSON.stringify(Array.from(data.entries()), null, 2);
-                    //console.log(str); // TODO: remove after done implementing
-
-                    //let table = new Table({head: ['User', 'Minutes'], colors: false});
-                    let tableData = [['User', 'Minutes']];
-                    for (const [userID, time] of data) {
-                        const mbr = await client.services.resolver.ResolveGuildMember(userID, msg.guild!);
-                        if (mbr) {
-                            tableData.push([
-                                mbr.displayName,
-                                Math.round(time / 60000).toString()
-                            ]);
-                            if (time / 60000 >= threshold) attendees.add(mbr.id);
-                        }
-                    }
+                    let sorted = Array.from(data.keys()).sort((a, b) => data.get(b)! - data.get(a)!);
+                    let descriptionArr: string[] = [];
+    
+                    sorted.forEach((userID, i) => {
+                        const time = Math.round(data.get(userID)! / 60000);
+                        descriptionArr.push(
+                            `\`${i + 1}\`. <@${userID}>: ${time} minute${time == 1 ? '' : 's'}`
+                        );
+                        if (time >= threshold) attendees.add(userID);
+                    })
 
                     const { success, failure } = await client.services.points.awardPoints(
                         points,
                         activityId,
                         attendees
                     );
-
+                    
                     await msg.channel.send(
-                        `Event Participation for ${voiceChannel.name}\n\`\`\`${table(tableData)}\`\`\``
+                        new MessageEmbed({
+                            title: 'Time spent in VC',
+                            description: descriptionArr.join('\n'),
+                        })
                     );
+
                     return msg.reply(
                         `Awarded **${points}** points to **${
                             success.length
