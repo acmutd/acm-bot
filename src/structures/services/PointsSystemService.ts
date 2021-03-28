@@ -529,7 +529,7 @@ export default class PointsSystemService {
                 for (const [mentee, mentor] of Object.entries(pairs!)) {
                     let mentorData = res.find(data => data.users[0] == mentor)!;
                     const activities = individualData.get(mentee)!.activities;
-                    mentorData.points += activities ? activities['Mentor/ Mentee Meeting'] : 0;
+                    mentorData.points += activities && activities['Mentor/ Mentee Meeting'] ? activities['Mentor/ Mentee Meeting'] : 0;
                 }
                 break;
             
