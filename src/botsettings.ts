@@ -43,6 +43,7 @@ export interface Settings {
     };
     roles: {
         member: string;
+        staff: string;
         director: string;
         mute: string;
         divisions: {

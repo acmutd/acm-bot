@@ -28,11 +28,11 @@ export default class CommandService {
             );
 
         if (
-            command.requiredRole &&
+            command.requiredRoles &&
             msg.member &&
-            !msg.member.roles.cache.has(command.requiredRole)
+            !msg.member.roles.cache.some(role => command.requiredRoles!.findIndex(rr => rr == role.id) != -1)
         ) {
-            let role = msg.guild?.roles.cache.get(command.requiredRole);
+            let role = msg.guild?.roles.cache.get(command.requiredRoles[0]);
             return this.client.response.build(
                 `You do not have the appropriate role (${role?.toString()}) to use this command.`,
                 'invalid'
