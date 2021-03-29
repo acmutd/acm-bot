@@ -84,7 +84,7 @@ export default class ActivityManager {
      */
      voiceEventStats(voiceChannel: VoiceChannel): Map<string, number> | undefined {
         if (!this.voiceLog.has(voiceChannel.id)) return undefined;
-        const voiceData = this.voiceLog.get(voiceChannel.id)!;
+        const voiceData = [...this.voiceLog.get(voiceChannel.id)!];
         const now = Date.now();
         //console.log(JSON.stringify(voiceData, null, 2));
 

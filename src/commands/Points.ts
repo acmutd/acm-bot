@@ -379,7 +379,7 @@ export default class PointsCommand extends Command {
                     
                     await msg.channel.send(
                         new MessageEmbed({
-                            title: 'Time spent in VC',
+                            title: `Time spent in ${voiceChannel}`,
                             description: descriptionArr.join('\n'),
                         })
                     );

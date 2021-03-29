@@ -98,7 +98,7 @@ export default class VCEvent extends Command {
                         'error'
                     );
                 } else {
-                    this.printStats(msg.channel, data);
+                    this.printStats(msg.channel, voiceChannel!, data);
                 }
                 break;
             }
@@ -113,7 +113,7 @@ export default class VCEvent extends Command {
                         'error'
                     );
                 } else {
-                    this.printStats(msg.channel, data);
+                    this.printStats(msg.channel, voiceChannel!, data);
                 }
                 break;
             }
@@ -136,12 +136,12 @@ export default class VCEvent extends Command {
         
     }
 
-    async printStats(channel: TextChannel | DMChannel | NewsChannel, data: Map<string, number>) {
-        let sorted = Array.from(data.keys()).sort((a, b) => data.get(b)! - data.get(a)!);
+    async printStats(channel: TextChannel | DMChannel | NewsChannel, voiceChannel: VoiceChannel, stats: Map<string, number>) {
+        let sorted = Array.from(stats.keys()).sort((a, b) => stats.get(b)! - stats.get(a)!);
         let descriptionArr: string[] = [];
 
         sorted.forEach((userID, i) => {
-            const time = Math.round(data.get(userID)! / 60000);
+            const time = Math.round(stats.get(userID)! / 60000);
             descriptionArr.push(
                 `\`${i + 1}\`. <@${userID}>: ${time} minute${time == 1 ? '' : 's'}`
             );
@@ -150,7 +150,7 @@ export default class VCEvent extends Command {
       
         await channel.send(
             new MessageEmbed({
-                title: 'Time spent in VC',
+                title: `Time spent in ${voiceChannel}`,
                 description: descriptionArr.join('\n'),
             })
         );
