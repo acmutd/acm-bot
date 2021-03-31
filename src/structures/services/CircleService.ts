@@ -29,7 +29,7 @@ export default class CircleService {
         await c.bulkDelete(50);
         // generate the title
         c.send(
-            'https://cdn.discordapp.com/attachments/537776612238950410/806744701579165747/circle_banner.png'
+            'https://cdn.discordapp.com/attachments/537776612238950410/826695146250567681/circles.png'
         );
 
         // generate description
