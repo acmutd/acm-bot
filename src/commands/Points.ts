@@ -15,7 +15,7 @@ import { CommandContext } from '../structures/Command';
 import Wizard, { ConfirmationWizardNode } from '../utils/Wizard';
 import { settings } from '../botsettings';
 import { table } from 'table';
-
+// ACM Education points suite.
 export default class PointsCommand extends Command {
     constructor() {
         super({
@@ -25,10 +25,10 @@ export default class PointsCommand extends Command {
                 'Suite of commands to manage the points system.\n' +
                 'You can check and award points, display the leaderboard, or hold a weighted raffle.\n' +
                 'Most options also have an alias for ease of use:\n' +
-                '`check`: `c`\n' +
-                '`award`: `a`\n' +
-                '`leaderboard`: `lb`\n' +
-                '`raffle`: `r`',
+                '`check`: `c`\n' + // check points
+                '`award`: `a`\n' + // award points
+                '`leaderboard`: `lb`\n' + // access points leaderboard
+                '`raffle`: `r`', // randomly raffle points
             usage: [
                 'points check [user]',
                 'points award <amount> <activity-id> [user1 [user2 [user3 ...]]]',
@@ -41,7 +41,11 @@ export default class PointsCommand extends Command {
             requiredRoles: [settings.points.staffRole],
         });
     }
-
+    /**
+     * Standard Command Executor
+     * @param param0 Command Arguments
+     * @returns Emit Promise
+     */
     public async exec({ msg, client, args }: CommandContext) {
         if (!msg.guild) {
             // shouldn't ever happen, but we"re gonna include it just for typescript 😄

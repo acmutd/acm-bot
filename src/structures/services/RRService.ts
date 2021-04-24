@@ -3,7 +3,9 @@ import { MessageReaction, TextChannel, User } from 'discord.js';
 import { identitytoolkit } from 'googleapis/build/src/apis/identitytoolkit';
 import e from 'express';
 import { RRMessageData } from '../models/RRMessage';
-
+/**
+ * Handles reaction roles and their functionality (create, handle, fetch, etc)
+ */
 export default class RRService {
     public client: ACMClient;
     public emojiRegEx: RegExp;

@@ -1,7 +1,7 @@
 import Command from '../structures/Command';
 import { CommandContext } from '../structures/Command';
 import schedule, { Job } from 'node-schedule';
-
+// Reminder system via the ACM Discord Bot. Reminds a user about a task after a given amount of time.
 export default class RemindCommand extends Command {
     constructor() {
         super({
@@ -10,7 +10,11 @@ export default class RemindCommand extends Command {
             usage: ['remind [minutes] [message]'],
         });
     }
-
+    /**
+     * Standard Command Executor
+     * @param param0 Command Arguments
+     * @returns Emit Promise
+     */
     public async exec({ msg, client, args }: CommandContext) {
         if (args.length < 2) {
             return client.response.emit(msg.channel, `Usage: \`${this.usage[0]}\``, 'invalid');

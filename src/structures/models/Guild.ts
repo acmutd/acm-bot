@@ -20,7 +20,7 @@ export interface Guild extends Document {
         ban: string[];
     };
 }
-
+// DB Guild Schema
 const guildSchema = new Schema({
     _id: String,
     channels: {

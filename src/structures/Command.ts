@@ -25,7 +25,9 @@ export interface CommandConfig {
     userPermissions?: number;
     requiredRoles?: string[];
 }
-
+/**
+ * Represents a bot command (name, esc, type, permissions, etc)
+ */
 export default abstract class Command {
     public name: string;
     public description: string;

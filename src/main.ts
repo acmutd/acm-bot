@@ -14,4 +14,5 @@ let client: ACMClient = new ACMClient({
   disabledCategories: settings.disabledCategories,
 });
 
+// execute initial listeners
 client.start();

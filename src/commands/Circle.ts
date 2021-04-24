@@ -10,7 +10,9 @@ import Wizard, {
 } from '../utils/Wizard';
 import { settings } from '../botsettings';
 import { CircleData } from '../structures/models/Circle';
-
+/*
+Main circle command suite. Used to add a circle or repost the entire list.
+*/
 export default class CircleCommand extends Command {
     constructor() {
         super({
@@ -20,13 +22,18 @@ export default class CircleCommand extends Command {
             userPermissions: 268443664,
         });
     }
+    /**
+     * Standard Command Executor
+     * @param param0 Command Arguments
+     * @returns Promise
+     */
     public async exec({ msg, client, args }: CommandContext) {
         switch (args[0]) {
             case 'add':
                 await addCircle(client, msg, args);
                 break;
             case 'repost':
-                await client.services.circles.repost();
+                await client.services.circles.repost(); // refresh circles channel
                 break;
             default:
                 msg.channel.send(
@@ -36,8 +43,14 @@ export default class CircleCommand extends Command {
         }
     }
 }
-
 // * Circle CRUD series
+/**
+ * Adds a circle to the database
+ * @param client Bot Instance
+ * @param msg Raw Command Message
+ * @param args Optional Flags
+ * @returns 
+ */
 async function addCircle(client: ACMClient, msg: Message, args: string[]) {
     let wizard = new Wizard(msg, undefined, { title: '__**Circle Creation:**__ ' });
     wizard.addNodes([

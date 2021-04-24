@@ -4,7 +4,7 @@ import { Message, MessageAttachment, MessageEmbed } from 'discord.js';
 import ACMClient from '../structures/Bot';
 import axios from 'axios';
 import { settings } from '../botsettings';
-
+ // WIP TODO
 export default class HelpCommand extends Command {
     constructor() {
         super({
@@ -17,7 +17,11 @@ export default class HelpCommand extends Command {
             dmWorks: true,
         });
     }
-
+    /**
+     * Standard Command Executor
+     * @param param0 Command Arguments
+     * @returns Promise
+     */
     public async exec({ msg, client, args }: CommandContext) {
         switch (args.length) {
             case 0:

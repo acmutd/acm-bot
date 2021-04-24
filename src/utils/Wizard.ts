@@ -19,7 +19,9 @@ export interface WizardConfigurations {
         error: string;
     };
 }
-
+/**
+ * A factory-style wizard for data entry (custom node support)
+ */
 export default class Wizard {
     public nodes: WizardNode[] = [];
     public message: Message;
@@ -331,7 +333,9 @@ export class CustomWizardNode extends WizardNode {
         if (res) return res;
     }
 }
-
+/**
+ * Emoji input node.
+ */
 export class EmojiWizardNode extends WizardNode {
     async preSendCB(details: MessageEmbedOptions): Promise<MessageEmbedOptions | void> {}
 
@@ -343,7 +347,9 @@ export class EmojiWizardNode extends WizardNode {
         }
     }
 }
-
+/**
+ * Text input node.
+ */
 export class TextWizardNode extends WizardNode {
     async preSendCB(details: MessageEmbedOptions): Promise<MessageEmbedOptions | void> {}
 
@@ -353,7 +359,9 @@ export class TextWizardNode extends WizardNode {
         }
     }
 }
-
+/**
+ * HEX input node.
+ */
 export class ColorWizardNode extends WizardNode {
     async preSendCB(details: MessageEmbedOptions) {}
 
@@ -375,7 +383,9 @@ export class GraphicWizardNode extends WizardNode {
         }
     }
 }
-
+/**
+ * Mention input node.
+ */
 export class UserMentionWizardNode extends WizardNode {
     async preSendCB(details: MessageEmbedOptions) {}
 
@@ -385,7 +395,9 @@ export class UserMentionWizardNode extends WizardNode {
         }
     }
 }
-
+/**
+ * Channel input node.
+ */
 export class ChannelMentionWizardNode extends WizardNode {
     async preSendCB(details: MessageEmbedOptions) {}
 
@@ -395,7 +407,9 @@ export class ChannelMentionWizardNode extends WizardNode {
         }
     }
 }
-
+/**
+ * Role input node.
+ */
 export class RoleMentionWizardNode extends WizardNode {
     async preSendCB(details: MessageEmbedOptions) {}
 
@@ -405,7 +419,9 @@ export class RoleMentionWizardNode extends WizardNode {
         }
     }
 }
-
+/**
+ * Flag(s) input node.
+ */
 export class OptionsWizardNode extends WizardNode {
     public choices: string[];
     public strict: boolean;
@@ -442,7 +458,9 @@ export class OptionsWizardNode extends WizardNode {
         if (!this.strict) return { value: response.content, isOption: false };
     }
 }
-
+/**
+ * Confirmation node.
+ */
 export class ConfirmationWizardNode extends WizardNode {
     async preSendCB(details: MessageEmbedOptions) {
         details.footer = { text: "Enter 'confirm' to proceed. Enter 'quit' to end wizard." };

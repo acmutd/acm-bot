@@ -8,7 +8,7 @@ import Wizard, {
     ChannelMentionWizardNode,
 } from '../utils/Wizard';
 import { Intents } from 'discord.js';
-
+// returns cache size of mentioned user (debugging command)
 export default class CacheCheckCommand extends Command {
     constructor() {
         super({
@@ -16,7 +16,11 @@ export default class CacheCheckCommand extends Command {
             description: 'sends the link to ur cacheCheck',
         });
     }
-
+    /**
+     * Standard Command Executor
+     * @param param0 Command Arguments
+     * @returns Promise
+     */
     public async exec({ msg, client, args }: CommandContext) {
         if (msg.mentions.users.array().length > 0) {
             const memberId = msg.guild?.members.cache.get(msg.mentions.users.first()!.id);

@@ -16,7 +16,7 @@ import Wizard, {
     UserMentionWizardNode,
 } from '../utils/Wizard';
 import { settings } from '../botsettings';
-
+// ACM Projects command suite. Allows officers to create, delete, and manage projects and members.
 export default class ProjectCommand extends Command {
     constructor() {
         super({
@@ -25,6 +25,11 @@ export default class ProjectCommand extends Command {
             dmWorks: false,
         });
     }
+    /**
+     * Standard Command Executor
+     * @param param0 Command Arguments
+     * @returns Promise
+     */
     public async exec({ msg, client, args }: CommandContext) {
         switch (args[0]) {
             case 'create':

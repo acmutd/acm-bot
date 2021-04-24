@@ -1,6 +1,6 @@
 import { Message } from "discord.js";
 import Command, { CommandContext } from "../structures/Command";
-
+// Boilerplate Ping command. Tests the bot's response time.
 export default class PingCommand extends Command {
     constructor() {
         super({
@@ -8,7 +8,11 @@ export default class PingCommand extends Command {
             description: "test",
         });
     }
-
+    /**
+     * Standard Command Executor
+     * @param param0 Command Arguments
+     * @returns Emit Promise
+     */
     public async exec({ msg, client, args }: CommandContext) {
         const startTime = new Date().getTime();
 

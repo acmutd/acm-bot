@@ -14,7 +14,7 @@ export interface RRMessage extends Document {
     type: string;
     reactionRoles: any;
 }
-
+// DB ReactionRole schema
 const rrSchema = new Schema({
     _id: String,
     guild: String,

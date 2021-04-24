@@ -8,7 +8,7 @@ import Wizard, {
     ChannelMentionWizardNode,
 } from '../utils/Wizard';
 import { Intents } from 'discord.js';
-
+// return avatar URL
 export default class AvatarCommand extends Command {
     constructor() {
         super({
@@ -16,7 +16,11 @@ export default class AvatarCommand extends Command {
             description: 'sends the link to ur avatar',
         });
     }
-
+    /**
+     * Standard Command Executor
+     * @param param0 Command Arguments
+     * @returns Promise
+     */
     public async exec({ msg, client, args }: CommandContext) {
         // const avatarURL = msg.author.displayAvatarURL({ format: 'png' });
         // // const results = await toolkit.ai.detectSafeSearch(avatarURL);
@@ -35,11 +39,11 @@ export default class AvatarCommand extends Command {
         let wizard = new Wizard(msg, undefined, { title: '👋🏽 | ' });
         // declaring nodes
         wizard.addNodes([
-            new TextWizardNode(wizard, {
+            new TextWizardNode(wizard, { // name node
                 title: 'whats ur name??',
                 description: 'please enter ur name',
             }),
-            new UserMentionWizardNode(
+            new UserMentionWizardNode( // info node
                 wizard,
                 {
                     title: 'who is ur best friend??',
@@ -49,14 +53,14 @@ export default class AvatarCommand extends Command {
                     invalidMessage: 'Yo that wasnt correct',
                 }
             ),
-            new OptionsWizardNode(
+            new OptionsWizardNode( // info node
                 wizard,
                 {
                     title: 'choose from ur favorite thing',
                 },
                 ['oranges', 'apples', 'bananas']
             ),
-            new ChannelMentionWizardNode(
+            new ChannelMentionWizardNode( // info node
                 wizard,
                 {
                     title: 'whats ur fav channels',

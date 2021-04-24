@@ -4,7 +4,9 @@ import ACMClient from '../Bot';
 import { settings } from '../../botsettings';
 import {Firestore, Settings} from '@google-cloud/firestore';
 
-
+/**
+ * Manages Firestore interactions.
+ */
 export default class FirestoreManager {
     public client: ACMClient;
     

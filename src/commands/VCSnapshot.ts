@@ -4,7 +4,7 @@ import Command from '../structures/Command';
 import { CommandContext } from '../structures/Command';
 import Wizard, { ConfirmationWizardNode } from '../utils/Wizard';
 import { settings } from '../botsettings';
-
+// Takes a snapshot-by-id of a given voice channel, listing the ids of participating members.
 export default class VCSnapshot extends Command {
     constructor() {
         super({
@@ -19,7 +19,11 @@ export default class VCSnapshot extends Command {
             dmWorks: false,
         });
     }
-
+    /**
+     * Standard Command Executor
+     * @param param0 Command Arguments
+     * @returns Optional Emit Promise
+     */
     public async exec({ msg, client, args }: CommandContext) {
         let voiceChannel: VoiceChannel | null | undefined;
         let attendees: Array<string> = [];

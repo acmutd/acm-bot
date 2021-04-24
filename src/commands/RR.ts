@@ -10,7 +10,7 @@ import Wizard, {
 import { Message, MessageEmbed, TextChannel } from 'discord.js';
 import ACMClient from '../structures/Bot';
 import { RRMessageData } from '../structures/models/RRMessage';
-
+// Reaction roles command suite. Create and delete reaction roles for automated handling.
 export default class RRCommand extends Command {
     constructor() {
         super({
@@ -18,7 +18,11 @@ export default class RRCommand extends Command {
             description: 'Reaction roles suite',
         });
     }
-
+    /**
+     * Standard Command Executor
+     * @param param0 Command Arguments
+     * @returns Optional Emit Promise
+     */
     public async exec({ msg, client, args }: CommandContext) {
         switch (args[0]) {
             case 'create':

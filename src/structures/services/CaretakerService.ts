@@ -1,7 +1,9 @@
 import ACMClient from '../Bot';
 import { MessageEmbed, TextChannel } from 'discord.js';
 import { settings } from '../../botsettings';
-
+/**
+ * Manages the Caretaker task.
+ */
 export default class CaretakerService {
     public client: ACMClient;
     private lastMsg: string | Date;
@@ -28,7 +30,6 @@ export default class CaretakerService {
             cron: '15 8 1 * * *',
         });
     }
-
     //
     // Caretaker msg handling //
     //

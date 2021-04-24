@@ -18,7 +18,9 @@ export default class CalendarManager {
         // move into config. ACM Calendar
         this.calendarId = 'c_vr4m53270cbovs7qrnirtqbojo@group.calendar.google.com';
     }
-
+    /**
+     * Boilerplate OAuth2 setup.
+     */
     public async setup() {
         let keyPath = path.join(__dirname, 'client_secret.json');
         let keys: any = { redirect_uris: [''] };

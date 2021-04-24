@@ -16,7 +16,9 @@ enum LogSeverity {
   NONE,
   ERROR
 }
-
+/**
+ * ACMBot logger utility (info, warn, error, db, redis supports)
+ */
 export default class LoggerUtil {
   public logPath: string = `${process.cwd()}${sep}data`;
   public colors: typeof leeks.colors = leeks.colors;

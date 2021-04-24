@@ -36,7 +36,9 @@ export type ResponseType =
     | 'success';
 
 export type ResponseFormat = 'simple' | 'embed';
-
+/**
+ * ACMBot message response utility (raw, embed support) factory-style build function.
+ */
 export default class ResponseUtil {
 
     public format: ResponseFormat;

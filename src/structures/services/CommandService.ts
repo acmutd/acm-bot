@@ -3,7 +3,9 @@ import ACMClient from '../Bot';
 import Command from '../Command';
 import { settings } from '../../botsettings';
 import shlex from 'shlex';
-
+/**
+ * Handles command execution and invalid invocations.
+ */
 export default class CommandService {
     public client: ACMClient;
 

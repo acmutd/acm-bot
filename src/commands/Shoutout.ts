@@ -3,7 +3,7 @@ import { CommandContext } from '../structures/Command';
 import { settings } from '../botsettings';
 import { MessageEmbed, TextChannel } from 'discord.js';
 import color from '../utils/Color';
-
+// Shoutout a person(s) for a given reason. Posted in the shoutouts channel.
 export default class ShoutoutCommand extends Command {
     constructor() {
         super({
@@ -12,7 +12,11 @@ export default class ShoutoutCommand extends Command {
             usage: ['shoutout [list of mentions] [reason for shoutout]'],
         });
     }
-
+    /**
+     * Standard Command Executor
+     * @param param0 Command Arguments
+     * @returns Optional Emit Promise
+     */
     public async exec({ msg, client, args }: CommandContext) {
         //console.log(msg.content);
         //console.log(args[0]);

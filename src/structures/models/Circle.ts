@@ -25,7 +25,7 @@ export interface Circle extends Document {
     channel: string;
     owner: string;
 }
-
+// DB Circles schema
 const circleSchema = new Schema({
     _id: String,
     name: String,

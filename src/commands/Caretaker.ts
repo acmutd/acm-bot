@@ -1,7 +1,7 @@
 import Command from '../structures/Command';
 import { CommandContext } from '../structures/Command';
 import Wizard, { OptionsWizardNode } from '../utils/Wizard';
-
+// debugging command
 export default class CaretakerCommand extends Command {
     constructor() {
         super({
@@ -11,7 +11,11 @@ export default class CaretakerCommand extends Command {
             userPermissions: 8,
         });
     }
-
+    /**
+     * Standard Command Executor
+     * @param param0 Command Arguments
+     * @returns Promise
+     */
     public async exec({ msg, client, args }: CommandContext) {
         let fullResponses: any[] = [];
         const responses =

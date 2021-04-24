@@ -8,13 +8,19 @@ export default class ErrorManager {
     constructor(client: ACMClient) {
         this.client = client;
     }
-
+    /**
+     * Boilerplate async callback setup.
+     */
     setup() {
         process.on('unhandledRejection', (err) => this.handleMsg(err));
         process.on('uncaughtException', (err) => this.handleErr(err));
     }
-
-    handleMsg(message: string | {} | null | undefined) {
+    /**
+     * Handles bot messages.
+     * @param message Raw Message
+     * @returns Nothing
+     */
+    handleMsg(message: string | {} | null | undefined): void {
         if (!message) return;
         message = message.toString();
         var guild = this.client.guilds.resolve(settings.guild);
@@ -29,8 +35,12 @@ export default class ErrorManager {
         }
         this.client.logger.error(message);
     }
-
-    handleErr(err: Error | null | undefined) {
+    /**
+     * Handles bot errors.
+     * @param err Raw Error
+     * @returns Nothing
+     */
+    handleErr(err: Error | null | undefined): void {
         if (!err) return;
         var guild = this.client.guilds.resolve(settings.guild);
         if (guild) {

@@ -1,7 +1,9 @@
 import { Message } from 'discord.js';
 import ACMClient from '../Bot';
 import { settings } from '../../botsettings';
-
+/**
+ * Handles discord varification.
+ */
 export default class VerificationService {
     public channelID: string;
     public client: ACMClient;
@@ -10,7 +12,11 @@ export default class VerificationService {
         this.channelID = channelID;
         this.client = client;
     }
-
+    /**
+     * Parses the given message into First and Last name for discord verification.
+     * @param msg Raw Message
+     * @returns 
+     */
     public handle(msg: Message) {
         if (msg.guild) {
             if (msg.channel.id == this.channelID && msg.member) {

@@ -9,7 +9,9 @@ import {
 } from 'discord.js';
 import { settings } from '../../botsettings';
 import ACMClient from '../Bot';
-
+/**
+ * Manages the circle boilerplate (repost, reaction handling, updating, etc)
+ */
 export default class CircleService {
     public client: ACMClient;
     private circleChannelId: string;

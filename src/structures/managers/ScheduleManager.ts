@@ -16,7 +16,9 @@ import ACMClient from '../Bot';
  */
 
 export type TaskType = 'reminder' | 'newsletter' | 'rsvp_reminder' | 'caretaker';
-
+/**
+ * Manages scheduling of remidners, newsletters, rsvp_reminders, and other automated systems.
+ */
 export default class ScheduleManager {
     public tasks: Collection<string, Task>;
     public client: ACMClient;
@@ -25,8 +27,11 @@ export default class ScheduleManager {
         this.tasks = new Collection<string, Task>();
         this.client = client;
     }
-
-    public async setup() {
+    /**
+     * Boilerplate task setup.
+     * @returns Promise
+     */
+    public async setup(): Promise<void> {
         // load in the tasks to schedule from DB and scheule them
         let res = await this.client.database.schemas.task.find({});
         for (let taskData of res) {

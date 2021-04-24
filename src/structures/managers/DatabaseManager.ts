@@ -21,7 +21,9 @@ export interface CacheTypes {
     rrmessages: Collection<string, RRMessage>;
     circles: Collection<string, Circle>;
 }
-
+/**
+ * Standard DB Manager. Handles connection, disconnection, data I/O, etc.
+ */
 export default class DatabaseManager {
     public client: ACMClient;
     public url: string;

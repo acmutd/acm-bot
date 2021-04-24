@@ -3,7 +3,7 @@ import { Guild, GuildMember, User } from 'discord.js';
 import Command from '../structures/Command';
 import { CommandContext } from '../structures/Command';
 import Wizard, { ConfirmationWizardNode } from '../utils/Wizard';
-
+// WIP, TODO
 export default class ActivityTrackerCommand extends Command {
     constructor() {
         super({
@@ -13,7 +13,11 @@ export default class ActivityTrackerCommand extends Command {
             dmWorks: false,
         });
     }
-
+    /**
+     * Standard Command Executor
+     * @param param0 Command Arguments
+     * @returns Reply Promise
+     */
     public async exec({ msg, client, args }: CommandContext) {
         return msg.reply("This command is unavailable.");
         /*

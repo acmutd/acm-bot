@@ -1,5 +1,7 @@
 const isURL = require('is-url');
-
+/**
+ * Color utility class. Hex/Media support, hardcoded values.
+ */
 export default class CheckerUtils {
     static colors = [
         'DEFAULT',

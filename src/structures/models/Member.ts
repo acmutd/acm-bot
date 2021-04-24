@@ -8,7 +8,7 @@ export interface Member extends Document {
         subscribed: boolean;
     };
 }
-
+// DB Member Schema
 const memberSchema = new Schema({
     _id: String,
     strikes: Number,

@@ -4,7 +4,7 @@ import { Guild, GuildMember, User } from 'discord.js';
 import Command from '../structures/Command';
 import { CommandContext } from '../structures/Command';
 import Task from '../structures/managers/ScheduleManager';
-
+// Lists current automated runnables spawned by the ACM Bot instance.
 export default class TaskCommand extends Command {
     constructor() {
         super({
@@ -14,7 +14,11 @@ export default class TaskCommand extends Command {
             dmWorks: false,
         });
     }
-
+    /**
+     * Standard Command Executor
+     * @param param0 Command Arguments
+     * @returns Message Promise
+     */
     public async exec({ msg, client, args }: CommandContext) {
         const tasks = client.scheduler.tasks;
         let embed = {

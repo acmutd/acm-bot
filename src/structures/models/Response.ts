@@ -6,7 +6,7 @@ export interface Response extends Document {
     type: ResponsesType;
     message: String;
 }
-
+// DB Response Schema
 const responseSchema = new Schema({
     type: String,
     message: String,

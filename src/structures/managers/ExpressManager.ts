@@ -15,7 +15,9 @@ import { GuildMember, MessageEmbed, TextChannel } from 'discord.js';
  * https://olaralex.com/building-a-nodejs-express-backend-with-typescript/
  * https://developer.okta.com/blog/2018/11/15/node-express-typescript
  */
-
+/**
+ * Manages server I/O via express.
+ */
 export default class ExpressManager {
     public client: ACMClient;
     public app: Express;
@@ -37,7 +39,9 @@ export default class ExpressManager {
         this.certFile = settings.express.cert;
     }
 
-
+    /**
+     * Boilerplate ExpressJS hook setup.
+     */
     async setup() {
         this.app.use(bodyParser.urlencoded({ extended: true }));
         this.app.use(bodyParser.json());

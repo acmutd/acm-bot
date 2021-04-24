@@ -1,12 +1,17 @@
 import Event from '../structures/Event';
 import ACMClient from '../structures/Bot';
 import { GuildMember, Message, MessageEmbed } from 'discord.js';
-
+// Officially adds a member to the discord server (different from a member joining).
 export default class GuildMemberAddEvent extends Event {
     constructor(client: ACMClient) {
         super(client, 'guildMemberAdd');
     }
-
+    /**
+     * Standard Event Executor
+     * @param client Bot Instance
+     * @param member Guild Member
+     * @returns Promise
+     */
     public async emit(client: ACMClient, member: GuildMember) {
         const embed = new MessageEmbed({
             title: `**Welcome to the ACM Discord Server!** 🎉`,

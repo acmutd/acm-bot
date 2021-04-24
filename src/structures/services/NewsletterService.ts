@@ -10,6 +10,9 @@ interface Event {
     room: string;
     date: Date;
 }
+/**
+ * Handles newsletter functionality (sending, scheduling, etc)
+ */
 export default class NewsletterService {
     public client: ACMClient;
     private spreadsheetId: string;
@@ -38,7 +41,7 @@ export default class NewsletterService {
 
     //
     // Event monitoring and handling //
-    //
+    // Disabled
     public async send() {
         return; // disable newsletter for now
         // fetch data from google sheets

@@ -4,7 +4,7 @@ import ACMClient from "../Bot";
 import * as fs from 'fs';
 
 declare function require(name:string) : any;
-
+// Manages all event calls.
 export default class EventManager {
 
     public bot: ACMClient;
@@ -21,7 +21,9 @@ export default class EventManager {
         this.path = eventsDirPath;
         // this.events = new Collection();
     }
-
+    /**
+     * Scans the filesystem for event files.
+     */
     scanEvents() {
         fs.readdir(this.path, (err, files) => {
             this.bot.logger.info(`Found ${files.length} event(s)!`);

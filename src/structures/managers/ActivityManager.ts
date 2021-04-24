@@ -1,13 +1,13 @@
 import { Collection, GuildMember, Message, TextChannel, VoiceChannel, VoiceState } from 'discord.js';
 import ACMClient from '../Bot';
 import { settings } from '../../botsettings';
-
+// VoiceLog schema
 interface VoiceLogData {
     userID: string;
     time: number;
     joined: boolean;
 }
-
+// Handles voice channel activity/miscellaneous activity in the current bot instance.
 export default class ActivityManager {
     public client: ACMClient;
     public enabled: boolean;
@@ -20,7 +20,7 @@ export default class ActivityManager {
         this.activityLog = new Map<string, number>();
         this.voiceLog = new Map<string, Array<VoiceLogData>>(); // voice channel ID → array of logs
     }
-
+    // Handles leave/join events in a given voice channel
     async handleVoiceStateUpdate(oldMember: VoiceState, newMember: VoiceState) {
         //console.log("OLD: " + JSON.stringify(oldMember, null, 2));
         //console.log("NEW: " + JSON.stringify(newMember, null, 2));
@@ -114,8 +114,12 @@ export default class ActivityManager {
     
         return stats;
     }
-
-    async handleMessage(msg: Message) {
+    /**
+     * Handles a given message event (required by command handlers)
+     * @param msg message ot be handled
+     * @returns nothing
+     */
+    async handleMessage(msg: Message): Promise<void> {
         const cooldown = 10 * 60;
         let indicators = this.client.indicators;
         

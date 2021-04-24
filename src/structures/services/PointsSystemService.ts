@@ -20,7 +20,9 @@ interface LeaderboardData {
     users: Array<string>;
     points: number; 
 }
-
+/**
+ * Handles the points system (registration, typeforms, reactions, etc)
+ */
 export default class PointsSystemService {
     public client: ACMClient;
     privateChannelId: string;

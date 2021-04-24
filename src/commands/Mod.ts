@@ -2,7 +2,7 @@ import Command, { CommandContext } from '../structures/Command';
 import Wizard, { OptionsWizardNode, ChannelMentionWizardNode } from '../utils/Wizard';
 import { TextChannel, Message } from 'discord.js';
 import ACMClient from '../structures/Bot';
-
+// Mod command suite (deprecated as of 4/24/2021)
 export default class AdminCommand extends Command {
     constructor() {
         super({

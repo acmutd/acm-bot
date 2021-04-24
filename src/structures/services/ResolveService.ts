@@ -3,7 +3,9 @@ import ACMClient from '../Bot';
 import Command from '../Command';
 import { settings } from '../../botsettings';
 import { FieldValue } from '@google-cloud/firestore';
-
+/**
+ * Handles data extraction and data convergence into a simple-to-use system. 
+ */
 export default class ResolveService {
     public client: ACMClient;
 

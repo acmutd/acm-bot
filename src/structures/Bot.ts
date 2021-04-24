@@ -22,6 +22,7 @@ import NewsletterService from './services/NewsletterService';
 import CaretakerService from './services/CaretakerService';
 import CircleService from './services/CircleService';
 
+// config schema
 export interface BotConfig {
     token: string;
     dbUrl: string;
@@ -103,6 +104,7 @@ export default class ACMClient extends Client {
     async start() {
         // ! enable when done w testing
         // Sentry.init({ dsn: this.config.sentryDSN });
+        // constant connection to DB for faster I/O
         await this.database.connect();
         await this.database.setup();
         this.firestore.setup();

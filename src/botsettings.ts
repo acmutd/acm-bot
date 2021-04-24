@@ -1,5 +1,6 @@
 import { ResponseFormat } from './utils/Responses';
 
+// setting schema, basic discordjs hooks
 export interface Settings {
     token: string;
     prefix: string;

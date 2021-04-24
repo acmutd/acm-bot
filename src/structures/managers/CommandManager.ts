@@ -19,7 +19,9 @@ export default class CommandManager {
         this.path = commandPath;
         this.commands = new Collection();
     }
-
+    /**
+     * Scans filesystem for command files.
+     */
     scanCommands() {
         fs.readdir(this.path, (err, files) => {
             this.bot.logger.info(`Found ${files.length} commands(s)!`);

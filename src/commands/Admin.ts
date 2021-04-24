@@ -3,16 +3,20 @@ import Wizard, { OptionsWizardNode } from '../utils/Wizard';
 import { Message } from 'discord.js';
 import ACMClient from '../structures/Bot';
 import { ResponsesType } from '../structures/models/Response';
-
+// admin command suite
 export default class AdminCommand extends Command {
     constructor() {
         super({
             name: 'admin',
             description: 'A suite of commands for admin users.',
-            userPermissions: 8208,
+            userPermissions: 8208, // admin perms
         });
     }
-
+    /**
+     * Standard Command Executor
+     * @param param0 Command Arguments
+     * @returns Promise
+     */
     public async exec({ msg, client, args }: CommandContext) {
         switch (args[0]) {
             case 'responses':
@@ -21,14 +25,14 @@ export default class AdminCommand extends Command {
             case 'edit':
                 await edit(client, msg, args);
                 break;
-            case 'channels':
+            case 'channels': // WIP
                 console.log(client.database.cache.responses);
                 // await channels(client, msg, args);
                 break;
-            case 'strikes':
+            case 'strikes': // WIP
                 // await checkStrikes(client, msg, args);
                 break;
-            case 'mute':
+            case 'mute': // WIP
                 // await mute(client, msg, args);
                 break;
             default:

@@ -8,7 +8,7 @@ export interface TaskData extends mongoose.Document {
     cron: string | Date;
     payload?: any;
 }
-
+// Task Automation schema
 const taskSchema = new mongoose.Schema(
     {
         _id: String,

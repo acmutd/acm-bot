@@ -17,6 +17,8 @@ Stop calls stop() on ~
 - Returns statistics back to whoever called stop()
 */
 
+// VCEvent command suite. Integrates with ACM Education's points command suite. Tracks user's participation in a given voice-channel event
+
 export default class VCEvent extends Command {
     constructor() {
         super({
@@ -32,7 +34,11 @@ export default class VCEvent extends Command {
             requiredRoles: [settings.roles.staff, settings.points.staffRole]
         });
     }
-
+    /**
+     * Standard Command Executor
+     * @param param0 Command Arguments
+     * @returns Optional Message Promise
+     */
     public async exec({ msg, client, args }: CommandContext) {
         let voiceChannel: VoiceChannel | null | undefined;
         let attendees: Array<string> = [];
