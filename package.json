@@ -1,15 +1,12 @@
 {
     "name": "acm-bot",
-    "version": "1.0.0",
-    "description": "The official Discord bot for the ACM Community server!",
-    "main": "main.js",
+    "version": "2.0.0",
+    "description": "The official Discord bot for the ACM Community server.",
+    "main": "index.js",
     "scripts": {
-        "test": "echo \"Error: no test specified\" && exit 1",
-        "update": "git pull",
-        "clean": "rm -rf dist",
         "build": "tsc",
-        "boot": "node dist/main.js",
-        "start": "npm run clean && npm run build && npm run boot"
+        "boot": "node dist/index.js",
+        "start": "npm run build && npm run boot"
     },
     "repository": {
         "type": "git",
@@ -22,41 +19,18 @@
     },
     "homepage": "https://github.com/jafrilli/acm-bot#readme",
     "dependencies": {
-        "@google-cloud/firestore": "^4.4.0",
-        "@google-cloud/vision": "^1.11.0",
-        "@sentry/node": "^5.15.5",
-        "@types/express": "^4.17.8",
-        "@types/google-spreadsheet": "^3.0.2",
-        "@types/mongoose": "^5.7.12",
-        "@types/request": "^2.48.5",
-        "@types/uuid": "^8.3.0",
-        "axios": "^0.21.0",
-        "body-parser": "^1.19.0",
-        "colorthief": "^2.3.0",
-        "csv-parser": "^2.3.3",
-        "date-and-time": "^0.13.1",
-        "discord.js": "^12.5.1",
-        "dotenv": "^8.2.0",
-        "express": "^4.17.1",
-        "google-spreadsheet": "^3.0.13",
-        "googleapis": "^59.0.0",
+        "discord.js": "^12.5.3",
         "is-url": "^1.2.4",
-        "leeks.js": "0.0.8",
-        "mongoose": "^5.9.10",
-        "mongoose-function": "^0.1.0",
-        "node-schedule": "^1.3.2",
-        "request-promise": "^4.2.5",
-        "shlex": "^2.0.2",
-        "streamifier": "^0.1.1",
-        "table": "^6.0.7",
-        "ts-mongoose": "0.0.21",
-        "unirest": "^0.6.0",
-        "uuid": "^8.3.1"
+        "leeks.js": "^0.0.8",
+        "mongoose": "^5.12.13",
+        "node-schedule": "^2.0.0",
+        "shlex": "^2.1.0",
+        "typescript": "^4.3.2",
+        "uuid": "^8.3.2"
     },
     "devDependencies": {
-        "@types/cli-table": "^0.3.0",
+        "@types/is-url": "^1.2.29",
         "@types/node-schedule": "^1.3.1",
-        "@types/table": "^6.0.0",
-        "nodemon": "^2.0.4"
+        "@types/uuid": "^8.3.0"
     }
 }
