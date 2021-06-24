@@ -1,4 +1,5 @@
-node_modules
-dist
-data
+node_modules/
+dist/
+data/
 botconfig.js
+package-lock.json
