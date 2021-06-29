@@ -68,7 +68,9 @@ async function addCircle(bot: Bot, msg: Message, args: string[]) {
         owner: res[0].id
     }
     try {
+        console.log(res[0].id)
         var owner = await msg.guild!.members.fetch(res[0].id)
+        console.log(res[0].id)
     } catch (err) {
         bot.response.emit(msg.channel, `Could not find member in the guild...`, 'error')
         return
