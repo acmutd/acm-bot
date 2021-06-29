@@ -49,6 +49,10 @@ async function addCircle(bot: Bot, msg: Message, args: string[]) {
             description: `What's the circle color? (used for the embed & role)`
         }),
         new EmojiWizardNode(wizard, {
+            title: 'Emoji',
+            description: `What's the circle's emoji?`
+        }),
+        new GraphicWizardNode(wizard, {
             title: 'Image',
             description: `What's the circle's graphic/image? (url)`
         })
