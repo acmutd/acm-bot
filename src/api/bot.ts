@@ -7,6 +7,7 @@ import IndicatorManager from'../util/manager/indicator'
 import EventManager from '../util/manager/event'
 import DatabaseManager from '../util/manager/database'
 import ScheduleManager from '../util/manager/schedule'
+import CircleManager from '../util/manager/circle'
 
 export interface Config {
     token: string
@@ -24,6 +25,7 @@ export interface ManagerList {
     indicator: IndicatorManager
     database: DatabaseManager
     scheduler: ScheduleManager
+    circle: CircleManager
 }
 
 export default class Bot extends Client {
@@ -48,7 +50,8 @@ export default class Bot extends Client {
             event: new EventManager(this, config.eventPath),
             indicator: new IndicatorManager(this),
             database: new DatabaseManager(this, config),
-            scheduler: new ScheduleManager(this)
+            scheduler: new ScheduleManager(this),
+            circle: new CircleManager(this)
         }
         this.config = config
     }
