@@ -19,6 +19,7 @@
     },
     "homepage": "https://github.com/jafrilli/acm-bot#readme",
     "dependencies": {
+        "@google-cloud/firestore": "^4.13.0",
         "discord.js": "^12.5.3",
         "is-url": "^1.2.4",
         "leeks.js": "^0.0.8",
