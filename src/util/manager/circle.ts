@@ -24,7 +24,7 @@ export default class CircleManager extends Manager {
 
         const circles = this.bot.managers.database.cache.circles.array()
         for (const circle of circles) {
-            const owner = await c.guild.members.fetch(circle.owner)
+            const owner = await c.guild.members.fetch(circle.owner).catch(() => console.log("BAD OWNER"))
             const count = await this.findMemberCount(circle._id)
             const role = await c.guild.roles.fetch(circle._id)
             const encodedData: any = {
