@@ -13,7 +13,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const command_1 = __importDefault(require("../api/command"));
-class VCSnapshot extends command_1.default {
+class VCSnapshotCommand extends command_1.default {
     constructor() {
         super({
             name: 'vcsnapshot',
@@ -53,4 +53,4 @@ class VCSnapshot extends command_1.default {
         });
     }
 }
-exports.default = VCSnapshot;
+exports.default = VCSnapshotCommand;

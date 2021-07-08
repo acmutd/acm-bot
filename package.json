@@ -26,6 +26,7 @@
         "mongoose": "^5.12.13",
         "node-schedule": "^2.0.0",
         "shlex": "^2.1.0",
+        "table": "^6.7.1",
         "typescript": "^4.3.2",
         "uuid": "^8.3.2"
     },

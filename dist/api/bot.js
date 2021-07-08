@@ -22,6 +22,10 @@ const event_1 = __importDefault(require("../util/manager/event"));
 const database_1 = __importDefault(require("../util/manager/database"));
 const schedule_1 = __importDefault(require("../util/manager/schedule"));
 const circle_1 = __importDefault(require("../util/manager/circle"));
+const firestore_1 = __importDefault(require("../util/manager/firestore"));
+const resolve_1 = __importDefault(require("../util/manager/resolve"));
+const points_1 = __importDefault(require("../util/manager/points"));
+const activity_1 = __importDefault(require("../util/manager/activity"));
 class Bot extends discord_js_1.Client {
     constructor(config) {
         const intents = new discord_js_1.Intents([discord_js_1.Intents.NON_PRIVILEGED, 'GUILD_MEMBERS']);
@@ -39,14 +43,16 @@ class Bot extends discord_js_1.Client {
             indicator: new indicator_1.default(this),
             database: new database_1.default(this, config),
             scheduler: new schedule_1.default(this),
-            circle: new circle_1.default(this)
+            circle: new circle_1.default(this),
+            firestore: new firestore_1.default(this),
+            resolve: new resolve_1.default(this),
+            points: new points_1.default(this),
+            activity: new activity_1.default(this)
         };
         this.config = config;
     }
     start() {
         return __awaiter(this, void 0, void 0, function* () {
-            // start logic
-            // Initialize Managers
             this.logger.info('Initializing managers...');
             Object.entries(this.managers).forEach(([k, v]) => {
                 v.init();

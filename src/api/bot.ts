@@ -8,6 +8,10 @@ import EventManager from '../util/manager/event'
 import DatabaseManager from '../util/manager/database'
 import ScheduleManager from '../util/manager/schedule'
 import CircleManager from '../util/manager/circle'
+import FirestoreManager from '../util/manager/firestore'
+import ResolveManager from '../util/manager/resolve'
+import PointsManager from '../util/manager/points'
+import ActivityManager from '../util/manager/activity'
 
 export interface Config {
     token: string
@@ -26,6 +30,10 @@ export interface ManagerList {
     database: DatabaseManager
     scheduler: ScheduleManager
     circle: CircleManager
+    firestore: FirestoreManager
+    resolve: ResolveManager
+    points: PointsManager
+    activity: ActivityManager
 }
 
 export default class Bot extends Client {
@@ -51,13 +59,15 @@ export default class Bot extends Client {
             indicator: new IndicatorManager(this),
             database: new DatabaseManager(this, config),
             scheduler: new ScheduleManager(this),
-            circle: new CircleManager(this)
+            circle: new CircleManager(this),
+            firestore: new FirestoreManager(this),
+            resolve: new ResolveManager(this),
+            points: new PointsManager(this),
+            activity: new ActivityManager(this)
         }
         this.config = config
     }
     async start(): Promise<void> {
-        // start logic
-        // Initialize Managers
         this.logger.info('Initializing managers...')
         Object.entries(this.managers).forEach(([k, v]) => {
             v.init()

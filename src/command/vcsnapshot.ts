@@ -4,7 +4,7 @@ import Command, { CommandContext } from '../api/command'
 import Wizard, { ConfirmationWizardNode } from '../util/wizard'
 import { settings } from '../settings'
 
-export default class VCSnapshot extends Command {
+export default class VCSnapshotCommand extends Command {
     constructor() {
         super({
             name: 'vcsnapshot',
