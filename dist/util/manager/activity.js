@@ -23,7 +23,7 @@ class ActivityManager extends manager_1.default {
     }
     init() { }
     handleVoiceStateUpdate(oldMember, newMember) {
-        var _a;
+        var _a, _b;
         return __awaiter(this, void 0, void 0, function* () {
             const oldVC = oldMember.channel;
             const newVC = newMember.channel;
@@ -41,7 +41,7 @@ class ActivityManager extends manager_1.default {
                     time: Date.now(),
                     joined: true,
                 };
-                this.voiceLog.get(newVC.id).push(data);
+                (_b = this.voiceLog.get(newVC.id)) === null || _b === void 0 ? void 0 : _b.push(data);
             }
         });
     }

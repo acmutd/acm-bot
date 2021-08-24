@@ -45,7 +45,7 @@ export default class ActivityManager extends Manager {
         time: Date.now(),
         joined: true,
       };
-      this.voiceLog.get(newVC.id).push(data);
+      this.voiceLog.get(newVC.id)?.push(data);
     }
   }
 
