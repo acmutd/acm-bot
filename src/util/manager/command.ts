@@ -12,38 +12,45 @@ export default class CommandManager extends Manager {
 
   constructor(bot: Bot, path: string) {
     super(bot);
-    this.path = path;
+    this.path = path.endsWith("/") ? path : path + "/";
     this.commands = new Collection();
   }
+
+  /**
+   * Dynamically load all commands from some path
+   */
   public init(): void {
     fs.readdir(this.path, (err, files) => {
       this.bot.logger.info(`Found ${files.length} command(s)...`);
       files.forEach((file) => {
-        const cmd = require(`${
-          this.path.endsWith("/") ? this.path : this.path + "/"
-        }${file}`);
+        const cmd = require(this.path + file);
         const command = new cmd.default();
         this.commands.set(command.name, command);
         this.bot.logger.info(`Loaded command '${command.name}'`);
       });
     });
   }
-  public cantInvoke(
-    msg: Message,
-    command: Command
-  ): string | MessageEmbed | void {
+
+  /**
+   * Determine if a user has permissions to use a command
+   * @param msg Message object of command
+   * @param command Command object
+   * @returns Plaintext/embed error message, or void if everything is fine
+   */
+  public cantInvoke(msg: Message, command: Command): string | void {
+    // Filter on dmWorks
     const dm = msg.channel instanceof DMChannel;
-    if (dm && !command.dmWorks)
-      return this.bot.response.build(
-        "DM functionality is not enabled for this command...",
-        "invalid"
-      );
+    if (dm && !command.dmWorks) return "This command does not work in DMs.";
+
+    // Filter on userPermissions
     if (
       command.userPermissions &&
       msg.member &&
       !msg.member.permissions.has(command.userPermissions)
     )
-      return this.bot.response.build("Invalid permission level...", "invalid");
+      return "Unauthorized permission level.";
+
+    // Filter on requiredRoles (Check if user has any of them, >=1 is enough)
     if (
       command.requiredRoles &&
       msg.member &&
@@ -52,32 +59,34 @@ export default class CommandManager extends Manager {
       )
     ) {
       const role = msg.guild?.roles.cache.get(command.requiredRoles[0]);
-      return this.bot.response.build(
-        `Missing role '${role?.toString()}'...`,
-        "invalid"
-      );
+      return `Missing a role to perform this command, such as '${role?.toString()}'.`;
     }
+
+    // Filter on command disabled
     if (
       this.bot.config.disabledCommands &&
       this.bot.config.disabledCommands.includes(command.name)
     )
-      return this.bot.response.build("Command disabled...", "invalid");
+      return "Command disabled.";
   }
+
+  /**
+   * Handle messages that might be commands
+   * @param msg Message to handle
+   */
   public handle(msg: Message): void {
+    // Basic filtering
     if (msg.author.bot) return;
     if (!msg.content.startsWith(settings.prefix)) return;
-    const command = msg.content.substring(settings.prefix.length).split(" ")[0];
-    const args = shlex
-      .split(msg.content.slice(settings.prefix.length).trim())
-      .slice(1);
 
-    const cmd = this.bot.managers.command.commands.get(command) as Command;
-    if (!cmd)
-      return this.bot.response.emit(
-        msg.channel,
-        `Invalid command...`,
-        "invalid"
-      );
+    // Get first word after the prefix, i.e. potential command name
+    const command = msg.content.substring(settings.prefix.length).split(" ")[0];
+
+    // Check if command exists
+    const cmd = this.commands.get(command);
+    if (!cmd) return;
+
+    // Check if we are already running a command from the user
     if (this.bot.managers.indicator.hasUser("usingCommand", msg.author))
       return this.bot.response.emit(
         msg.channel,
@@ -85,10 +94,29 @@ export default class CommandManager extends Manager {
         "invalid"
       );
 
-    const response = this.cantInvoke(msg, cmd);
-    if (response) return this.bot.response.emitBuild(msg.channel, response);
-    this.bot.managers.indicator.addUser("usingCommand", msg.author);
+    // Check if the user has permissions
+    const permsError = this.cantInvoke(msg, cmd);
+    if (permsError)
+      return this.bot.response.emit(msg.channel, permsError, "invalid");
+
+    // Try parsing arguments, with quotes to support multi-word arguments
+    let args: Array<string>;
     try {
+      args = shlex
+        .split(msg.content.slice(settings.prefix.length).trim())
+        .slice(1);
+    } catch (e) {
+      return this.bot.response.emit(
+        msg.channel,
+        "Wasn't able to parse your command's arguments. " +
+          "Quotes are used for multi-word arguments and MUST be matched.",
+        "invalid"
+      );
+    }
+
+    // Execute command
+    try {
+      this.bot.managers.indicator.addUser("usingCommand", msg.author);
       cmd.exec({ bot: this.bot, msg, args });
     } catch (e) {
       msg.reply("Command execution failed. Please contact a bot maintainer...");
