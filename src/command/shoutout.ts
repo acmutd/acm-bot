@@ -1,8 +1,6 @@
-import Command from "../api/command";
-import { CommandContext } from "../api/command";
+import Command, { CommandContext } from "../api/command";
 import { settings } from "../settings";
 import { MessageEmbed, TextChannel } from "discord.js";
-import color from "../util/checker";
 
 export default class ShoutoutCommand extends Command {
   constructor() {
@@ -12,7 +10,8 @@ export default class ShoutoutCommand extends Command {
       usage: ["shoutout [list of mentions] [reason for shoutout]"],
     });
   }
-  public exec({ msg, bot, args }: CommandContext): void {
+
+  public async exec({ msg, bot, args }: CommandContext) {
     if (!/^<@!?[\d]{17,18}>/.test(args[0]))
       return bot.response.emit(msg.channel, "No user mentions...", "invalid");
 

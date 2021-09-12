@@ -1,6 +1,4 @@
-import { Collection } from "discord.js";
 import Manager from "../../api/manager";
-import Command from "../../api/command";
 import Bot from "../../api/bot";
 import * as fs from "fs";
 
@@ -13,10 +11,14 @@ export default class EventManager extends Manager {
     super(bot);
     this.path = path;
   }
+
   public init(): void {
     fs.readdir(this.path, (err, files) => {
       this.bot.logger.info(`Found ${files.length} event(s)...`);
       files.forEach((file) => {
+        // Skip non-js files, such as map files.
+        if (!file.endsWith(".js")) return;
+
         const e = require(`${
           this.path.endsWith("/") ? this.path : this.path + "/"
         }${file}`);
