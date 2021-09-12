@@ -1,5 +1,4 @@
 import Command, { CommandContext } from "../api/command";
-import schedule, { Job } from "node-schedule";
 
 export default class RemindCommand extends Command {
   constructor() {
@@ -10,7 +9,7 @@ export default class RemindCommand extends Command {
     });
   }
 
-  public exec({ msg, bot, args }: CommandContext): void {
+  public async exec({ msg, bot, args }: CommandContext) {
     if (args.length < 2) return this.sendInvalidUsage(msg, bot);
 
     const minutes = parseInt(args[0]);

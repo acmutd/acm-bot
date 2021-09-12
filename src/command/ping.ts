@@ -1,5 +1,5 @@
-import { Message } from "discord.js";
 import Command, { CommandContext } from "../api/command";
+
 export default class PingCommand extends Command {
   constructor() {
     super({
@@ -7,7 +7,8 @@ export default class PingCommand extends Command {
       description: "Fetch the bot's response time...",
     });
   }
-  public exec({ msg, bot, args }: CommandContext): void {
+
+  public async exec({ msg, bot, args }: CommandContext) {
     const startTime = new Date().getTime();
     msg.channel
       .send("Ping: This message should be deleted...")

@@ -1,17 +1,12 @@
 import Command, { CommandContext } from "../api/command";
 import Bot from "../api/bot";
-import {
-  CategoryChannel,
-  Message,
-  OverwriteResolvable,
-  TextChannel,
-} from "discord.js";
+import { CategoryChannel, Message, OverwriteResolvable } from "discord.js";
 import Wizard, {
-  TextWizardNode,
-  UserMentionWizardNode,
+  ColorWizardNode,
   EmojiWizardNode,
   GraphicWizardNode,
-  ColorWizardNode,
+  TextWizardNode,
+  UserMentionWizardNode,
 } from "../util/wizard";
 import { settings } from "../settings";
 import { CircleData } from "../api/schema";
@@ -26,7 +21,7 @@ export default class CircleCommand extends Command {
     });
   }
 
-  public async exec({ msg, bot, args }: CommandContext): Promise<void> {
+  public async exec({ msg, bot, args }: CommandContext) {
     switch (args[0]) {
       case "add":
         await addCircle(bot, msg, args);
@@ -42,6 +37,7 @@ export default class CircleCommand extends Command {
     }
   }
 }
+
 async function addCircle(bot: Bot, msg: Message, args: string[]) {
   const wizard = new Wizard(msg, undefined, {
     title: "__**Circle Creation**__ ",

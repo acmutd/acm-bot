@@ -50,7 +50,8 @@ export default abstract class Command {
     this.userPermissions = config.userPermissions || 0;
     this.requiredRoles = config.requiredRoles;
   }
-  public abstract exec(context: CommandContext): void;
+
+  public abstract exec(context: CommandContext): Promise<void>;
 
   public infoEmbed(): MessageEmbed {
     const embed = new MessageEmbed()
@@ -72,6 +73,7 @@ export default abstract class Command {
       .addField("Cooldown", `${this.cooldown} seconds`, true);
     return embed;
   }
+
   public sendInvalidUsage(msg: Message, bot: Bot): void {
     bot.response.emit(
       msg.channel,
@@ -79,6 +81,7 @@ export default abstract class Command {
       "invalid"
     );
   }
+
   public getUsageText(prefix: string): string {
     return this.usage.length > 0
       ? "Usage\n" + this.usage.map((e) => `${prefix}${e}`).join("\n")

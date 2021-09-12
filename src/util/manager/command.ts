@@ -1,4 +1,4 @@
-import { Collection, Message, DMChannel, MessageEmbed } from "discord.js";
+import { Collection, DMChannel, Message } from "discord.js";
 import Command from "../../api/command";
 import Bot from "../../api/bot";
 import Manager from "../../api/manager";
@@ -21,11 +21,15 @@ export default class CommandManager extends Manager {
    */
   public init(): void {
     fs.readdir(this.path, (err, files) => {
-      this.bot.logger.info(`Found ${files.length} command(s)...`);
       files.forEach((file) => {
+        // Skip non-js files, such as map files.
+        if (!file.endsWith(".js")) return;
+
+        // Load command
         const cmd = require(this.path + file);
         const command = new cmd.default();
         this.commands.set(command.name, command);
+
         this.bot.logger.info(`Loaded command '${command.name}'`);
       });
     });
@@ -74,7 +78,7 @@ export default class CommandManager extends Manager {
    * Handle messages that might be commands
    * @param msg Message to handle
    */
-  public handle(msg: Message): void {
+  public async handle(msg: Message): Promise<void> {
     // Basic filtering
     if (msg.author.bot) return;
     if (!msg.content.startsWith(settings.prefix)) return;
@@ -117,7 +121,7 @@ export default class CommandManager extends Manager {
     // Execute command
     try {
       this.bot.managers.indicator.addUser("usingCommand", msg.author);
-      cmd.exec({ bot: this.bot, msg, args });
+      await cmd.exec({ bot: this.bot, msg, args });
     } catch (e) {
       msg.reply("Command execution failed. Please contact a bot maintainer...");
       throw e;
