@@ -67,7 +67,7 @@ export default class DatabaseManager extends Manager {
     };
     setup().then(() => {
       this.bot.logger.info(
-        "Cached cirlce, response, and reaction role data..."
+        "Cached circle, response, and reaction role data..."
       );
     });
   }
@@ -78,7 +78,7 @@ export default class DatabaseManager extends Manager {
       useFindAndModify: false,
     });
     this.m.connection.on("error", (err) => {
-      this.bot.logger.error("Databse connection error...");
+      this.bot.logger.error("Database connection error...");
       this.bot.logger.error(err);
     });
   }
