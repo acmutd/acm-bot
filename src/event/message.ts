@@ -9,5 +9,6 @@ export default class MessageEvent extends Event {
 
   public emit(bot: Bot, msg: Message): void {
     bot.managers.command.handle(msg);
+    bot.managers.verification.handle(msg);
   }
 }

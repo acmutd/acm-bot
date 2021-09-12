@@ -1,5 +1,5 @@
 import { Client, Intents } from "discord.js";
-import { settings } from "../settings";
+import { settings, Settings } from "../settings";
 import ResponseUtil, { ResponseFormat } from "../util/response";
 import LoggerUtil from "../util/logger";
 import CommandManager from "../util/manager/command";
@@ -12,6 +12,7 @@ import FirestoreManager from "../util/manager/firestore";
 import ResolveManager from "../util/manager/resolve";
 import PointsManager from "../util/manager/points";
 import ActivityManager from "../util/manager/activity";
+import VerificationManager from "../util/manager/verification";
 
 export interface Config {
   token: string;
@@ -23,8 +24,10 @@ export interface Config {
   disabledCommands: string[] | undefined;
   disabledCategories: string[] | undefined;
 }
+
 export interface ManagerList {
   command: CommandManager;
+  verification: VerificationManager;
   event: EventManager;
   indicator: IndicatorManager;
   database: DatabaseManager;
@@ -37,7 +40,7 @@ export interface ManagerList {
 }
 
 export default class Bot extends Client {
-  public settings: any;
+  public settings: Settings;
   public logger: LoggerUtil;
   public response: ResponseUtil;
   public managers: ManagerList;
@@ -55,6 +58,7 @@ export default class Bot extends Client {
     this.response = new ResponseUtil(config.responseFormat);
     this.managers = {
       command: new CommandManager(this, config.commandPath),
+      verification: new VerificationManager(this),
       event: new EventManager(this, config.eventPath),
       indicator: new IndicatorManager(this),
       database: new DatabaseManager(this, config),
@@ -67,12 +71,13 @@ export default class Bot extends Client {
     };
     this.config = config;
   }
+
   async start(): Promise<void> {
     this.logger.info("Initializing managers...");
     Object.entries(this.managers).forEach(([k, v]) => {
       v.init();
     });
     await this.login(this.config.token);
-    this.logger.info("Logged in...");
+    this.logger.info("Bot started.");
   }
 }

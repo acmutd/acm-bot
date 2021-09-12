@@ -1,6 +1,4 @@
 import {
-  CategoryChannel,
-  Guild,
   Message,
   MessageEmbed,
   MessageReaction,
@@ -13,10 +11,12 @@ import Manager from "../../api/manager";
 
 export default class CircleManager extends Manager {
   private circleChannelId: string;
+
   constructor(bot: Bot) {
     super(bot);
     this.circleChannelId = this.bot.settings.channels.circles;
   }
+
   public init(): void {}
 
   public async repost() {
@@ -69,6 +69,7 @@ export default class CircleManager extends Manager {
       msg.react(`${circle.emoji}`);
     }
   }
+
   public async update(channel: TextChannel, circleId: string) {
     const msgs = await channel.messages.fetch({ limit: 50 });
     let message: Message | undefined;
@@ -110,6 +111,7 @@ export default class CircleManager extends Manager {
       (m) => !!m.roles.cache.find((r) => r.id === id)
     ).size;
   }
+
   public async handleReactionAdd(reaction: MessageReaction, user: User) {
     if (reaction.partial) await reaction.fetch();
     await reaction.users.fetch();
@@ -117,7 +119,7 @@ export default class CircleManager extends Manager {
     if (reaction.message.embeds.length === 0) return;
     if (!reaction.message.embeds[0].description) return;
     const obj = decode(reaction.message.embeds[0].description);
-    if (!obj || obj.reactions) return;
+    if (!obj || !obj.reactions) return;
     let reactionRes: string | undefined;
     Object.keys(obj.reactions).forEach((n) => {
       if (reaction.emoji.name.includes(n)) reactionRes = obj.reactions[n];
@@ -139,11 +141,13 @@ export default class CircleManager extends Manager {
     this.update(reaction.message.channel as TextChannel, reactionRes);
   }
 }
+
 function encode(obj: any): string {
   return `[\u200B](http://fake.fake?data=${encodeURIComponent(
     JSON.stringify(obj)
   )})`;
 }
+
 function decode(description: string | null): any {
   if (!description) return;
   const re = /\[\u200B\]\(http:\/\/fake\.fake\?data=(.*?)\)/;
