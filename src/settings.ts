@@ -14,8 +14,6 @@ export interface Settings {
   };
   express: {
     port: number;
-    privateKey: string;
-    cert: string;
   };
   keys: {
     sheets: string;

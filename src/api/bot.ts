@@ -10,6 +10,7 @@ import ScheduleManager from "../util/manager/schedule";
 import CircleManager from "../util/manager/circle";
 import FirestoreManager from "../util/manager/firestore";
 import ResolveManager from "../util/manager/resolve";
+import ExpressManager from "../util/manager/express";
 import PointsManager from "../util/manager/points";
 import ActivityManager from "../util/manager/activity";
 import VerificationManager from "../util/manager/verification";
@@ -35,6 +36,7 @@ export interface ManagerList {
   circle: CircleManager;
   firestore: FirestoreManager;
   resolve: ResolveManager;
+  express: ExpressManager;
   points: PointsManager;
   activity: ActivityManager;
 }
@@ -66,6 +68,7 @@ export default class Bot extends Client {
       circle: new CircleManager(this),
       firestore: new FirestoreManager(this),
       resolve: new ResolveManager(this),
+      express: new ExpressManager(this),
       points: new PointsManager(this),
       activity: new ActivityManager(this),
     };
