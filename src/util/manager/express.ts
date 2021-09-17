@@ -45,7 +45,10 @@ export default class ExpressManager extends Manager {
     }
     const endpointFiles: string[] = fs.readdirSync(this.endpointPath);
     endpointFiles.forEach((file) => {
-      // TODO: import logic from each file
+      // Skip non-js files, such as map files.
+      if (!file.endsWith(".js")) return;
+
+      require(this.endpointPath + file)(this.app, this.bot);
     });
 
     // Log endpoint names
