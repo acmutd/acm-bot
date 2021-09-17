@@ -22,6 +22,7 @@
   "homepage": "https://github.com/jafrilli/acm-bot#readme",
   "dependencies": {
     "@google-cloud/firestore": "^4.13.0",
+    "axios": "^0.21.4",
     "body-parser": "^1.19.0",
     "discord.js": "^12.5.3",
     "express": "^4.17.1",
