@@ -20,6 +20,7 @@ interface UserPointsData {
   last_name: string;
   full_name: string;
   email: string;
+  netId: string;
   tag: string;
   snowflake?: string;
   points?: number;
@@ -101,14 +102,14 @@ export default class PointsManager extends Manager {
     const confirmationChannel = (await this.bot.channels.fetch(
       this.privateChannelId
     )) as TextChannel;
-    const resolvedSnowflakes: string[] = await this.emailsToSnowflakes(
-      new Set<string>([answers[0].email])
+    const resolvedSnowflakes: string[] = await this.netIdsToSnowflakes(
+      new Set<string>([answers[0].text])
     );
 
     if (resolvedSnowflakes.length === 0)
       return this.bot.response.emit(
         confirmationChannel,
-        `\`${answers[1].text}\` submitted \`${title}\` with an unknown email: \`${answers[0].email}\``,
+        `\`${answers[1].text}\` submitted \`${title}\` with an unknown NetID: \`${answers[0].text}\``,
         "error"
       );
 
@@ -124,8 +125,8 @@ export default class PointsManager extends Manager {
       title: `Response for ${userData.full_name}`,
       description: `[\u200B](http://fake.fake?data=${encodeURIComponent(
         JSON.stringify(data)
-      )})**Discord**: <@${userData.snowflake}>\n**Email**: \`${
-        userData.email
+      )})**Discord**: <@${userData.snowflake}>\n**NetID**: \`${
+        userData.netId
       }\`\n**Activity**: \`${answers[2].choice.label}\`\n\n**Proof**:`,
       footer: {
         text: `${points} points will be awarded upon approval...`,
@@ -137,6 +138,7 @@ export default class PointsManager extends Manager {
     const msg = await confirmationChannel.send(embed);
     await msg.react("✅");
   }
+
   async handleRegistrationTypeform(typeformData: any) {
     const notifChannel = (await this.bot.channels.fetch(
       this.privateChannelId
@@ -146,16 +148,18 @@ export default class PointsManager extends Manager {
     let mentorData: UserPointsData = {
       first_name: answers[0].text,
       last_name: answers[1].text,
-      full_name: answers[0].text,
+      full_name: answers[0].text + " " + answers[1].text,
       email: answers[2].email.toLowerCase(),
-      tag: answers[3].text,
+      netId: answers[3].text.toLowerCase(),
+      tag: answers[4].text,
     };
     let menteeData: UserPointsData = {
-      first_name: answers[4].text,
-      last_name: answers[5].text,
-      full_name: answers[4].text + " " + answers[5].text,
-      email: answers[6].email.toLowerCase(),
-      tag: answers[7].text,
+      first_name: answers[5].text,
+      last_name: answers[6].text,
+      full_name: answers[5].text + " " + answers[6].text,
+      email: answers[7].email.toLowerCase(),
+      netId: answers[8].text.toLowerCase(),
+      tag: answers[9].text,
     };
 
     const mentorSnowflake = await this.registerUser(mentorData);
@@ -183,6 +187,7 @@ export default class PointsManager extends Manager {
       );
     }
   }
+
   async registerUser(data: UserPointsData, notify: boolean = true) {
     const notifChannel = (await this.bot.channels.fetch(
       this.privateChannelId
@@ -214,6 +219,12 @@ export default class PointsManager extends Manager {
       ?.collection("points_system_f21")
       .doc("email_to_discord")
       .set({ [data.email]: data.snowflake }, { merge: true });
+
+    await this.bot.managers.firestore.firestore
+      ?.collection("points_system_f21")
+      .doc("netid_to_discord")
+      .set({ [data.netId]: data.snowflake }, { merge: true });
+
     if (notify)
       await member
         .send(
@@ -239,13 +250,13 @@ export default class PointsManager extends Manager {
     )) as TextChannel;
     const title: string = typeformData.form_response.definition.title;
 
-    const resolvedSnowflakes: string[] = await this.emailsToSnowflakes(
-      new Set<string>([answers[0].email])
+    const resolvedSnowflakes: string[] = await this.netIdsToSnowflakes(
+      new Set<string>([answers[0].text])
     );
     if (resolvedSnowflakes.length === 0)
       return this.bot.response.emit(
         errChannel,
-        `\`${answers[1].text}\` submitted \`${title}\` with an unknown email: \`${answers[0].email}\``,
+        `\`${answers[1].text}\` submitted \`${title}\` with an unknown NetID: \`${answers[0].text}\``,
         "error"
       );
 
@@ -274,12 +285,14 @@ export default class PointsManager extends Manager {
     });
     return true;
   }
+
   stopReactionEvent(channelId: string) {
     if (!this.bot.managers.indicator.hasKey("reactionEvent", channelId))
       return false;
     this.bot.managers.indicator.removeKey("reactionEvent", channelId);
     return true;
   }
+
   startVoiceEvent(
     voiceChannel: VoiceChannel,
     activityId: string,
@@ -301,6 +314,7 @@ export default class PointsManager extends Manager {
     });
     return true;
   }
+
   stopVoiceEvent(voiceChannel: VoiceChannel) {
     const voiceEvent = this.bot.managers.indicator.getValue(
       "voiceEvent",
@@ -324,9 +338,6 @@ export default class PointsManager extends Manager {
   async awardPoints(points: number, activity: string, awardees: Set<string>) {
     const success: string[] = [];
     const failure: string[] = [];
-    let activities = {};
-
-    const icrement = FieldValue.increment(points);
 
     for (const snowflake of awardees.values()) {
       const docRef = this.bot.managers.firestore.firestore
@@ -370,6 +381,7 @@ export default class PointsManager extends Manager {
     );
     return { success, failure };
   }
+
   async getUser(snowflake: string) {
     let exists: boolean | undefined;
     let data: UserPointsData | undefined;
@@ -384,6 +396,7 @@ export default class PointsManager extends Manager {
     if (data !== undefined && data.points === undefined) data.points = 0;
     return data;
   }
+
   async emailsToSnowflakes(emails: Set<string>): Promise<string[]> {
     const snowflakes: string[] = [];
     await this.bot.managers.firestore.firestore
@@ -406,6 +419,30 @@ export default class PointsManager extends Manager {
       });
     return snowflakes;
   }
+
+  async netIdsToSnowflakes(netIds: Set<string>): Promise<string[]> {
+    const snowflakes: string[] = [];
+    await this.bot.managers.firestore.firestore
+      ?.collection("points_system_f21")
+      .doc("netid_to_discord")
+      .get()
+      .then(async (doc) => {
+        if (!doc.exists || !doc.data()) return [];
+        const rawData = doc.data()!;
+        let data: any = {};
+        for (const netId in rawData) {
+          data[netId.toLowerCase()] = rawData[netId];
+        }
+        for (let netId of netIds.values()) {
+          netId = netId.toLowerCase();
+          if (netId in data) {
+            snowflakes.push(data[netId]);
+          }
+        }
+      });
+    return snowflakes;
+  }
+
   async getLeaderboard(type: "mentee" | "mentor" | "both" = "both", limit = 0) {
     let res: LeaderboardData[] = [];
     const individualData: Map<string, UserPointsData> = new Map<
