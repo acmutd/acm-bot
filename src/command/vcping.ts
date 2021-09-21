@@ -30,6 +30,6 @@ export default class VCPingCommand extends Command {
       attendees.push(`<@${member.id}>`)
       mentions.push(member.id)
     }
-    msg.channel.send(`**VC Ping for \`${voiceChannel.name}\` requested by ${msg.author}**\n` + `Members (${attendees.length}): ${attendees.join(" ")}\n` + `Copyable: \` ${attendees.join("` `")}\``, { allowedMentions: { users: mentions }}).catch(() => msg.channel.send(`VC Ping request failed for ${msg.author}**`, { allowedMentions: { users: [] }}))
+    msg.channel.send(`**VC Ping for \`${voiceChannel.name}\` requested by ${msg.author}**\n` + `Members (${attendees.length}): ${attendees.join(" ")}\n`, { allowedMentions: { users: mentions }}).catch(() => msg.channel.send(`VC Ping request failed for ${msg.author}**`, { allowedMentions: { users: [] }}))
   }
 }
