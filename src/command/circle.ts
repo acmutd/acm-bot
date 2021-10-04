@@ -17,7 +17,7 @@ export default class CircleCommand extends Command {
       name: "circle",
       description: "A suite of command that manage ACM Community Circles...",
       dmWorks: false,
-      userPermissions: 268443664,
+      userPermissions: BigInt(268443664),
     });
   }
 
@@ -89,11 +89,9 @@ async function addCircle(bot: Bot, msg: Message, args: string[]) {
     return;
   }
   const circleRole = await msg.guild!.roles.create({
-    data: {
-      name: `${circle.emoji} ${circle.name}`,
-      mentionable: true,
-      color: res[3],
-    },
+    name: `${circle.emoji} ${circle.name}`,
+    mentionable: true,
+    color: res[3],
   });
   owner.roles.add(circleRole);
   const permissions: OverwriteResolvable[] = [
@@ -108,14 +106,14 @@ async function addCircle(bot: Bot, msg: Message, args: string[]) {
       type: "role",
     },
   ];
-  const circleCategory = msg.guild!.channels.cache.get(
+  const circleCategory = (await msg.guild!.channels.fetch(
     settings.channels.circlesCategory
-  ) as CategoryChannel;
+  )) as CategoryChannel;
   const desc = `🎗️: ${circleRole.name}`;
   const circleChannel = await msg.guild!.channels.create(
     `${circle.emoji} ${circle.name}`,
     {
-      type: "text",
+      type: "GUILD_TEXT",
       topic: desc,
       parent: circleCategory,
       permissionOverwrites: permissions,

@@ -15,10 +15,10 @@ export default class GuildMemberAddEvent extends Event {
         icon_url: "https://www.acmutd.co/png/acm-light.png",
         url: "https://acmutd.co/",
       },
-      color: `EC7621`,
+      color: `#EC7621`,
       footer: {
         text: `Powered by ACM`,
-        iconURL: bot.user!.avatarURL() as string,
+        iconURL: bot.user!.avatarURL(),
       },
       fields: [
         {
@@ -38,7 +38,7 @@ export default class GuildMemberAddEvent extends Event {
 
     const channel = await member.createDM();
     if (channel) {
-      await channel.send(embed);
+      await channel.send({ embeds: [embed] });
     }
   }
 }

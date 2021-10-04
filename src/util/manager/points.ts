@@ -1,18 +1,12 @@
 import {
-  MessageOptions,
-  DMChannel,
   MessageEmbed,
   MessageReaction,
+  TextChannel,
   User,
   VoiceChannel,
-  Collection,
-  TextChannel,
 } from "discord.js";
 import Bot from "../../api/bot";
-import Command from "../../api/command";
 import { settings } from "../../settings";
-import { FieldValue } from "@google-cloud/firestore";
-import { stringify } from "uuid";
 import Manager from "../../api/manager";
 
 interface UserPointsData {
@@ -43,6 +37,7 @@ export default class PointsManager extends Manager {
     this.publicChannelId = settings.points.publicChannel;
     this.staffRoleId = settings.points.staffRole;
   }
+
   init() {}
 
   async handleReactionAdd(reaction: MessageReaction, user: User) {
@@ -92,7 +87,7 @@ export default class PointsManager extends Manager {
       color: "GREEN",
       description: `**${user} has approved \`${encodedData.activity}\` for <@${encodedData.snowflake}>!**\n[link to original message](${msg.url})`,
     });
-    return msg.channel.send(embed);
+    return msg.channel.send({ embeds: [embed] });
   }
 
   async handlePointsTypeform(typeformData: any) {
@@ -135,7 +130,7 @@ export default class PointsManager extends Manager {
     if (answers[4].type === "text")
       embed.description += "\n*" + answers[4].text + "*";
     else embed.image = { url: answers[4].file_url };
-    const msg = await confirmationChannel.send(embed);
+    const msg = await confirmationChannel.send({ embeds: [embed] });
     await msg.react("✅");
   }
 
@@ -227,21 +222,24 @@ export default class PointsManager extends Manager {
 
     if (notify)
       await member
-        .send(
-          new MessageEmbed({
-            color: "#ec7621",
-            title: "Mentor/Mentee Registration Confirmation",
-            description: `Hello **${data.full_name}**, thank you for registering!\n`,
-            footer: {
-              text: "If you did not recently request this action, please conteact an ACM staff member...",
-            },
-          })
-        )
+        .send({
+          embeds: [
+            new MessageEmbed({
+              color: "#ec7621",
+              title: "Mentor/Mentee Registration Confirmation",
+              description: `Hello **${data.full_name}**, thank you for registering!\n`,
+              footer: {
+                text: "If you did not recently request this action, please conteact an ACM staff member...",
+              },
+            }),
+          ],
+        })
         .catch((e: any) =>
           notifChannel.send(`DMs are off for ${data.tag} (${data.full_name})`)
         );
     return data.snowflake;
   }
+
   async handleGenericTypeform(typeformData: any) {
     const points: number = typeformData.form_response.calculated.score;
     const answers: any = typeformData.form_response.answers;
@@ -364,17 +362,17 @@ export default class PointsManager extends Manager {
         this.publicChannelId
       )) as TextChannel;
       if (success.length > 60)
-        logChannel.send(
-          `Awarded ${points} to ${success.length} users for ${activity}...`,
-          { allowedMentions: { users: [] } }
-        );
+        logChannel.send({
+          content: `Awarded ${points} to ${success.length} users for ${activity}...`,
+          allowedMentions: { parse: [] },
+        });
       else if (success.length !== 0)
-        logChannel.send(
-          `Awarded ${points} points to ${success.join(
+        logChannel.send({
+          content: `Awarded ${points} points to ${success.join(
             ", "
           )} for ${activity}...`,
-          { allowedMentions: { users: [] } }
-        );
+          allowedMentions: { users: [] },
+        });
     }
     console.log(
       `Awarded ${points} to ${success.length}/${awardees.size} users for ${activity}...`

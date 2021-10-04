@@ -1,8 +1,5 @@
-import { FieldValue } from "@google-cloud/firestore";
-import { Guild, GuildMember, User, VoiceChannel } from "discord.js";
+import { StageChannel, VoiceChannel } from "discord.js";
 import Command, { CommandContext } from "../api/command";
-import Wizard, { ConfirmationWizardNode } from "../util/wizard";
-import { settings } from "../settings";
 
 export default class VCSnapshotCommand extends Command {
   constructor() {
@@ -16,21 +13,25 @@ export default class VCSnapshotCommand extends Command {
       dmWorks: false,
     });
   }
+
   public async exec({ msg, bot, args }: CommandContext) {
-    let voiceChannel: VoiceChannel | null | undefined;
+    let voiceChannel: VoiceChannel | StageChannel | null | undefined;
     let attendees: Array<string> = [];
 
     if (args.length > 0) {
       const chan = /^\d{17,19}$/.test(args[0])
         ? await bot.channels.fetch(args[0])
         : undefined;
-      if (!chan || chan.type !== "voice")
+      if (
+        !chan ||
+        (!(chan instanceof VoiceChannel) && !(chan instanceof StageChannel))
+      )
         return bot.response.emit(
           msg.channel,
           `Could not resolve the given ID into a valid voice channel...`,
           "invalid"
         );
-      voiceChannel = chan as VoiceChannel;
+      voiceChannel = chan;
     } else {
       voiceChannel = msg.member?.voice.channel;
       if (!voiceChannel)
@@ -46,14 +47,16 @@ export default class VCSnapshotCommand extends Command {
       attendees.push(`<@${member.id}>`);
     }
     msg.channel
-      .send(
-        `**VC Snapshot for \`${voiceChannel.name}\` requested by ${msg.author}**\n` +
+      .send({
+        content:
+          `**VC Snapshot for \`${voiceChannel.name}\` requested by ${msg.author}**\n` +
           `Members (${attendees.length}): ${attendees.join(" ")}\n` +
           `Copyable: \` ${attendees.join("` `")}\``,
-        { allowedMentions: { users: [] } }
-      )
+        allowedMentions: { users: [] },
+      })
       .catch(() =>
-        msg.channel.send(`**VC Snapshot request failed for ${msg.author}**`, {
+        msg.channel.send({
+          content: `**VC Snapshot request failed for ${msg.author}**`,
           allowedMentions: { users: [] },
         })
       );
