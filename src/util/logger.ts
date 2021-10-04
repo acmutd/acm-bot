@@ -42,7 +42,7 @@ export default class LoggerUtil {
     const ampm = now.getHours() >= 12 ? "PM" : "AM";
     return `[${hours}:${minutes}:${seconds} ${ampm}]`;
   }
-  private strip(message: string) {
+  private static strip(message: string) {
     return message.replace(/\u001b\[.*?m/g, "");
   }
   private write(
@@ -80,7 +80,9 @@ export default class LoggerUtil {
       .join("\n");
     appendFileSync(
       `${this.logPath}${sep}acmbot.log`,
-      `${this.getDate()} ${this.strip(lvlText)} -> ${this.strip(msg)}\n`
+      `${this.getDate()} ${LoggerUtil.strip(lvlText)} -> ${LoggerUtil.strip(
+        msg
+      )}\n`
     );
 
     const output =

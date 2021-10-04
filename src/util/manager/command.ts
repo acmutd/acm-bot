@@ -126,8 +126,9 @@ export default class CommandManager extends Manager {
       this.bot.managers.indicator.addUser("usingCommand", msg.author);
       await cmd.exec({ bot: this.bot, msg, args });
     } catch (e) {
-      msg.reply("Command execution failed. Please contact a bot maintainer...");
-      throw e;
+      await msg.reply(
+        "Command execution failed. Please contact a bot maintainer..."
+      );
     } finally {
       this.bot.managers.indicator.removeUser("usingCommand", msg.author);
     }

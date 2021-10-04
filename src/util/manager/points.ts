@@ -65,7 +65,7 @@ export default class PointsManager extends Manager {
       return;
 
     if (!member.roles.cache.has(this.staffRoleId)) {
-      reaction.users.remove(user.id);
+      await reaction.users.remove(user.id);
       return this.bot.response.emit(
         msg.channel,
         `${user}, you are not authorized to approve points...`,
@@ -75,7 +75,7 @@ export default class PointsManager extends Manager {
     const encodedData = JSON.parse(
       decodeURIComponent(msg.embeds[0].description.match(re)![1])
     );
-    this.awardPoints(
+    await this.awardPoints(
       encodedData.points,
       encodedData.activity,
       new Set<string>([encodedData.snowflake])
@@ -197,7 +197,7 @@ export default class PointsManager extends Manager {
       true
     );
     if (!member) {
-      notifChannel.send(
+      await notifChannel.send(
         `Err: Couldn't find user ${data.tag} (${data.full_name})...`
       );
       return;
@@ -234,7 +234,7 @@ export default class PointsManager extends Manager {
             }),
           ],
         })
-        .catch((e: any) =>
+        .catch(() =>
           notifChannel.send(`DMs are off for ${data.tag} (${data.full_name})`)
         );
     return data.snowflake;
@@ -362,12 +362,12 @@ export default class PointsManager extends Manager {
         this.publicChannelId
       )) as TextChannel;
       if (success.length > 60)
-        logChannel.send({
+        await logChannel.send({
           content: `Awarded ${points} to ${success.length} users for ${activity}...`,
           allowedMentions: { parse: [] },
         });
       else if (success.length !== 0)
-        logChannel.send({
+        await logChannel.send({
           content: `Awarded ${points} points to ${success.join(
             ", "
           )} for ${activity}...`,
@@ -478,10 +478,10 @@ export default class PointsManager extends Manager {
         for (const [mentee, mentor] of Object.entries(pairs!)) {
           let mentorData = res.find((data) => data.users[0] === mentor)!;
           const activities = individualData.get(mentee)!.activities;
-          mentorData.points == activities &&
-          activities["Mentor/ Mentee Meeting"]
-            ? activities["Mentor/ Mentee Meeting"]
-            : 0;
+          mentorData.points +=
+            activities && activities["Mentor/ Mentee Meeting"]
+              ? activities["Mentor/ Mentee Meeting"]
+              : 0;
         }
         break;
       case "both":

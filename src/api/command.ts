@@ -38,7 +38,7 @@ export default abstract class Command {
   public userPermissions: bigint;
   public requiredRoles: string[] | undefined;
 
-  constructor(config: CommandConfig) {
+  protected constructor(config: CommandConfig) {
     this.name = config.name;
     this.description = config.description;
     this.longDescription = config.longDescription || config.description;

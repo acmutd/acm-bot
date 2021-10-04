@@ -43,11 +43,11 @@ export default class ResponseUtil {
     this.format = format;
   }
 
-  private simple(msg: string, emoji: string): string {
+  private static simple(msg: string, emoji: string): string {
     return `${emoji} | ${msg}`;
   }
 
-  private embed(
+  private static embed(
     msg: string,
     emojiSet: { simple: string; embed: string; color: ColorResolvable }
   ): MessageEmbed {
@@ -63,7 +63,6 @@ export default class ResponseUtil {
   ): string | MessageEmbed {
     type = type || "normal";
     format = format || this.format;
-    let response: MessageEmbed | string = "";
     let em: { simple: string; embed: string; color: ColorResolvable };
     switch (type) {
       case "error":
@@ -85,8 +84,8 @@ export default class ResponseUtil {
         return "";
     }
     return format == "simple"
-      ? this.simple(message, em.simple)
-      : this.embed(message, em);
+      ? ResponseUtil.simple(message, em.simple)
+      : ResponseUtil.embed(message, em);
   }
 
   public emit(

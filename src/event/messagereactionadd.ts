@@ -8,7 +8,7 @@ export default class MessageReactionAddEvent extends Event {
   }
 
   public async emit(bot: Bot, reaction: MessageReaction, user: User) {
-    bot.managers.points.handleReactionAdd(reaction, user);
-    bot.managers.circle.handleReactionAdd(reaction, user);
+    await bot.managers.points.handleReactionAdd(reaction, user);
+    await bot.managers.circle.handleReactionAdd(reaction, user);
   }
 }

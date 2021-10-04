@@ -43,7 +43,7 @@ export default class CheckerUtils {
 
   public static isMediaURL(link: string) {
     if (!isUrl(link)) return false;
-    if (
+    return !(
       !link.toLowerCase().endsWith(".gif") &&
       !link.toLowerCase().endsWith(".jpg") &&
       !link.toLowerCase().endsWith(".png") &&
@@ -52,9 +52,6 @@ export default class CheckerUtils {
       !link.toLowerCase().endsWith(".jpg/") &&
       !link.toLowerCase().endsWith(".png/") &&
       !link.toLowerCase().endsWith(".jpeg/")
-    ) {
-      return false;
-    }
-    return true;
+    );
   }
 }
