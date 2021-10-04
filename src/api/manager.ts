@@ -3,7 +3,7 @@ import Bot from "./bot";
 export default abstract class Manager {
   public bot: Bot;
 
-  constructor(bot: Bot) {
+  protected constructor(bot: Bot) {
     this.bot = bot;
   }
 

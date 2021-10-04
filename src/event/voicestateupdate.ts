@@ -8,6 +8,6 @@ export default class VoiceStateUpdateEvent extends Event {
   }
 
   public async emit(bot: Bot, oldMember: VoiceState, newMember: VoiceState) {
-    bot.managers.activity.handleVoiceStateUpdate(oldMember, newMember);
+    await bot.managers.activity.handleVoiceStateUpdate(oldMember, newMember);
   }
 }

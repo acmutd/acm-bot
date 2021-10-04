@@ -37,7 +37,7 @@ export default class RemindCommand extends Command {
 
     const dateStr = date.toLocaleString("en-US", options);
 
-    bot.managers.scheduler.createTask({
+    await bot.managers.scheduler.createTask({
       cron: date,
       type: "reminder",
       payload: {

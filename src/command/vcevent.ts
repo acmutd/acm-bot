@@ -69,7 +69,7 @@ export default class VCEventCommand extends Command {
             `No running VC Event in ${vc}...`,
             "error"
           );
-        this.printStats(msg.channel, vc, data);
+        await this.printStats(msg.channel, vc, data);
         break;
       case "stats":
         data = bot.managers.activity.voiceEventStats(vc);
@@ -79,7 +79,7 @@ export default class VCEventCommand extends Command {
             `No running VC Event in ${vc}...`,
             "error"
           );
-        this.printStats(msg.channel, vc, data);
+        await this.printStats(msg.channel, vc, data);
         break;
       case "list":
         const channels = Array.from(bot.managers.activity.voiceLog.keys()).map(

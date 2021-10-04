@@ -25,7 +25,7 @@ export default class ResolveManager extends Manager {
       (strategies.size === 0 || strategies.has("id")) &&
       /^[\d]{17,18}$/.test(toResolve)
     )
-      member = await guild?.members.fetch(toResolve);
+      member = await guild.members.fetch(toResolve);
 
     // Resolve on mention
     if (
@@ -33,7 +33,7 @@ export default class ResolveManager extends Manager {
       (strategies.size === 0 || strategies.has("mention")) &&
       /^<@!?[\d]{17,18}>$/.test(toResolve)
     )
-      member = await guild?.members.fetch(toResolve.slice(3, -1));
+      member = await guild.members.fetch(toResolve.slice(3, -1));
 
     if (
       !member &&
@@ -42,33 +42,35 @@ export default class ResolveManager extends Manager {
         strategies.has("username") ||
         strategies.has("nickname"))
     )
-      member = (await guild?.members.search({ query: toResolve })).values()[0];
+      member = (await guild.members.search({ query: toResolve })).values()[0];
 
     if (lenient) {
-      toResolve = this.makeLenient(toResolve);
+      toResolve = ResolveManager.makeLenient(toResolve);
       if (
         !member &&
         (strategies.size === 0 || strategies.has("tag")) &&
         /#\d{4}$/.test(toResolve)
       )
-        member = guild?.members.cache.find(
-          (gm) => this.makeLenient(gm.user.tag) === toResolve
+        member = guild.members.cache.find(
+          (gm) => ResolveManager.makeLenient(gm.user.tag) === toResolve
         );
 
       if (!member && (strategies.size === 0 || strategies.has("username")))
-        member = guild?.members.cache.find(
-          (gm) => this.makeLenient(gm.user.username) === toResolve
+        member = guild.members.cache.find(
+          (gm) => ResolveManager.makeLenient(gm.user.username) === toResolve
         );
 
       if (!member && (strategies.size === 0 || strategies.has("nickname")))
-        member = guild?.members.cache.find(
-          (gm) => this.makeLenient(gm.nickname ? gm.nickname : "") === toResolve
+        member = guild.members.cache.find(
+          (gm) =>
+            ResolveManager.makeLenient(gm.nickname ? gm.nickname : "") ===
+            toResolve
         );
     }
     return member;
   }
 
-  private makeLenient(str: string) {
+  private static makeLenient(str: string) {
     return str.replace(" ", "").toLowerCase();
   }
 }

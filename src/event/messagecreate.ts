@@ -7,8 +7,8 @@ export default class MessageCreateEvent extends Event {
     super(bot, "messageCreate");
   }
 
-  public emit(bot: Bot, msg: Message): void {
-    bot.managers.command.handle(msg);
-    bot.managers.verification.handle(msg);
+  public async emit(bot: Bot, msg: Message): Promise<void> {
+    await bot.managers.command.handle(msg);
+    await bot.managers.verification.handle(msg);
   }
 }

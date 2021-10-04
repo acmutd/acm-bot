@@ -93,7 +93,7 @@ async function addCircle(bot: Bot, msg: Message, args: string[]) {
     mentionable: true,
     color: res[3],
   });
-  owner.roles.add(circleRole);
+  await owner.roles.add(circleRole);
   const permissions: OverwriteResolvable[] = [
     {
       id: msg.guild!.id,
@@ -129,8 +129,8 @@ async function addCircle(bot: Bot, msg: Message, args: string[]) {
       `Could not add circle to the database...`,
       "error"
     );
-    circleRole.delete();
-    circleChannel.delete();
+    await circleRole.delete();
+    await circleChannel.delete();
     return;
   }
 

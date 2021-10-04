@@ -16,7 +16,6 @@ import {
   TaskSchema,
   CircleSchema,
 } from "../../api/schema";
-import { settings } from "../../settings";
 
 export interface SchemaTypes {
   member: Model<Member>;

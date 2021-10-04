@@ -16,14 +16,14 @@ export default class VerificationManager extends Manager {
 
   public init() {}
 
-  public handle(msg: Message) {
+  public async handle(msg: Message) {
     if (msg.guild) {
       if (msg.channel.id == this.verificationChannelID && msg.member) {
         try {
           // Modify member nickname and roles
-          msg.member.setNickname(msg.content);
-          msg.member.roles.add(this.memberRoleID);
-          msg.delete();
+          await msg.member.setNickname(msg.content);
+          await msg.member.roles.add(this.memberRoleID);
+          await msg.delete();
 
           // Add to firebase
           let map: any = {};

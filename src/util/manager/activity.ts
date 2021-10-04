@@ -1,9 +1,4 @@
-import {
-  Message,
-  StageChannel,
-  VoiceChannel,
-  VoiceState,
-} from "discord.js";
+import { Message, StageChannel, VoiceChannel, VoiceState } from "discord.js";
 import Bot from "../../api/bot";
 import Manager from "../../api/manager";
 import { settings } from "../../settings";
@@ -25,7 +20,7 @@ export default class ActivityManager extends Manager {
     this.activityLog = new Map<string, number>();
     this.voiceLog = new Map<string, Array<VoiceLogData>>();
   }
-  init() { }
+  init() {}
   async handleVoiceStateUpdate(oldMember: VoiceState, newMember: VoiceState) {
     const oldVC = oldMember.channel;
     const newVC = newMember.channel;
@@ -49,7 +44,7 @@ export default class ActivityManager extends Manager {
 
   startVoiceEvent(vc: VoiceChannel | StageChannel): boolean {
     if (this.voiceLog.has(vc.id)) return false;
-    const data = new Array();
+    const data = [];
     const now = Date.now();
     for (const id of vc.members.keys()) {
       data.push({
@@ -61,14 +56,18 @@ export default class ActivityManager extends Manager {
     this.voiceLog.set(vc.id, data);
     return true;
   }
-  stopVoiceEvent(vc: VoiceChannel | StageChannel): Map<string, number> | undefined {
+  stopVoiceEvent(
+    vc: VoiceChannel | StageChannel
+  ): Map<string, number> | undefined {
     if (!this.voiceLog.has(vc.id)) return undefined;
 
     const stats = this.voiceEventStats(vc);
     this.voiceLog.delete(vc.id);
     return stats;
   }
-  voiceEventStats(vc: VoiceChannel | StageChannel): Map<string, number> | undefined {
+  voiceEventStats(
+    vc: VoiceChannel | StageChannel
+  ): Map<string, number> | undefined {
     if (!this.voiceLog.has(vc.id)) return undefined;
     const data = [...this.voiceLog.get(vc.id)!];
     const now = Date.now();
@@ -89,7 +88,6 @@ export default class ActivityManager extends Manager {
         if (!stats.has(id)) stats.set(id, 0);
         stats.set(id, stats.get(id)! + (time - joinTime.get(id)!));
         joinTime.delete(id);
-        continue;
       } else {
         joinTime.set(id, time);
       }
@@ -108,8 +106,8 @@ export default class ActivityManager extends Manager {
     if (
       (indicators.hasKey("textActivity", msg.author.id) &&
         msg.createdTimestamp >
-        indicators.getValue("textActivity", msg.author.id)! +
-        cooldown * 1000) ||
+          indicators.getValue("textActivity", msg.author.id)! +
+            cooldown * 1000) ||
       !indicators.hasKey("textActivity", msg.author.id)
     ) {
       indicators.setKeyValue(
@@ -117,7 +115,7 @@ export default class ActivityManager extends Manager {
         msg.author.id,
         msg.createdTimestamp
       );
-      let { success, failure } = await this.bot.managers.points.awardPoints(
+      let { success } = await this.bot.managers.points.awardPoints(
         1,
         "Discord",
         new Set<string>([msg.author.id])
@@ -125,7 +123,8 @@ export default class ActivityManager extends Manager {
       if (success.length === 0) {
       } else {
         console.log(
-          `${new Date().toLocaleTimeString()}: ${msg.author.tag
+          `${new Date().toLocaleTimeString()}: ${
+            msg.author.tag
           } was awarded 1pt for activity (${msg.createdTimestamp})`
         );
       }

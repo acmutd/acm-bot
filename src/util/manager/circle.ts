@@ -10,7 +10,7 @@ import Bot from "../../api/bot";
 import Manager from "../../api/manager";
 
 export default class CircleManager extends Manager {
-  private circleChannelId: string;
+  private readonly circleChannelId: string;
 
   constructor(bot: Bot) {
     super(bot);
@@ -23,10 +23,10 @@ export default class CircleManager extends Manager {
     const channel = this.bot.channels.resolve(this.circleChannelId);
     const c = channel as TextChannel;
     await c.bulkDelete(50);
-    c.send(
+    await c.send(
       "https://cdn.discordapp.com/attachments/537776612238950410/826695146250567681/circles.png"
     );
-    c.send(
+    await c.send(
       `> :yellow_circle: Circles are interest groups made by the community!\n` +
         `> :door: Join one by reacting to the emoji attached to each.\n` +
         `> :crown: You can apply to make your own Circle by filling out this application: <https://apply.acmutd.co/circles>\n`
@@ -66,7 +66,7 @@ export default class CircleManager extends Manager {
         },
       });
       const msg = await c.send({ embeds: [embed] });
-      msg.react(`${circle.emoji}`);
+      await msg.react(`${circle.emoji}`);
     }
   }
 
@@ -102,7 +102,7 @@ export default class CircleManager extends Manager {
         { name: "**Members**", value: `${count ?? "N/A"}`, inline: true },
       ],
     });
-    message.edit({ embeds: [embed] });
+    await message.edit({ embeds: [embed] });
   }
 
   public async findMemberCount(id: string) {
@@ -126,7 +126,7 @@ export default class CircleManager extends Manager {
       if (reaction.emoji.name.includes(n)) reactionRes = obj.reactions[n];
     });
     if (!reactionRes) return;
-    reaction.users.remove(user.id);
+    await reaction.users.remove(user.id);
 
     const guild = await this.bot.guilds.fetch(settings.guild);
     const member = guild.members.resolve(user.id);
@@ -135,11 +135,11 @@ export default class CircleManager extends Manager {
       await member.roles.add(reactionRes);
 
       const chan = (await guild.channels.fetch(obj.channel)) as TextChannel;
-      chan.send(`${member}, welcome to ${obj.name}!`);
+      await chan.send(`${member}, welcome to ${obj.name}!`);
     } else {
       await member.roles.remove(reactionRes);
     }
-    this.update(reaction.message.channel as TextChannel, reactionRes);
+    await this.update(reaction.message.channel as TextChannel, reactionRes);
   }
 }
 

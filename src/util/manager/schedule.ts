@@ -59,8 +59,7 @@ export default class ScheduleManager extends Manager {
         type: t.type,
         payload: t.payload,
       });
-    const job = schedule.scheduleJob(t.cron, () => this.runTask(t));
-    t.job = job;
+    t.job = schedule.scheduleJob(t.cron, () => this.runTask(t));
     this.tasks.set(t.id!, t);
     return t;
   }

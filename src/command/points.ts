@@ -177,7 +177,7 @@ export default class PointsCommand extends Command {
 
         // process awardees inn the attachment
         let attachmentAwardees = await processAttachments(bot, msg);
-        for (const id of attachmentAwardees) {
+        for (const id of attachmentAwardees.values()) {
           awardees.add(id);
         }
 
@@ -506,9 +506,12 @@ export default class PointsCommand extends Command {
   }
 }
 
-async function processAttachments(client: Bot, msg: Message) {
+async function processAttachments(
+  client: Bot,
+  msg: Message
+): Promise<Set<string>> {
   let awardees = new Set<string>();
-  if (msg.attachments.size == 0) return;
+  if (msg.attachments.size == 0) return new Set<string>();
   await Promise.all(
     msg.attachments.map(async (val) => {
       let attachmentAwardees = await processCSV(client, val);

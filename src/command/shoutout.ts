@@ -51,8 +51,8 @@ export default class ShoutoutCommand extends Command {
     const channel = msg.guild?.channels.resolve(
       settings.channels.shoutout
     ) as TextChannel;
-    channel.send({ embeds: [embed] });
-    channel.send(
+    await channel.send({ embeds: [embed] });
+    await channel.send(
       msg.content.match(reg)![0].replace(settings.prefix + "shoutout", "")
     );
 
