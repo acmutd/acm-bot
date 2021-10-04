@@ -3,6 +3,7 @@ import {
   Message,
   MessageAttachment,
   MessageEmbed,
+  StageChannel,
   User,
   VoiceChannel,
 } from "discord.js";
@@ -117,7 +118,7 @@ export default class PointsCommand extends Command {
               "__**Activities**__\n" + userActivities.join("\n");
           }
 
-          await msg.channel.send(scorecardEmbed);
+          await msg.channel.send({ embeds: [scorecardEmbed] });
           return;
         } else {
           await bot.response.emit(
@@ -189,17 +190,20 @@ export default class PointsCommand extends Command {
         );
 
         // send back our results with mentions but not pings
-        await msg.reply(
-          `Awarded **${points}** points to **${
-            success.length
-          }** users for completing **${activityId}**:\n${success.join(" ")}\n` +
+        await msg.reply({
+          content:
+            `Awarded **${points}** points to **${
+              success.length
+            }** users for completing **${activityId}**:\n${success.join(
+              " "
+            )}\n` +
             (failure.length
               ? `${failure.length} users were not registered: ${failure.join(
                   " "
                 )}`
               : ""),
-          { allowedMentions: { users: [] } }
-        );
+          allowedMentions: { parse: [] },
+        });
         return;
       }
 
@@ -250,12 +254,14 @@ export default class PointsCommand extends Command {
             );
         });
 
-        await msg.channel.send(
-          new MessageEmbed({
-            title: "Leaderboard",
-            description: descriptionArr.join("\n"),
-          })
-        );
+        await msg.channel.send({
+          embeds: [
+            new MessageEmbed({
+              title: "Leaderboard",
+              description: descriptionArr.join("\n"),
+            }),
+          ],
+        });
         return;
       }
 
@@ -317,12 +323,14 @@ export default class PointsCommand extends Command {
           if (winningNumbers.size == 0) break;
         }
 
-        await msg.channel.send(
-          new MessageEmbed({
-            title: "🎉 The winners (and how many times they won)",
-            description: winningUsers.join("\n"),
-          })
-        );
+        await msg.channel.send({
+          embeds: [
+            new MessageEmbed({
+              title: "🎉 The winners (and how many times they won)",
+              description: winningUsers.join("\n"),
+            }),
+          ],
+        });
         return;
       }
       case "vcevent":
@@ -339,7 +347,7 @@ export default class PointsCommand extends Command {
         const unresolvedThreshold = args[3];
         const activityId = args[2];
         let attendees = new Set<string>();
-        let voiceChannel: VoiceChannel | null | undefined;
+        let voiceChannel: VoiceChannel | StageChannel | null | undefined;
         const points = +unresolvedPoints;
         const threshold = +unresolvedThreshold;
 
@@ -401,26 +409,29 @@ export default class PointsCommand extends Command {
             attendees
           );
 
-          await msg.channel.send(
-            new MessageEmbed({
-              title: "Time spent in VC",
-              description: descriptionArr.join("\n"),
-            })
-          );
+          await msg.channel.send({
+            embeds: [
+              new MessageEmbed({
+                title: "Time spent in VC",
+                description: descriptionArr.join("\n"),
+              }),
+            ],
+          });
 
-          await msg.reply(
-            `Awarded **${points}** points to **${
-              success.length
-            }** users for completing **${activityId}**:\n${success.join(
-              " "
-            )}\n` +
+          await msg.reply({
+            content:
+              `Awarded **${points}** points to **${
+                success.length
+              }** users for completing **${activityId}**:\n${success.join(
+                " "
+              )}\n` +
               (failure.length
                 ? `${failure.length} users were not registered: ${failure.join(
                     " "
                   )}`
                 : ""),
-            { allowedMentions: { users: [] } }
-          );
+            allowedMentions: { parse: [] },
+          });
           return;
         }
 
@@ -438,7 +449,7 @@ export default class PointsCommand extends Command {
         const unresolvedPoints = args[1];
         const activityId = args[2];
         let attendees = new Set<string>();
-        let voiceChannel: VoiceChannel | null | undefined;
+        let voiceChannel: VoiceChannel | StageChannel | null | undefined;
         const points = +unresolvedPoints;
 
         // invalid award amount
@@ -473,17 +484,20 @@ export default class PointsCommand extends Command {
           attendees
         );
 
-        await msg.reply(
-          `Awarded **${points}** points to **${
-            success.length
-          }** users for completing **${activityId}**:\n${success.join(" ")}\n` +
+        await msg.reply({
+          content:
+            `Awarded **${points}** points to **${
+              success.length
+            }** users for completing **${activityId}**:\n${success.join(
+              " "
+            )}\n` +
             (failure.length
               ? `${failure.length} users were not registered: ${failure.join(
                   " "
                 )}`
               : ""),
-          { allowedMentions: { users: [] } }
-        );
+          allowedMentions: { parse: [] },
+        });
         return;
       }
 

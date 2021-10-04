@@ -1,5 +1,9 @@
-import { Timestamp } from "bson";
-import { MessageEmbedOptions, Message, MessageEmbed } from "discord.js";
+import {
+  Message,
+  MessageEmbed,
+  MessageEmbedOptions,
+  MessageOptions,
+} from "discord.js";
 import CheckerUtils from "./checker";
 
 enum StringReplacements {
@@ -59,6 +63,7 @@ export default class Wizard {
   public addNode(node: WizardNode): void {
     this.nodes.push(node);
   }
+
   public addNodes(nodes: WizardNode[]): void {
     this.nodes.push(...nodes);
   }
@@ -82,7 +87,7 @@ enum WizardNodeResponseStatus {
 
 export interface WizardNodeOptions {
   timer?: number;
-  invalidMessage?: string | MessageEmbed;
+  invalidMessage?: MessageOptions;
   skipValue?: any;
   loopedCB?: (item: any[]) => WizardNodeLoopCBResponse;
 }
@@ -94,7 +99,7 @@ export interface WizardNodeResponse {
 
 export interface WizardNodeLoopCBResponse {
   item?: any[] | undefined;
-  message?: string | MessageEmbed | undefined;
+  message?: MessageOptions | undefined;
 }
 
 const messageEmbedOptionKeys: (keyof MessageEmbedOptions)[] = [
@@ -104,7 +109,6 @@ const messageEmbedOptionKeys: (keyof MessageEmbedOptions)[] = [
   "timestamp",
   "color",
   "fields",
-  "files",
   "author",
   "thumbnail",
   "image",
@@ -156,6 +160,7 @@ export abstract class WizardNode {
   public abstract preSendCB(
     details: MessageEmbedOptions
   ): Promise<MessageEmbedOptions | void>;
+
   public abstract validationCB(response: Message): Promise<any>;
 
   public async emit(): Promise<WizardNodeResponse> {
@@ -189,12 +194,16 @@ export abstract class WizardNode {
               this.wizard.message.channel.send(this.options.invalidMessage);
           }
           let embed = new MessageEmbed(details);
-          var wizardNode = await this.wizard.message.channel.send({ embed });
+          var wizardNode = await this.wizard.message.channel.send({
+            embeds: [embed],
+          });
           try {
-            var response = await this.wizard.message.channel.awaitMessages(
-              (m) => m.author.id === this.wizard.message.author.id,
-              { max: 1, time: this.timer * 1000, errors: ["time"] }
-            );
+            var response = await this.wizard.message.channel.awaitMessages({
+              filter: (m) => m.author.id === this.wizard.message.author.id,
+              max: 1,
+              time: this.timer * 1000,
+              errors: ["time"],
+            });
           } catch (err) {
             this.wizard.message.channel.send(
               this.wizard.configs.responses.time.replace(
@@ -263,12 +272,16 @@ export abstract class WizardNode {
             this.wizard.message.channel.send(this.options.invalidMessage);
         }
         let embed = new MessageEmbed(details);
-        var wizardNode = await this.wizard.message.channel.send({ embed });
+        var wizardNode = await this.wizard.message.channel.send({
+          embeds: [embed],
+        });
         try {
-          var response = await this.wizard.message.channel.awaitMessages(
-            (m) => m.author.id === this.wizard.message.author.id,
-            { max: 1, time: this.timer * 1000, errors: ["time"] }
-          );
+          var response = await this.wizard.message.channel.awaitMessages({
+            filter: (m) => m.author.id === this.wizard.message.author.id,
+            max: 1,
+            time: this.timer * 1000,
+            errors: ["time"],
+          });
         } catch (err) {
           this.wizard.message.channel.send(
             this.wizard.configs.responses.time.replace(
@@ -319,18 +332,22 @@ export class CustomWizardNode extends WizardNode {
     super(wizard, overwrites, options);
     this.callback = callback;
   }
+
   public async preSendCB(
     details: MessageEmbedOptions
   ): Promise<MessageEmbedOptions | void> {}
+
   public async validationCB(response: Message): Promise<any> {
     const res = this.callback(response);
     if (res) return res;
   }
 }
+
 export class EmojiWizardNode extends WizardNode {
   public async preSendCB(
     details: MessageEmbedOptions
   ): Promise<MessageEmbedOptions | void> {}
+
   public async validationCB(response: Message): Promise<any> {
     const emojiRegEx =
       /(?:[\u2700-\u27bf]|(?:\ud83c[\udde6-\uddff]){2}|[\ud800-\udbff][\udc00-\udfff]|[\u0023-\u0039]\ufe0f?\u20e3|\u3299|\u3297|\u303d|\u3030|\u24c2|\ud83c[\udd70-\udd71]|\ud83c[\udd7e-\udd7f]|\ud83c\udd8e|\ud83c[\udd91-\udd9a]|\ud83c[\udde6-\uddff]|\ud83c[\ude01-\ude02]|\ud83c\ude1a|\ud83c\ude2f|\ud83c[\ude32-\ude3a]|\ud83c[\ude50-\ude51]|\u203c|\u2049|[\u25aa-\u25ab]|\u25b6|\u25c0|[\u25fb-\u25fe]|\u00a9|\u00ae|\u2122|\u2139|\ud83c\udc04|[\u2600-\u26FF]|\u2b05|\u2b06|\u2b07|\u2b1b|\u2b1c|\u2b50|\u2b55|\u231a|\u231b|\u2328|\u23cf|[\u23e9-\u23f3]|[\u23f8-\u23fa]|\ud83c\udccf|\u2934|\u2935|[\u2190-\u21ff])/g;
@@ -338,6 +355,7 @@ export class EmojiWizardNode extends WizardNode {
     if (matches && matches.length > 0) return matches;
   }
 }
+
 export class TextWizardNode extends WizardNode {
   public async preSendCB(
     details: MessageEmbedOptions
@@ -347,6 +365,7 @@ export class TextWizardNode extends WizardNode {
     if (typeof response.content === "string") return response.content;
   }
 }
+
 export class ColorWizardNode extends WizardNode {
   public async preSendCB(
     details: MessageEmbedOptions
@@ -356,49 +375,56 @@ export class ColorWizardNode extends WizardNode {
     if (CheckerUtils.isHexColor(response.content)) return response.content;
   }
 }
+
 export class GraphicWizardNode extends WizardNode {
   public async preSendCB(
     details: MessageEmbedOptions
   ): Promise<MessageEmbedOptions | void> {}
+
   public async validationCB(response: Message): Promise<string | void> {
     const isMedia = await CheckerUtils.isMediaURL(response.content.toString());
     if (isMedia) return response.content;
   }
 }
+
 export class UserMentionWizardNode extends WizardNode {
   public async preSendCB(
     details: MessageEmbedOptions
   ): Promise<MessageEmbedOptions | void> {}
 
   public async validationCB(response: Message): Promise<any> {
-    if (response.mentions.users.array().length > 0)
+    if (response.mentions.users.size > 0)
       return response.mentions.users.first();
   }
 }
+
 export class ChannelMentionWizardNode extends WizardNode {
   public async preSendCB(
     details: MessageEmbedOptions
   ): Promise<MessageEmbedOptions | void> {}
 
   public async validationCB(response: Message): Promise<any> {
-    if (response.mentions.channels.array().length > 0)
+    if (response.mentions.channels.size > 0)
       return response.mentions.channels.first();
   }
 }
+
 export class RoleMentionWizardNode extends WizardNode {
   public async preSendCB(
     details: MessageEmbedOptions
   ): Promise<MessageEmbedOptions | void> {}
 
   public async validationCB(response: Message): Promise<any> {
-    if (response.mentions.roles.array().length > 0)
+    if (response.mentions.roles.size > 0)
       return response.mentions.roles.first();
   }
 }
+
 export class OptionsWizardNode extends WizardNode {
   public choices: string[];
   public strict: boolean;
   public numList: number[];
+
   constructor(
     wizard: Wizard,
     overwrites: MessageEmbedOptions,
@@ -411,6 +437,7 @@ export class OptionsWizardNode extends WizardNode {
     this.choices = choices;
     this.numList = [];
   }
+
   public async preSendCB(
     details: MessageEmbedOptions
   ): Promise<MessageEmbedOptions> {
@@ -434,6 +461,7 @@ export class OptionsWizardNode extends WizardNode {
     if (!this.strict) return { value: response.content, isOption: false };
   }
 }
+
 export class ConfirmationWizardNode extends WizardNode {
   public async preSendCB(
     details: MessageEmbedOptions
@@ -443,6 +471,7 @@ export class ConfirmationWizardNode extends WizardNode {
     };
     return details;
   }
+
   public async validationCB(response: Message): Promise<boolean | void> {
     if (
       typeof response.content == "string" &&
@@ -451,6 +480,7 @@ export class ConfirmationWizardNode extends WizardNode {
       return true;
   }
 }
+
 export class YesNoWizardNode extends WizardNode {
   async preSendCB(details: MessageEmbedOptions): Promise<MessageEmbedOptions> {
     details.footer = {
@@ -458,6 +488,7 @@ export class YesNoWizardNode extends WizardNode {
     };
     return details;
   }
+
   async validationCB(response: Message): Promise<boolean | void> {
     if (typeof response.content == "string") {
       if (response.content.toLowerCase() == "yes") return true;

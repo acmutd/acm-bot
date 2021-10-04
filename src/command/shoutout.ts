@@ -15,7 +15,7 @@ export default class ShoutoutCommand extends Command {
     if (!/^<@!?[\d]{17,18}>/.test(args[0]))
       return bot.response.emit(msg.channel, "No user mentions...", "invalid");
 
-    const receivers = msg.mentions.members!.array();
+    const receivers = [...msg.mentions.members!.values()];
     let title = `📣 ${
       msg.member?.nickname ?? msg.author.username
     } gave a shoutout to `;
@@ -51,7 +51,7 @@ export default class ShoutoutCommand extends Command {
     const channel = msg.guild?.channels.resolve(
       settings.channels.shoutout
     ) as TextChannel;
-    channel.send(embed);
+    channel.send({ embeds: [embed] });
     channel.send(
       msg.content.match(reg)![0].replace(settings.prefix + "shoutout", "")
     );

@@ -32,7 +32,7 @@ export default class CircleManager extends Manager {
         `> :crown: You can apply to make your own Circle by filling out this application: <https://apply.acmutd.co/circles>\n`
     );
 
-    const circles = this.bot.managers.database.cache.circles.array();
+    const circles = [...this.bot.managers.database.cache.circles.values()];
     for (const circle of circles) {
       const owner = await c.guild.members.fetch(circle.owner).catch();
       const count = await this.findMemberCount(circle._id);
@@ -65,7 +65,7 @@ export default class CircleManager extends Manager {
           })}${owner ? `﹒👑 Owner: ${owner.displayName}` : ""}`,
         },
       });
-      const msg = await c.send(embed);
+      const msg = await c.send({ embeds: [embed] });
       msg.react(`${circle.emoji}`);
     }
   }
@@ -73,7 +73,7 @@ export default class CircleManager extends Manager {
   public async update(channel: TextChannel, circleId: string) {
     const msgs = await channel.messages.fetch({ limit: 50 });
     let message: Message | undefined;
-    for (const m of msgs.array()) {
+    for (const m of msgs.values()) {
       if (m.embeds.length === 0) return;
       if (!m.embeds[0].description) return;
 
@@ -94,7 +94,7 @@ export default class CircleManager extends Manager {
     const embed = new MessageEmbed({
       title: message.embeds[0].title || "",
       description: message.embeds[0].description || "",
-      color: message.embeds[0].color || "",
+      color: message.embeds[0].color,
       footer: message.embeds[0].footer || {},
       thumbnail: message.embeds[0].thumbnail || {},
       fields: [
@@ -102,11 +102,12 @@ export default class CircleManager extends Manager {
         { name: "**Members**", value: `${count ?? "N/A"}`, inline: true },
       ],
     });
-    message.edit(embed);
+    message.edit({ embeds: [embed] });
   }
 
   public async findMemberCount(id: string) {
     const guild = await this.bot.guilds.fetch(settings.guild);
+    await guild.members.fetch();
     return guild.members.cache.filter(
       (m) => !!m.roles.cache.find((r) => r.id === id)
     ).size;
@@ -133,7 +134,7 @@ export default class CircleManager extends Manager {
     if (!member.roles.cache.has(reactionRes)) {
       await member.roles.add(reactionRes);
 
-      const chan = guild.channels.cache.get(obj.channel) as TextChannel;
+      const chan = (await guild.channels.fetch(obj.channel)) as TextChannel;
       chan.send(`${member}, welcome to ${obj.name}!`);
     } else {
       await member.roles.remove(reactionRes);

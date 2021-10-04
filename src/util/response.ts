@@ -1,36 +1,30 @@
-import {
-  MessageEmbed,
-  TextChannel,
-  DMChannel,
-  ColorResolvable,
-  NewsChannel,
-} from "discord.js";
+import { ColorResolvable, MessageEmbed, TextBasedChannels } from "discord.js";
 
 const emoji = {
   error: {
     simple: "❌",
     embed: ":x:",
-    color: "DARK_RED",
+    color: "DARK_RED" as ColorResolvable,
   },
   invalid: {
     simple: "🚫",
     embed: "🚫",
-    color: "RED",
+    color: "RED" as ColorResolvable,
   },
   warning: {
     simple: "⚠️",
     embed: "⚠️",
-    color: "YELLOW",
+    color: "YELLOW" as ColorResolvable,
   },
   normal: {
     simple: "",
     embed: "",
-    color: "DARKER_GREY",
+    color: "DARKER_GREY" as ColorResolvable,
   },
   success: {
     simple: "✅",
     embed: "✅",
-    color: "GREEN",
+    color: "GREEN" as ColorResolvable,
   },
 };
 
@@ -48,9 +42,11 @@ export default class ResponseUtil {
   constructor(format: ResponseFormat) {
     this.format = format;
   }
+
   private simple(msg: string, emoji: string): string {
     return `${emoji} | ${msg}`;
   }
+
   private embed(
     msg: string,
     emojiSet: { simple: string; embed: string; color: ColorResolvable }
@@ -59,6 +55,7 @@ export default class ResponseUtil {
       .setDescription(`${emojiSet.embed} | **${msg}**`)
       .setColor(emojiSet.color);
   }
+
   public build(
     message: string,
     type?: ResponseType,
@@ -91,8 +88,9 @@ export default class ResponseUtil {
       ? this.simple(message, em.simple)
       : this.embed(message, em);
   }
+
   public emit(
-    channel: TextChannel | DMChannel | NewsChannel,
+    channel: TextBasedChannels,
     message: string,
     type?: ResponseType,
     format?: ResponseFormat
@@ -100,14 +98,15 @@ export default class ResponseUtil {
     const response = this.build(message, type, format);
     typeof response == "string"
       ? channel.send(response)
-      : channel.send({ embed: response });
+      : channel.send({ embeds: [response] });
   }
+
   public emitBuild(
-    channel: TextChannel | DMChannel | NewsChannel,
+    channel: TextBasedChannels,
     response: string | MessageEmbed
   ): void {
     typeof response == "string"
       ? channel.send(response)
-      : channel.send({ embed: response });
+      : channel.send({ embeds: [response] });
   }
 }

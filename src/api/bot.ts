@@ -49,11 +49,19 @@ export default class Bot extends Client {
   public config: Config;
 
   constructor(config: Config) {
-    const intents = new Intents([Intents.NON_PRIVILEGED, "GUILD_MEMBERS"]);
+    const intents = new Intents([
+      Intents.FLAGS.GUILDS,
+      Intents.FLAGS.GUILD_MEMBERS,
+      Intents.FLAGS.GUILD_INTEGRATIONS,
+      Intents.FLAGS.GUILD_VOICE_STATES,
+      Intents.FLAGS.GUILD_MESSAGES,
+      Intents.FLAGS.GUILD_MESSAGE_REACTIONS,
+      Intents.FLAGS.DIRECT_MESSAGES,
+      Intents.FLAGS.DIRECT_MESSAGE_REACTIONS
+    ]);
     super({
-      ws: { intents },
-      partials: ["REACTION", "MESSAGE", "CHANNEL"],
-      fetchAllMembers: true,
+      intents,
+      partials: ["REACTION", "MESSAGE", "CHANNEL"]
     });
     this.settings = settings;
     this.logger = new LoggerUtil();

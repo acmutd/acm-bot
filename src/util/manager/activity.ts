@@ -1,8 +1,6 @@
 import {
-  Collection,
-  GuildMember,
   Message,
-  TextChannel,
+  StageChannel,
   VoiceChannel,
   VoiceState,
 } from "discord.js";
@@ -27,7 +25,7 @@ export default class ActivityManager extends Manager {
     this.activityLog = new Map<string, number>();
     this.voiceLog = new Map<string, Array<VoiceLogData>>();
   }
-  init() {}
+  init() { }
   async handleVoiceStateUpdate(oldMember: VoiceState, newMember: VoiceState) {
     const oldVC = oldMember.channel;
     const newVC = newMember.channel;
@@ -49,7 +47,7 @@ export default class ActivityManager extends Manager {
     }
   }
 
-  startVoiceEvent(vc: VoiceChannel): boolean {
+  startVoiceEvent(vc: VoiceChannel | StageChannel): boolean {
     if (this.voiceLog.has(vc.id)) return false;
     const data = new Array();
     const now = Date.now();
@@ -63,14 +61,14 @@ export default class ActivityManager extends Manager {
     this.voiceLog.set(vc.id, data);
     return true;
   }
-  stopVoiceEvent(vc: VoiceChannel): Map<string, number> | undefined {
+  stopVoiceEvent(vc: VoiceChannel | StageChannel): Map<string, number> | undefined {
     if (!this.voiceLog.has(vc.id)) return undefined;
 
     const stats = this.voiceEventStats(vc);
     this.voiceLog.delete(vc.id);
     return stats;
   }
-  voiceEventStats(vc: VoiceChannel): Map<string, number> | undefined {
+  voiceEventStats(vc: VoiceChannel | StageChannel): Map<string, number> | undefined {
     if (!this.voiceLog.has(vc.id)) return undefined;
     const data = [...this.voiceLog.get(vc.id)!];
     const now = Date.now();
@@ -110,8 +108,8 @@ export default class ActivityManager extends Manager {
     if (
       (indicators.hasKey("textActivity", msg.author.id) &&
         msg.createdTimestamp >
-          indicators.getValue("textActivity", msg.author.id)! +
-            cooldown * 1000) ||
+        indicators.getValue("textActivity", msg.author.id)! +
+        cooldown * 1000) ||
       !indicators.hasKey("textActivity", msg.author.id)
     ) {
       indicators.setKeyValue(
@@ -127,8 +125,7 @@ export default class ActivityManager extends Manager {
       if (success.length === 0) {
       } else {
         console.log(
-          `${new Date().toLocaleTimeString()}: ${
-            msg.author.tag
+          `${new Date().toLocaleTimeString()}: ${msg.author.tag
           } was awarded 1pt for activity (${msg.createdTimestamp})`
         );
       }

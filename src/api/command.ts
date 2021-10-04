@@ -22,7 +22,7 @@ export interface CommandConfig {
   tags?: string[];
   cooldown?: number;
   dmWorks?: boolean;
-  userPermissions?: number;
+  userPermissions?: bigint;
   requiredRoles?: string[];
 }
 
@@ -35,7 +35,7 @@ export default abstract class Command {
   public tags: string[];
   public cooldown: number;
   public dmWorks: boolean;
-  public userPermissions: number;
+  public userPermissions: bigint;
   public requiredRoles: string[] | undefined;
 
   constructor(config: CommandConfig) {
@@ -47,14 +47,14 @@ export default abstract class Command {
     this.tags = config.tags || [];
     this.cooldown = config.cooldown || 0;
     this.dmWorks = config.dmWorks || false;
-    this.userPermissions = config.userPermissions || 0;
+    this.userPermissions = config.userPermissions || BigInt(0);
     this.requiredRoles = config.requiredRoles;
   }
 
   public abstract exec(context: CommandContext): Promise<void>;
 
   public infoEmbed(): MessageEmbed {
-    const embed = new MessageEmbed()
+    return new MessageEmbed()
       .setTitle(`Command ${this.name}`)
       .setDescription(`**${this.description}**`)
       .addField(
@@ -71,7 +71,6 @@ export default abstract class Command {
       )
       .addField("Works in DMs?", this.dmWorks ? "Yes" : "No", true)
       .addField("Cooldown", `${this.cooldown} seconds`, true);
-    return embed;
   }
 
   public sendInvalidUsage(msg: Message, bot: Bot): void {

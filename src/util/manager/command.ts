@@ -41,7 +41,10 @@ export default class CommandManager extends Manager {
    * @param command Command object
    * @returns Plaintext/embed error message, or void if everything is fine
    */
-  public cantInvoke(msg: Message, command: Command): string | void {
+  public async cantInvoke(
+    msg: Message,
+    command: Command
+  ): Promise<string | void> {
     // Filter on dmWorks
     const dm = msg.channel instanceof DMChannel;
     if (dm && !command.dmWorks) return "This command does not work in DMs.";
@@ -62,7 +65,7 @@ export default class CommandManager extends Manager {
         (role) => command.requiredRoles!.findIndex((rr) => rr == role.id) != -1
       )
     ) {
-      const role = msg.guild?.roles.cache.get(command.requiredRoles[0]);
+      const role = await msg.guild?.roles.fetch(command.requiredRoles[0]);
       return `Missing a role to perform this command, such as '${role?.toString()}'.`;
     }
 
@@ -99,7 +102,7 @@ export default class CommandManager extends Manager {
       );
 
     // Check if the user has permissions
-    const permsError = this.cantInvoke(msg, cmd);
+    const permsError = await this.cantInvoke(msg, cmd);
     if (permsError)
       return this.bot.response.emit(msg.channel, permsError, "invalid");
 
