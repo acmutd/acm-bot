@@ -524,23 +524,30 @@ async function processAttachments(client: Bot, msg: Message) {
 
 async function processCSV(bot: Bot, attachment: MessageAttachment) {
   let csvRaw: string;
-  const emails: Set<string> = new Set<string>();
+  const users: Set<string> = new Set<string>();
+  let isEmails: boolean = true;
 
   try {
     csvRaw = (await axios.get(attachment.url)).data;
     const csvLines = csvRaw.split("\n");
     // determine email column
     const headers = csvLines[0].split(",");
-    const emailColNum = headers.indexOf("Email");
+    let colNum = headers.indexOf("Email");
+    if(colNum === -1) {
+      colNum = headers.indexOf("NetID");
+      isEmails = false;
+    }
+
 
     // extract emails from remaining csv
     for (let lineNum = 1; lineNum < csvLines.length; lineNum++) {
-      let email = csvLines[lineNum].split(",")[emailColNum];
-      emails.add(email);
+      let email = csvLines[lineNum].split(",")[colNum];
+      users.add(email);
     }
   } catch (error) {
     return;
   }
 
-  return await bot.managers.points.emailsToSnowflakes(emails);
+  if(isEmails) return await bot.managers.points.emailsToSnowflakes(users);
+  return await bot.managers.points.netIdsToSnowflakes(users);
 }
