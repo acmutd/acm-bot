@@ -177,10 +177,8 @@ export default class PointsCommand extends Command {
 
         // process awardees inn the attachment
         let attachmentAwardees = await processAttachments(bot, msg);
-        if (attachmentAwardees) {
-          for (let id of attachmentAwardees) {
-            awardees.add(id);
-          }
+        for (const id of attachmentAwardees) {
+          awardees.add(id);
         }
 
         const { success, failure } = await bot.managers.points.awardPoints(
@@ -522,14 +520,17 @@ async function processAttachments(client: Bot, msg: Message) {
   return awardees;
 }
 
-async function processCSV(bot: Bot, attachment: MessageAttachment) {
+async function processCSV(
+  bot: Bot,
+  attachment: MessageAttachment
+): Promise<Set<string>> {
   let csvRaw: string;
-  const netIds: Set<string> = new Set<string>();
-  const emails: Set<string> = new Set<string>();
+  const netIds = new Set<string>();
+  const emails = new Set<string>();
 
   try {
     csvRaw = (await axios.get(attachment.url)).data;
-    const csvLines = csvRaw.split("\n");
+    const csvLines = csvRaw.split(/\r?\n/);
     // determine email column
     const headers = csvLines[0].split(",");
     const emailColNum = headers.indexOf("Email");
@@ -546,11 +547,13 @@ async function processCSV(bot: Bot, attachment: MessageAttachment) {
       }
     }
   } catch (error) {
-    return;
+    return new Set<string>();
   }
 
   const snowflakes: string[] = [];
-  if(emails.size !== 0) snowflakes.concat(await bot.managers.points.emailsToSnowflakes(emails));
-  if(netIds.size !== 0) snowflakes.concat(await bot.managers.points.netIdsToSnowflakes(netIds));
-  return snowflakes;
+  if (emails.size > 0)
+    snowflakes.push(...(await bot.managers.points.emailsToSnowflakes(emails)));
+  if (netIds.size > 0)
+    snowflakes.push(...(await bot.managers.points.netIdsToSnowflakes(netIds)));
+  return new Set(snowflakes);
 }
