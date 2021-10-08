@@ -129,6 +129,10 @@ export default class CommandManager extends Manager {
       await msg.reply(
         "Command execution failed. Please contact a bot maintainer..."
       );
+      console.error(e);
+      // Don't throw and let the bot handle this as an unhandled rejection. Instead,
+      // take initiative to handle it as an error so we can see the trace.
+      await this.bot.managers.error.handleErr(e);
     } finally {
       this.bot.managers.indicator.removeUser("usingCommand", msg.author);
     }
