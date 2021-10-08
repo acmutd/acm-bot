@@ -1,6 +1,11 @@
 import Bot from "./api/bot";
 import * as path from "path";
 import { settings } from "./settings";
+import sourceMapSupport from "source-map-support";
+
+sourceMapSupport.install({
+  handleUncaughtExceptions: false,
+});
 
 const bot: Bot = new Bot({
   token: settings.token,

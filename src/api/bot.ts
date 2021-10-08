@@ -14,6 +14,7 @@ import ExpressManager from "../util/manager/express";
 import PointsManager from "../util/manager/points";
 import ActivityManager from "../util/manager/activity";
 import VerificationManager from "../util/manager/verification";
+import ErrorManager from "../util/manager/error";
 
 export interface Config {
   token: string;
@@ -28,6 +29,7 @@ export interface Config {
 
 export interface ManagerList {
   command: CommandManager;
+  error: ErrorManager;
   verification: VerificationManager;
   event: EventManager;
   indicator: IndicatorManager;
@@ -57,17 +59,18 @@ export default class Bot extends Client {
       Intents.FLAGS.GUILD_MESSAGES,
       Intents.FLAGS.GUILD_MESSAGE_REACTIONS,
       Intents.FLAGS.DIRECT_MESSAGES,
-      Intents.FLAGS.DIRECT_MESSAGE_REACTIONS
+      Intents.FLAGS.DIRECT_MESSAGE_REACTIONS,
     ]);
     super({
       intents,
-      partials: ["REACTION", "MESSAGE", "CHANNEL"]
+      partials: ["REACTION", "MESSAGE", "CHANNEL"],
     });
     this.settings = settings;
     this.logger = new LoggerUtil();
     this.response = new ResponseUtil(config.responseFormat);
     this.managers = {
       command: new CommandManager(this, config.commandPath),
+      error: new ErrorManager(this),
       verification: new VerificationManager(this),
       event: new EventManager(this, config.eventPath),
       indicator: new IndicatorManager(this),
