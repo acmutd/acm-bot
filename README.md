@@ -34,4 +34,4 @@ Run with [PM2](https://pm2.keymetrics.io) for auto-restart functionality.
 The bot is currently hosted on GCP, with Compute Engine. Contact bot maintainers for access.  
 
 ## Contact
-The current maintainers are [Nicholas Burnett](https://github.com/NickBurnett) and [Eric Zhang](https://github.com/ez314). 
+The current maintainers are [Eric Zhang](https://github.com/ez314) and [Nicolas Burnett](https://github.com/NickBurnett). 
