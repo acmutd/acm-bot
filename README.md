@@ -1,6 +1,9 @@
 # ACM Bot
 🤖 | A Discord bot for the official ACM UTD Community server.
 
+## Getting started with TypeScript
+To get started with TypeScript, go (here)[https://www.typescriptlang.org/].
+
 ## Quick Start
 Verify that your `node` version is at least `16.6.0`. 
 ```bash
