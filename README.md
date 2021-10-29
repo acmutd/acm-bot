@@ -2,10 +2,10 @@
 🤖 | A Discord bot for the official ACM UTD Community server.
 
 ## Getting started with TypeScript
-To get started with TypeScript, go (here)[https://www.typescriptlang.org/].
+To get started with TypeScript, go [here](https://www.typescriptlang.org/).
 
 ## Getting started with DiscordJS
-To get started with DiscordJS, go (here)[https://discord.js.org/#/]. For v13, go (here)[https://discordjs.guide/additional-info/changes-in-v13.html].
+To get started with DiscordJS, go [here](https://discord.js.org/#/). For v13, go [here](https://discordjs.guide/additional-info/changes-in-v13.html).
 
 ## Quick Start
 Verify that your `node` version is at least `16.6.0`. 
