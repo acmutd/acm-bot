@@ -5,6 +5,7 @@ import http from "http";
 import Bot from "../../api/bot";
 import { settings } from "../../settings";
 import Manager from "../../api/manager";
+import DynamicLoader from "../dynamicloader";
 
 export default class ExpressManager extends Manager {
   public app: Express;
@@ -13,12 +14,12 @@ export default class ExpressManager extends Manager {
   public endpointPath: string;
   public server: http.Server | null = null;
 
-  constructor(bot: Bot) {
+  constructor(bot: Bot, path: string) {
     super(bot);
-    this.app = express();
+    this.endpointPath = path;
 
+    this.app = express();
     this.port = settings.express.port;
-    this.endpointPath = __dirname + "/../../endpoint/";
   }
 
   /**
@@ -43,13 +44,8 @@ export default class ExpressManager extends Manager {
       );
       return;
     }
-    const endpointFiles: string[] = fs.readdirSync(this.endpointPath);
-    endpointFiles.forEach((file) => {
-      // Skip non-js files, such as map files.
-      if (!file.endsWith(".js")) return;
 
-      require(this.endpointPath + file)(this.app, this.bot);
-    });
+    DynamicLoader.loadFunctions(this.endpointPath, [this.app, this.bot]);
 
     // Log endpoint names
     this.app._router.stack.forEach((r: any) => {

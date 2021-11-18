@@ -1,4 +1,4 @@
-import { User, Collection } from "discord.js";
+import { User, Collection, GuildMember } from "discord.js";
 import Bot from "../../api/bot";
 import Manager from "../../api/manager";
 
@@ -20,7 +20,7 @@ export default class IndicatorManager extends Manager {
 
   public init(): void {}
 
-  public hasUser(indicator: IndicatorType, user: User): boolean {
+  public hasUser(indicator: IndicatorType, user: User | GuildMember): boolean {
     return (
       this.indicators.has(indicator) &&
       this.indicators.get(indicator)!.includes(user.id)

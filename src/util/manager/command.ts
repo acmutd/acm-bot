@@ -5,6 +5,7 @@ import Manager from "../../api/manager";
 import { settings } from "../../settings";
 import * as fs from "fs";
 import shlex from "shlex";
+import DynamicLoader from "../dynamicloader";
 
 export default class CommandManager extends Manager {
   public path: string;
@@ -12,7 +13,7 @@ export default class CommandManager extends Manager {
 
   constructor(bot: Bot, path: string) {
     super(bot);
-    this.path = path.endsWith("/") ? path : path + "/";
+    this.path = path;
     this.commands = new Collection();
   }
 
@@ -20,18 +21,9 @@ export default class CommandManager extends Manager {
    * Dynamically load all commands from some path
    */
   public init(): void {
-    fs.readdir(this.path, (err, files) => {
-      files.forEach((file) => {
-        // Skip non-js files, such as map files.
-        if (!file.endsWith(".js")) return;
-
-        // Load command
-        const cmd = require(this.path + file);
-        const command = new cmd.default();
-        this.commands.set(command.name, command);
-
-        this.bot.logger.info(`Loaded command '${command.name}'`);
-      });
+    DynamicLoader.loadClasses(this.path).forEach((command) => {
+      this.commands.set(command.name, command);
+      this.bot.logger.info(`Loaded command '${command.name}'`);
     });
   }
 
