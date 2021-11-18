@@ -15,6 +15,7 @@ import PointsManager from "../util/manager/points";
 import ActivityManager from "../util/manager/activity";
 import VerificationManager from "../util/manager/verification";
 import ErrorManager from "../util/manager/error";
+import ReactionRoleManager from "../util/manager/rero";
 
 export interface Config {
   token: string;
@@ -36,6 +37,7 @@ export interface ManagerList {
   database: DatabaseManager;
   scheduler: ScheduleManager;
   circle: CircleManager;
+  rero: ReactionRoleManager;
   firestore: FirestoreManager;
   resolve: ResolveManager;
   express: ExpressManager;
@@ -77,6 +79,7 @@ export default class Bot extends Client {
       database: new DatabaseManager(this, config),
       scheduler: new ScheduleManager(this),
       circle: new CircleManager(this),
+      rero: new ReactionRoleManager(this),
       firestore: new FirestoreManager(this),
       resolve: new ResolveManager(this),
       express: new ExpressManager(this),
