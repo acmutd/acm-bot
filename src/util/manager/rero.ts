@@ -1,4 +1,4 @@
-import { MessageReaction, TextChannel, User } from "discord.js";
+import { Channel, MessageReaction, TextChannel, User } from "discord.js";
 import Bot from "../../api/bot";
 import Manager from "../../api/manager";
 import { RRMessageData } from "../../api/schema";
@@ -12,22 +12,27 @@ export default class ReactionRoleManager extends Manager {
   }
 
   public async init(): Promise<void> {
-    // Fetch reaction role messages
-    let channelIDs = this.bot.managers.database.cache.rrmessages.map(
-      (rr) => rr.channel
-    );
-    channelIDs = channelIDs.filter((a, b) => channelIDs.indexOf(a) === b);
-    for (let i = 0; i < channelIDs.length; i++) {
-      let id = channelIDs[i];
-      let channel;
-      try {
-        channel = await this.bot.channels.fetch(id);
-      } catch (e) {
-        console.error(e);
+    // Get rero from db
+    const allReactionRoles = this.bot.managers.database.cache.rrmessages;
+
+    let reroCounter = 0;
+    for (const [messageId, rero] of allReactionRoles) {
+      // Fetch rero channel and ensure it is text channel
+      const channelId = rero.channel;
+      let channel = await this.bot.channels.fetch(channelId);
+      if (channel && channel instanceof TextChannel) {
+        // Fetch the message and ensure the bot has reacted to it
+        let message = await channel.messages.fetch(messageId);
+        for (const emote in rero.reactionRoles) {
+          if (rero.reactionRoles.hasOwnProperty(emote)) {
+            await message.react(emote);
+            reroCounter++;
+          }
+        }
       }
-      if (!channel)
-        return this.bot.logger.error("Could not fetch reaction role channels");
     }
+
+    this.bot.logger.info(`Listening to ${reroCounter} reaction roles.`);
   }
 
   // Procedure for creating a new reaction role.
