@@ -80,13 +80,18 @@ export default class ReactionRoleManager extends Manager {
         reaction.emoji.id ? reaction.emoji.id : reaction.emoji.name
       ]
     );
-    if (!hasRole)
+    if (!hasRole) {
+      console.log(
+        rrmsg.reactionRoles[
+          reaction.emoji.id ? reaction.emoji.id : reaction.emoji.name
+        ]
+      );
       await member.roles.add(
         rrmsg.reactionRoles[
           reaction.emoji.id ? reaction.emoji.id : reaction.emoji.name
         ]
       );
-    else
+    } else
       await member.roles.remove(
         rrmsg.reactionRoles[
           reaction.emoji.id ? reaction.emoji.id : reaction.emoji.name
