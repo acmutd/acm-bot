@@ -81,6 +81,8 @@ export default class ReactionRoleManager extends Manager {
       ]
     );
     if (!hasRole) {
+      console.log(reaction);
+      console.log(reaction.emoji.id ? reaction.emoji.id : reaction.emoji.name);
       console.log(
         rrmsg.reactionRoles[
           reaction.emoji.id ? reaction.emoji.id : reaction.emoji.name
