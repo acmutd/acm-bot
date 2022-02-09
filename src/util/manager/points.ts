@@ -30,12 +30,14 @@ export default class PointsManager extends Manager {
   privateChannelId: string;
   publicChannelId: string;
   staffRoleId: string;
+  firebaseRoot: string;
 
   constructor(bot: Bot) {
     super(bot);
     this.privateChannelId = settings.points.privateChannel;
     this.publicChannelId = settings.points.publicChannel;
     this.staffRoleId = settings.points.staffRole;
+    this.firebaseRoot = settings.points.firebaseRoot;
   }
 
   init() {}
@@ -166,7 +168,7 @@ export default class PointsManager extends Manager {
         "success"
       );
       await this.bot.managers.firestore.firestore
-        ?.collection("points_system_f21")
+        ?.collection(this.firebaseRoot)
         .doc("pairs")
         .set(
           {
@@ -206,17 +208,17 @@ export default class PointsManager extends Manager {
     data.tag = member.user.tag;
 
     await this.bot.managers.firestore.firestore
-      ?.collection("points_system_f21/users/profiles")
+      ?.collection(`${this.firebaseRoot}/users/profiles`)
       .doc(data.snowflake)
       .set(data, { merge: true });
 
     await this.bot.managers.firestore.firestore
-      ?.collection("points_system_f21")
+      ?.collection(this.firebaseRoot)
       .doc("email_to_discord")
       .set({ [data.email]: data.snowflake }, { merge: true });
 
     await this.bot.managers.firestore.firestore
-      ?.collection("points_system_f21")
+      ?.collection(this.firebaseRoot)
       .doc("netid_to_discord")
       .set({ [data.netId]: data.snowflake }, { merge: true });
 
@@ -339,7 +341,7 @@ export default class PointsManager extends Manager {
 
     for (const snowflake of awardees.values()) {
       const docRef = this.bot.managers.firestore.firestore
-        ?.collection("points_system_f21/users/profiles")
+        ?.collection(`${this.firebaseRoot}/users/profiles`)
         .doc(snowflake);
       const doc = await docRef?.get();
 
@@ -384,7 +386,7 @@ export default class PointsManager extends Manager {
     let exists: boolean | undefined;
     let data: UserPointsData | undefined;
     await this.bot.managers.firestore.firestore
-      ?.collection("points_system_f21/users/profiles")
+      ?.collection(`${this.firebaseRoot}/users/profiles`)
       .doc(snowflake)
       .get()
       .then(async (doc) => {
@@ -398,7 +400,7 @@ export default class PointsManager extends Manager {
   async emailsToSnowflakes(emails: Set<string>): Promise<string[]> {
     const snowflakes: string[] = [];
     await this.bot.managers.firestore.firestore
-      ?.collection("points_system_f21")
+      ?.collection(this.firebaseRoot)
       .doc("email_to_discord")
       .get()
       .then(async (doc) => {
@@ -421,7 +423,7 @@ export default class PointsManager extends Manager {
   async netIdsToSnowflakes(netIds: Set<string>): Promise<string[]> {
     const snowflakes: string[] = [];
     await this.bot.managers.firestore.firestore
-      ?.collection("points_system_f21")
+      ?.collection(this.firebaseRoot)
       .doc("netid_to_discord")
       .get()
       .then(async (doc) => {
@@ -448,14 +450,14 @@ export default class PointsManager extends Manager {
       UserPointsData
     >();
     const snapshot = await this.bot.managers.firestore.firestore
-      ?.collection("points_system_f21/users/profiles")
+      ?.collection(`${this.firebaseRoot}/users/profiles`)
       .get();
     snapshot?.forEach((doc) => {
       individualData.set(doc.id, doc.data() as UserPointsData);
     });
     const pairs = await (
       await this.bot.managers.firestore.firestore
-        ?.collection("points_system_f21")
+        ?.collection(this.firebaseRoot)
         .doc("pairs")
         .get()!
     ).data();
