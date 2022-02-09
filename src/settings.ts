@@ -27,6 +27,7 @@ export interface Settings {
     privateChannel: string;
     publicChannel: string;
     staffRole: string;
+    firebaseRoot: string;
   };
   channels: {
     verification: string;
