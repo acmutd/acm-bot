@@ -1,4 +1,4 @@
-import { ColorResolvable, MessageEmbed, TextBasedChannels } from "discord.js";
+import { ColorResolvable, MessageEmbed, TextBasedChannel } from "discord.js";
 
 const emoji = {
   error: {
@@ -89,7 +89,7 @@ export default class ResponseUtil {
   }
 
   public emit(
-    channel: TextBasedChannels,
+    channel: TextBasedChannel,
     message: string,
     type?: ResponseType,
     format?: ResponseFormat
@@ -101,7 +101,7 @@ export default class ResponseUtil {
   }
 
   public emitBuild(
-    channel: TextBasedChannels,
+    channel: TextBasedChannel,
     response: string | MessageEmbed
   ): void {
     typeof response == "string"

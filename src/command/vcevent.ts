@@ -1,7 +1,7 @@
 import {
   MessageEmbed,
   StageChannel,
-  TextBasedChannels,
+  TextBasedChannel,
   VoiceChannel,
 } from "discord.js";
 import Command, { CommandContext } from "../api/command";
@@ -100,7 +100,7 @@ export default class VCEventCommand extends Command {
   }
 
   async printStats(
-    channel: TextBasedChannels,
+    channel: TextBasedChannel,
     voiceChannel: VoiceChannel | StageChannel,
     stats: Map<string, number>
   ) {
