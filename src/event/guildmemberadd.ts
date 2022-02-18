@@ -31,7 +31,7 @@ export default class GuildMemberAddEvent extends Event {
         },
         {
           name: `Step 3: Join Circles (interest groups)!`,
-          value: `<#${bot.settings.channels.circles}>`,
+          value: `<#${bot.settings.circles.joinChannel}>`,
         },
       ],
     });

@@ -106,9 +106,7 @@ async function addCircle(bot: Bot, msg: Message, args: string[]) {
       type: "role",
     },
   ];
-  const circleCategory = (await msg.guild!.channels.fetch(
-    settings.channels.circlesCategory
-  )) as CategoryChannel;
+  const circleCategory = (await msg.guild!.channels.fetch(settings.circles.parentCategory)) as CategoryChannel;
   const desc = `🎗️: ${circleRole.name}`;
   const circleChannel = await msg.guild!.channels.create(
     `${circle.emoji} ${circle.name}`,

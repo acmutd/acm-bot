@@ -2,3 +2,8 @@ node_modules/
 data/
 dist/
 botconfig.js
+
+acm-core.json
+.idea/
+.vscode/
+.DS_Store
