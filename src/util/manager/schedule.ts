@@ -6,16 +6,14 @@ import Manager from "../../api/manager";
 
 export type TaskType =
   | "reminder"
-  | "newsletter"
-  | "rsvp_reminder"
-  | "caretaker";
+  | "circle_activity_reminder"
 
 export interface Task {
   id?: string;
   type: TaskType;
   cron: string | Date;
   payload?: any;
-  job?: Job;
+  job?: Job; // Internal in-memory job linked to this task
 }
 
 export default class ScheduleManager extends Manager {
@@ -25,6 +23,10 @@ export default class ScheduleManager extends Manager {
     super(bot);
     this.tasks = new Collection();
   }
+
+  /**
+   * Load scheduled tasks from database
+   */
   public init(): void {
     const setup = async () => {
       const res = await this.bot.managers.database.schemas.task.find({});
@@ -44,11 +46,25 @@ export default class ScheduleManager extends Manager {
       this.bot.logger.info(`Loaded ${res.length} scheduled tasks...`);
     });
   }
+
+  /**
+   * Create a new task
+   * @param task
+   * @returns the created task, or existing task if ID already exists
+   */
   public async createTask(task: Task): Promise<Task> {
+    // create local cope
     const t = { ...task };
-    if (t.id) {
-      if (this.tasks.has(t.id)) return this.tasks.get(t.id)!;
-    } else t.id = v4();
+
+    // If ID passed in and already exists, return existing task
+    if (t.id && this.tasks.has(t.id))
+      return this.tasks.get(t.id)!;
+
+    // If no ID passed in, generate one
+    if (!t.id)
+      t.id = v4();
+
+    // Add task to the database
     const search = await this.bot.managers.database.schemas.task.find({
       _id: t.id,
     });
@@ -59,39 +75,53 @@ export default class ScheduleManager extends Manager {
         type: t.type,
         payload: t.payload,
       });
+
+    // Schedule task in memory
     t.job = schedule.scheduleJob(t.cron, () => this.runTask(t));
-    this.tasks.set(t.id!, t);
+    this.tasks.set(t.id, t);
+    
     return t;
   }
+
+  /**
+   * 
+   * @param id 
+   * @returns true on success, false on failure (task ID not found)
+   */
   public async deleteTask(id: string): Promise<boolean> {
-    if (!this.hasTask(id)) return false;
-    this.tasks.get(id)?.job?.cancel();
+    const t = this.getTask(id);
+    if (!t) return false;
+
+    t.job?.cancel();
     this.tasks.delete(id);
     await this.bot.managers.database.schemas.task.findByIdAndDelete(id);
+
     return true;
   }
-  public hasTask(id: string): Task | undefined {
+
+  /**
+   * 
+   * @param id Task id
+   * @returns Task if exists, else undefined
+   */
+  public getTask(id: string): Task | undefined {
     return this.tasks.get(id);
   }
+
   private async runTask(task: Task) {
     if (task.id) this.tasks.delete(task.id);
     await this.bot.managers.database.schemas.task.deleteOne({ _id: task.id });
     if (task.job) task.job.cancel();
 
     switch (task.type) {
-      case "newsletter":
-        //this.bot.managers.newsletter.send()
-        break;
       case "reminder":
         this.bot.guilds.cache
           .first()
           ?.members.cache.get(task.payload.id)
           ?.send(task.payload.message);
         break;
-      case "rsvp_reminder":
-        break;
-      case "caretaker":
-        //this.bot.managers.caretaker.send()
+      case "circle_activity_reminder":
+        this.bot.managers.circle.sendActivityReminder(task.payload);
         break;
     }
     await this.deleteTask(task.id!);

@@ -34,12 +34,17 @@ const devConfig = {
     staffRole: "role id",
     firebaseRoot: "points_system_collection",
   },
+  circles: {
+    joinChannel: "channel id",
+    parentCategory: "channel id",
+    leaderChannel: "channel id",
+    remindCron: "*/5 * * * * for every 5 minutes",
+    remindThresholdDays: 1,
+  },
   channels: {
     verification: "channel id",
     error: "channel id",
     shoutout: "channel id",
-    circles: "channel id",
-    circlesCategory: "channel id",
     roles: "channel id",
   },
   roles: {
@@ -87,12 +92,17 @@ const prodConfig = {
     staffRole: "role id",
     firebaseRoot: "points_system_collection",
   },
+  circles: {
+    joinChannel: "channel id",
+    parentCategory: "channel id",
+    leaderChannel: "channel id",
+    remindCron: "*/5 * * * * for every 5 minutes",
+    remindThresholdDays: 1,
+  },
   channels: {
     verification: "channel id",
     error: "channel id",
     shoutout: "channel id",
-    circles: "channel id",
-    circlesCategory: "channel id",
     roles: "channel id",
   },
   roles: {

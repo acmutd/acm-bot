@@ -29,12 +29,17 @@ export interface Settings {
     staffRole: string;
     firebaseRoot: string;
   };
+  circles: {
+    joinChannel: string;
+    parentCategory: string;
+    leaderChannel: string;
+    remindCron: string;
+    remindThresholdDays: number;
+  };
   channels: {
     verification: string;
     error: string;
     shoutout: string;
-    circles: string;
-    circlesCategory: string;
     roles: string;
   };
   roles: {

@@ -2,25 +2,35 @@ import {
   Message,
   MessageEmbed,
   MessageReaction,
+  TextBasedChannel,
   TextChannel,
   User,
 } from "discord.js";
 import { settings } from "../../settings";
 import Bot from "../../api/bot";
 import Manager from "../../api/manager";
+import { Circle } from "../../api/schema";
 
 export default class CircleManager extends Manager {
-  private readonly circleChannelId: string;
+  private readonly remindCron: string;
+  private readonly remindThresholdDays: number;
+  private readonly leaderChannelId: string;
+  private readonly joinChannelId: string;
 
   constructor(bot: Bot) {
     super(bot);
-    this.circleChannelId = this.bot.settings.channels.circles;
+    this.remindCron = this.bot.settings.circles.remindCron;
+    this.remindThresholdDays = this.bot.settings.circles.remindThresholdDays;
+    this.leaderChannelId = this.bot.settings.circles.leaderChannel;
+    this.joinChannelId = this.bot.settings.circles.joinChannel;
   }
 
-  public init(): void {}
+  public init(): void {
+    this.scheduleActivityReminder();
+  }
 
   public async repost() {
-    const channel = this.bot.channels.resolve(this.circleChannelId);
+    const channel = this.bot.channels.resolve(this.joinChannelId);
     const c = channel as TextChannel;
     await c.bulkDelete(50);
     await c.send(
@@ -140,6 +150,81 @@ export default class CircleManager extends Manager {
       await member.roles.remove(reactionRes);
     }
     await this.update(reaction.message.channel as TextChannel, reactionRes);
+  }
+
+  public async sendActivityReminder(payload: any) {
+    try {
+      // Create list of inactive circles & their last messages
+      const circles = [...this.bot.managers.database.cache.circles.values()];
+      let inactiveCircles: [Circle, Message][] = [];
+      for (const circle of circles) {  
+        const channel = await this.bot.channels.fetch(circle.channel) as TextBasedChannel;
+
+        const lastMessage = await this.getLastUserMessageInChannel(channel);
+        if (lastMessage == undefined || (new Date()).getTime() - lastMessage.createdAt.getTime() > this.remindThresholdDays * 24 * 3600 * 1000) {
+          inactiveCircles.push([circle, lastMessage]);
+        }
+      }
+
+      // Do nothing if all circles are active
+      if (inactiveCircles.length == 0)
+        return;
+
+      // Fetch leader circle to send report in
+      const leaderChannel = await this.bot.channels.fetch(this.leaderChannelId) as TextBasedChannel;
+
+      // Build and send report
+      let circleLeaders = inactiveCircles.map(([circle]) => `<@${circle.owner}>`);
+
+      let embed = new MessageEmbed({
+        title: 'Circles Inactivity Report',
+        description: `**${inactiveCircles.length}/${circles.length} circles have been inactive ` +
+          `for ${this.remindThresholdDays} days.**\n` +
+          inactiveCircles.map(([circle, lastMessage]) => 
+            (lastMessage == undefined ? 
+              `${circle.name} (Could not load messages)` : 
+              `[${circle.name}](${lastMessage.url})`)
+          ).join('\n'),
+        footer: {
+          text: 'This bot only tracks the main channel of each circle. ' +
+            'If your circle has activity in a side channel, you may ignore this message.'
+        }
+      });
+
+      await leaderChannel.send({content: circleLeaders.join(''), embeds: [embed]});
+    }
+    finally {
+      this.scheduleActivityReminder();
+    }
+  }
+
+  /**
+   * Deletes and re-schedules circle activity reminder, in scheduler.
+   * Override is done so that cron can be changed around as needed.  
+   */
+  private scheduleActivityReminder() {
+    // Delete any existing reminders
+    this.bot.managers.scheduler.deleteTask('circle_activity_reminder');
+
+    // Schedule new reminder
+    this.bot.managers.scheduler.createTask({
+      id: 'circle_activity_reminder',
+      type: 'circle_activity_reminder',
+      cron: this.remindCron,
+    })
+  }
+
+  private async getLastUserMessageInChannel(channel: TextBasedChannel): Promise<Message | undefined> {
+    // Fetch up to 10 messages from the channel
+    const messages = await channel.messages.fetch({ limit: 10 });
+
+    // Loop from most recent to least recent
+    for (const [snowflake, msg] of [...messages.entries()].sort((a, b) => a > b ? -1 : a < b ? 1 : 0)) {
+      if (!msg.author.bot)
+        return msg;
+    }
+
+    return undefined;
   }
 }
 
