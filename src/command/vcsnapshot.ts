@@ -6,9 +6,9 @@ export default class VCSnapshotCommand extends Command {
     super({
       name: "vcsnapshot",
       description:
-        "Take a snapshot of all users in your current voice channel...",
+        "Take a snapshot of all users in your current voice channel.",
       longDescription:
-        "Take a snapshot of all users in your current voice channel. You can also pass in a voice channel ID to take a snapshot of it without having to join...",
+        "Take a snapshot of all users in your current voice channel. You can also pass in a voice channel ID to take a snapshot of it without having to join.",
       usage: ["vcsnapshot", "vcsnapshot [channel-id]"],
       dmWorks: false,
     });
@@ -28,7 +28,7 @@ export default class VCSnapshotCommand extends Command {
       )
         return bot.response.emit(
           msg.channel,
-          `Could not resolve the given ID into a valid voice channel...`,
+          `Could not resolve the given ID into a valid voice channel.`,
           "invalid"
         );
       voiceChannel = chan;
@@ -37,7 +37,7 @@ export default class VCSnapshotCommand extends Command {
       if (!voiceChannel)
         return bot.response.emit(
           msg.channel,
-          `Please join a voice channel...`,
+          `Please join a voice channel.`,
           "invalid"
         );
     }

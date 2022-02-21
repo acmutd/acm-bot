@@ -14,7 +14,7 @@ export default class EventManager extends Manager {
 
   public init(): void {
     fs.readdir(this.path, (err, files) => {
-      this.bot.logger.info(`Found ${files.length} event(s)...`);
+      this.bot.logger.info(`Found ${files.length} event(s).`);
       files.forEach((file) => {
         // Skip non-js files, such as map files.
         if (!file.endsWith(".js")) return;

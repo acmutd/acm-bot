@@ -5,7 +5,7 @@ export default class VCPingCommand extends Command {
   constructor() {
     super({
       name: "vcping",
-      description: "Ping everyone in a voice channel...",
+      description: "Ping everyone in a voice channel.",
       usage: ["vcping", "vcping [channel-id]"],
       dmWorks: false,
     });
@@ -26,7 +26,7 @@ export default class VCPingCommand extends Command {
       )
         return bot.response.emit(
           msg.channel,
-          "Could not resolve the given ID into a valid voice channel...",
+          "Could not resolve the given ID into a valid voice channel.",
           "invalid"
         );
       voiceChannel = channel;
@@ -35,7 +35,7 @@ export default class VCPingCommand extends Command {
       if (!voiceChannel)
         return bot.response.emit(
           msg.channel,
-          "Please join a voice channel...",
+          "Please join a voice channel.",
           "invalid"
         );
     }

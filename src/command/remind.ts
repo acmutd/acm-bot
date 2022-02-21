@@ -4,7 +4,7 @@ export default class RemindCommand extends Command {
   constructor() {
     super({
       name: "remind",
-      description: "Setup a timed reminder...",
+      description: "Setup a timed reminder.",
       usage: ["remind [minutes] [message]"],
     });
   }
@@ -18,7 +18,7 @@ export default class RemindCommand extends Command {
     if (isNaN(minutes) || minutes < 1 || minutes > maxTime)
       return bot.response.emit(
         msg.channel,
-        `Invalid time in range [1-${maxTime}]...`,
+        `Invalid time in range [1-${maxTime}].`,
         "invalid"
       );
 
@@ -47,7 +47,7 @@ export default class RemindCommand extends Command {
     });
     return bot.response.emit(
       msg.channel,
-      `${msg.author}, I'll DM you with your reminder at '${dateStr}'...`,
+      `${msg.author}, I'll DM you with your reminder at '${dateStr}'.`,
       "success"
     );
   }

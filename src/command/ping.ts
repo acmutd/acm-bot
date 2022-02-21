@@ -17,7 +17,7 @@ export default class PingCommand extends Command {
       msg.channel,
       `:ping_pong: | ${
         (new Date().getTime() - startTime) / 1000
-      }s response time...`,
+      }s response time.`,
       "success"
     );
   }
