@@ -43,7 +43,7 @@ export default class ScheduleManager extends Manager {
       return res;
     };
     setup().then((res) => {
-      this.bot.logger.info(`Loaded ${res.length} scheduled tasks...`);
+      this.bot.logger.info(`Loaded ${res.length} scheduled tasks.`);
     });
   }
 

@@ -97,7 +97,7 @@ export default class CommandManager extends Manager {
     if (this.bot.managers.indicator.hasUser("usingCommand", msg.author))
       return this.bot.response.emit(
         msg.channel,
-        "You are already using a command. Please complete that action before beginning another...",
+        "You are already using a command. Please complete that action before beginning another.",
         "invalid"
       );
 
@@ -127,7 +127,7 @@ export default class CommandManager extends Manager {
       await cmd.exec({ bot: this.bot, msg, args });
     } catch (e) {
       await msg.reply(
-        "Command execution failed. Please contact a bot maintainer..."
+        "Command execution failed. Please contact a bot maintainer."
       );
       console.error(e);
       // Don't throw and let the bot handle this as an unhandled rejection. Instead,

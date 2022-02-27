@@ -51,11 +51,11 @@ export default class Wizard {
         doneLoop: "done",
       },
       responses: {
-        quit: "Quitting wizard...",
+        quit: "Quitting wizard.",
         skip: "",
-        doneLoop: "Loop ended...",
-        time: "⏰ You ran out of time (+<time> seconds). Ending wizard...",
-        error: "Unexpected issue with the setup wizard, aborting...",
+        doneLoop: "Loop ended.",
+        time: "⏰ You ran out of time (+<time> seconds). Ending wizard.",
+        error: "Unexpected issue with the setup wizard, aborting.",
       },
     };
   }
@@ -173,7 +173,7 @@ export abstract class WizardNode {
               this.wizard.configs.commands.doneLoop +
               "' when you're finished. "
             : ""
-        }Enter '${this.wizard.configs.commands.quit}' to end the wizard...`,
+        }Enter '${this.wizard.configs.commands.quit}' to end the wizard.`,
       };
     }
     try {

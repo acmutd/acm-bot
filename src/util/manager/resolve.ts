@@ -17,6 +17,9 @@ export default class ResolveManager extends Manager {
   ): Promise<GuildMember | undefined> {
     let member: GuildMember | undefined;
 
+    // Ensure all members are in cache
+    await guild.members.fetch();
+
     // First perform strict searching]
 
     // Resolve on ID

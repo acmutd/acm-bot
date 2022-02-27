@@ -15,7 +15,7 @@ export default class CircleCommand extends Command {
   constructor() {
     super({
       name: "circle",
-      description: "A suite of command that manage ACM Community Circles...",
+      description: "A suite of command that manage ACM Community Circles.",
       dmWorks: false,
       userPermissions: BigInt(268443664),
     });
@@ -31,7 +31,7 @@ export default class CircleCommand extends Command {
         break;
       default:
         msg.channel.send(
-          `User '${settings.prefix}circle help' to show a list of commands...`
+          `Use '${settings.prefix}circle help' to show a list of commands.`
         );
         break;
     }
@@ -124,7 +124,7 @@ async function addCircle(bot: Bot, msg: Message, args: string[]) {
   if (!added) {
     bot.response.emit(
       msg.channel,
-      `Could not add circle to the database...`,
+      `Could not add circle to the database.`,
       "error"
     );
     await circleRole.delete();
@@ -134,7 +134,7 @@ async function addCircle(bot: Bot, msg: Message, args: string[]) {
 
   bot.response.emit(
     msg.channel,
-    `Successfully created circle <@&${circleRole.id}>...`,
+    `Successfully created circle <@&${circleRole.id}>.`,
     "success"
   );
 }

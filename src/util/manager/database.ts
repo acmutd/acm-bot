@@ -66,7 +66,7 @@ export default class DatabaseManager extends Manager {
     };
     setup().then(() => {
       this.bot.logger.info(
-        "Cached circle, response, and reaction role data..."
+        "Cached circle, response, and reaction role data."
       );
     });
   }
@@ -77,13 +77,13 @@ export default class DatabaseManager extends Manager {
       useFindAndModify: false,
     });
     this.m.connection.on("error", (err) => {
-      this.bot.logger.error("Database connection error...");
+      this.bot.logger.error("Database connection error.");
       this.bot.logger.error(err);
     });
   }
   public dispose() {
     this.m.connection.close();
-    this.bot.logger.database("Closed database connection...");
+    this.bot.logger.database("Closed database connection.");
   }
   private async recache(schema: keyof SchemaTypes, cache?: keyof CacheTypes) {
     try {

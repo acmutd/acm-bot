@@ -6,14 +6,14 @@ export default class ShoutoutCommand extends Command {
   constructor() {
     super({
       name: "shoutout",
-      description: "Give a shoutout to someone special...",
+      description: "Give a shoutout to someone special.",
       usage: ["shoutout [list of mentions] [reason for shoutout]"],
     });
   }
 
   public async exec({ msg, bot, args }: CommandContext) {
     if (!/^<@!?[\d]{17,18}>/.test(args[0]))
-      return bot.response.emit(msg.channel, "No user mentions...", "invalid");
+      return bot.response.emit(msg.channel, "No user mentions.", "invalid");
 
     const receivers = [...msg.mentions.members!.values()];
     let title = `📣 ${

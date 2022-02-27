@@ -70,7 +70,7 @@ export default class PointsManager extends Manager {
       await reaction.users.remove(user.id);
       return this.bot.response.emit(
         msg.channel,
-        `${user}, you are not authorized to approve points...`,
+        `${user}, you are not authorized to approve points.`,
         "invalid"
       );
     }
@@ -126,7 +126,7 @@ export default class PointsManager extends Manager {
         userData.netId
       }\`\n**Activity**: \`${answers[2].choice.label}\`\n\n**Proof**:`,
       footer: {
-        text: `${points} points will be awarded upon approval...`,
+        text: `${points} points will be awarded upon approval.`,
       },
     });
     if (answers[4].type === "text")
@@ -179,7 +179,7 @@ export default class PointsManager extends Manager {
     } else {
       this.bot.response.emit(
         notifChannel,
-        `Registration failed. Please ensure that both members are in thi server and resubmit...`,
+        `Registration failed. Please ensure that both members are in this server and resubmit.`,
         "invalid"
       );
     }
@@ -200,7 +200,7 @@ export default class PointsManager extends Manager {
     );
     if (!member) {
       await notifChannel.send(
-        `Err: Couldn't find user ${data.tag} (${data.full_name})...`
+        `Err: Couldn't find user ${data.tag} (${data.full_name}).`
       );
       return;
     }
@@ -231,7 +231,7 @@ export default class PointsManager extends Manager {
               title: "Mentor/Mentee Registration Confirmation",
               description: `Hello **${data.full_name}**, thank you for registering!\n`,
               footer: {
-                text: "If you did not recently request this action, please conteact an ACM staff member...",
+                text: "If you did not recently request this action, please contact an ACM staff member.",
               },
             }),
           ],
@@ -365,19 +365,19 @@ export default class PointsManager extends Manager {
       )) as TextChannel;
       if (success.length > 60)
         await logChannel.send({
-          content: `Awarded ${points} to ${success.length} users for ${activity}...`,
+          content: `Awarded ${points} to ${success.length} users for ${activity}.`,
           allowedMentions: { parse: [] },
         });
       else if (success.length !== 0)
         await logChannel.send({
           content: `Awarded ${points} points to ${success.join(
             ", "
-          )} for ${activity}...`,
+          )} for ${activity}.`,
           allowedMentions: { users: [] },
         });
     }
     console.log(
-      `Awarded ${points} to ${success.length}/${awardees.size} users for ${activity}...`
+      `Awarded ${points} to ${success.length}/${awardees.size} users for ${activity}.`
     );
     return { success, failure };
   }

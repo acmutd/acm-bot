@@ -11,7 +11,7 @@ export default class VCEventCommand extends Command {
   constructor() {
     super({
       name: "vcevent",
-      description: "Records user statistics for your current voice channel...",
+      description: "Records user statistics for your current voice channel.",
       usage: [
         "vcevent <start|stop|stats|list>",
         "vcevent <start|stop|stats> [channel-id]",
@@ -35,14 +35,14 @@ export default class VCEventCommand extends Command {
       )
         return bot.response.emit(
           msg.channel,
-          "Could not resolve that ID into a voice channel...",
+          "Could not resolve that ID into a voice channel.",
           "invalid"
         );
       vc = chan;
     } else {
       vc = msg.member?.voice.channel;
       if (!vc && action !== "list")
-        return bot.response.emit(msg.channel, "Please join a voice channel...");
+        return bot.response.emit(msg.channel, "Please join a voice channel.");
     }
     let data;
     switch (action) {
@@ -51,13 +51,13 @@ export default class VCEventCommand extends Command {
         if (bot.managers.activity.startVoiceEvent(vc))
           return bot.response.emit(
             msg.channel,
-            `VC Event started for ${vc}...`,
+            `VC Event started for ${vc}.`,
             "success"
           );
         else
           return bot.response.emit(
             msg.channel,
-            `VC Event already running ${vc}...`,
+            `VC Event already running ${vc}.`,
             "error"
           );
       case "stop":
@@ -66,7 +66,7 @@ export default class VCEventCommand extends Command {
         if (!data)
           return bot.response.emit(
             msg.channel,
-            `No running VC Event in ${vc}...`,
+            `No running VC Event in ${vc}.`,
             "error"
           );
         await this.printStats(msg.channel, vc, data);
@@ -76,7 +76,7 @@ export default class VCEventCommand extends Command {
         if (!data)
           return bot.response.emit(
             msg.channel,
-            `No running VC Event in ${vc}...`,
+            `No running VC Event in ${vc}.`,
             "error"
           );
         await this.printStats(msg.channel, vc, data);
@@ -117,7 +117,7 @@ export default class VCEventCommand extends Command {
     await channel.send({
       embeds: [
         new MessageEmbed({
-          title: `Time spent in ${voiceChannel}...`,
+          title: `Time spent in #${voiceChannel.name}`,
           description: descriptionArr.join("\n"),
         }),
       ],
