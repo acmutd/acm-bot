@@ -215,8 +215,8 @@ export default class CircleManager extends Manager {
   }
 
   private async getLastUserMessageInChannel(channel: TextBasedChannel): Promise<Message | undefined> {
-    // Fetch up to 10 messages from the channel
-    const messages = await channel.messages.fetch({ limit: 10 });
+    // Fetch up to 100 messages from the channel
+    const messages = await channel.messages.fetch({ limit: 100 });
 
     // Loop from most recent to least recent
     for (const [snowflake, msg] of [...messages.entries()].sort((a, b) => a > b ? -1 : a < b ? 1 : 0)) {
