@@ -11,11 +11,11 @@ export interface InteractionConfig {
 }
 
 export default abstract class BaseInteraction {
-  public name: string;
+  public readonly name: string;
 
   protected constructor(config: InteractionConfig) {
     this.name = config.name;
   }
 
-  public abstract exec(context: InteractionContext): Promise<void>;
+  public abstract handleInteraction(context: InteractionContext): Promise<void>;
 }

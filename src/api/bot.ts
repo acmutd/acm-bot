@@ -15,12 +15,9 @@ import PointsManager from "../util/manager/points";
 import ActivityManager from "../util/manager/activity";
 import VerificationManager from "../util/manager/verification";
 import ErrorManager from "../util/manager/error";
-<<<<<<< HEAD
 import ReactionRoleManager from "../util/manager/rero";
-=======
 import InteractionManager from "../util/manager/interaction";
 import { REST } from "@discordjs/rest";
->>>>>>> 26f5f0a (WIP)
 
 export interface Config {
   token: string;

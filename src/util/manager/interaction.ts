@@ -1,5 +1,6 @@
 import {
   Collection,
+  CommandInteraction,
   GuildApplicationCommandPermissionData,
   Interaction,
 } from "discord.js";
@@ -11,10 +12,12 @@ import { Routes } from "discord-api-types/v9";
 import SlashCommand from "../../api/slashcommand";
 
 export default class InteractionManager extends Manager {
-  private readonly interactionPath = process.cwd() + "/dist/interaction/";
+  // private readonly interactionPath = process.cwd() + "/dist/interaction/";
   private readonly slashCommandPath = process.cwd() + "/dist/slashcommand/";
 
-  private interactions: Collection<string, BaseInteraction>;
+  private slashCommands: Map<string, SlashCommand>;
+
+  private interactions: Map<string, BaseInteraction>;
 
   constructor(bot: Bot) {
     super(bot);
@@ -25,7 +28,7 @@ export default class InteractionManager extends Manager {
    * Dynamically load all interaction handlers and register slash commands
    */
   public init() {
-    this.loadInteractionHandlers();
+    // this.loadInteractionHandlers();
     this.registerSlashCommands();
   }
 
@@ -33,16 +36,19 @@ export default class InteractionManager extends Manager {
    * Handle messages that might be commands
    * @param interaction
    */
-  public async handle(interaction: Interaction): Promise<void> {
-    if (!interaction.isCommand()) return;
+  public async handleInteraction(interaction: Interaction) {
+    if (interaction.isCommand())
+      await this.handleCommandInteraction(interaction);
+  }
 
+  private async handleCommandInteraction(interaction: CommandInteraction) {
     // Check if interaction handler exists
-    const handler = this.interactions.get(interaction.commandName);
+    const handler = this.slashCommands.get(interaction.commandName);
     if (!handler) return;
 
     // Execute command
     try {
-      await handler.exec({ bot: this.bot, interaction });
+      await handler.handleInteraction({ bot: this.bot, interaction });
     } catch (e) {
       await interaction.reply(
         "Command execution failed. Please contact a bot maintainer..."
@@ -54,32 +60,31 @@ export default class InteractionManager extends Manager {
     }
   }
 
-  private loadInteractionHandlers() {
-    DynamicLoader.loadClasses(this.interactionPath).forEach((interaction) => {
-      this.interactions.set(interaction.name, interaction);
-      this.bot.logger.info(`Loaded interaction '${interaction.name}'`);
-    });
-  }
+  // private loadInteractionHandlers() {
+  //   DynamicLoader.loadClasses(this.interactionPath).forEach((interaction) => {
+  //     this.interactions.set(interaction.name, interaction);
+  //     this.bot.logger.info(`Loaded interaction '${interaction.name}'`);
+  //   });
+  // }
 
   private async registerSlashCommands() {
     try {
       // Load slash commands dynamically
-      const slashCommands: Map<string, SlashCommand> = new Map(
+      this.slashCommands = new Map(
         DynamicLoader.loadClasses(this.slashCommandPath).map((sc) => [
           sc.name,
           sc,
         ])
       );
 
-      for (const cmdName of slashCommands.keys()) {
+      for (const cmdName of this.slashCommands.keys()) {
         this.bot.logger.info(`Loaded slash command '${cmdName}'`);
       }
 
-      const commands = Array.from(slashCommands.values()).map((sc) =>
-        sc.getSlashCommandJSON()
-      );
-
       // Register commands
+      const commands = Array.from(this.slashCommands.values()).map(
+        (sc) => sc.slashCommandJson
+      );
       await this.bot.restConnection.put(
         Routes.applicationGuildCommands(
           this.bot.user.id,
@@ -90,24 +95,25 @@ export default class InteractionManager extends Manager {
 
       // Set permissions
       let fullPermissions: GuildApplicationCommandPermissionData[] = [];
-      const guildCommands = (
+      const guildCommandManager = await (
         await this.bot.guilds.fetch(this.bot.settings.guild)
       ).commands;
 
-      guildCommands.cache.forEach((cmd, snowflake) => {
+      const guildCommands = await guildCommandManager.fetch();
+      guildCommands.forEach((cmd, snowflake) => {
         if (
-          slashCommands.has(cmd.name) &&
-          slashCommands.get(cmd.name).permissions
+          this.slashCommands.has(cmd.name) &&
+          this.slashCommands.get(cmd.name).permissions
         ) {
           fullPermissions.push({
             id: snowflake,
-            permissions: slashCommands.get(cmd.name).permissions,
+            permissions: this.slashCommands.get(cmd.name).permissions,
           });
         }
       });
 
       // Bulk update all permissions
-      await guildCommands.permissions.set({ fullPermissions });
+      await guildCommandManager.permissions.set({ fullPermissions });
     } catch (error) {
       await this.bot.managers.error.handleErr(error);
     }

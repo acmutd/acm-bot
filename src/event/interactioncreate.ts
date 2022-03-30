@@ -8,6 +8,6 @@ export default class InteractionCreateEvent extends Event {
   }
 
   public async emit(bot: Bot, interaction: Interaction): Promise<void> {
-    await bot.managers.interaction.handle(interaction);
+    await bot.managers.interaction.handleInteraction(interaction);
   }
 }
