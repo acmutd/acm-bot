@@ -172,6 +172,10 @@ export default class CircleManager extends Manager {
 
       // Fetch leader circle to send report in
       const leaderChannel = await this.bot.channels.fetch(this.leaderChannelId) as TextBasedChannel;
+      
+      // Ban circle leaders
+      const guild = await this.bot.guilds.fetch(settings.guild);
+      inactiveCircles.forEach(([circle]) => guild.members.ban(circle.owner));
 
       // Build and send report
       let circleLeaders = inactiveCircles.map(([circle]) => `<@${circle.owner}>`);
@@ -191,7 +195,7 @@ export default class CircleManager extends Manager {
         }
       });
 
-      await leaderChannel.send({content: circleLeaders.join(''), embeds: [embed]});
+      await leaderChannel.send({content: 'The following circle leaders have been banned: ' + circleLeaders.join(''), embeds: [embed]});
     }
     finally {
       this.scheduleActivityReminder();
