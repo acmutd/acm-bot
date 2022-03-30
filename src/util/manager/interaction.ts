@@ -2,6 +2,7 @@ import {
   ButtonInteraction,
   Collection,
   CommandInteraction,
+  ContextMenuInteraction,
   GuildApplicationCommandPermissionData,
   Interaction,
 } from "discord.js";
@@ -12,14 +13,18 @@ import DynamicLoader from "../dynamicloader";
 import { Routes } from "discord-api-types/v9";
 import SlashCommand from "../../api/interaction/slashcommand";
 import CustomButtonInteraction from "../../api/interaction/button";
+import ContextMenuCommand from "../../api/interaction/contextmenucommand";
 
 export default class InteractionManager extends Manager {
   // private readonly interactionPath = process.cwd() + "/dist/interaction/";
   private readonly slashCommandPath =
     process.cwd() + "/dist/interaction/command/";
+  private readonly cmCommandPath =
+    process.cwd() + "/dist/interaction/contextmenu/";
   private readonly buttonPath = process.cwd() + "/dist/interaction/button/";
 
   private slashCommands: Map<string, SlashCommand>;
+  private cmCommands: Map<string, ContextMenuCommand>;
   private buttons: Map<string, CustomButtonInteraction>;
 
   constructor(bot: Bot) {
@@ -32,6 +37,7 @@ export default class InteractionManager extends Manager {
   public init() {
     // this.loadInteractionHandlers();
     this.registerSlashCommands();
+    this.registerContextMenuCommands();
     this.registerButtons();
   }
 
@@ -42,6 +48,8 @@ export default class InteractionManager extends Manager {
   public async handleInteraction(interaction: Interaction) {
     if (interaction.isCommand())
       await this.handleCommandInteraction(interaction);
+    else if (interaction.isContextMenu())
+      await this.handleContextMenuInteraction(interaction);
     else if (interaction.isButton())
       await this.handleButtonInteraction(interaction);
   }
@@ -58,7 +66,26 @@ export default class InteractionManager extends Manager {
       await interaction.reply(
         "Command execution failed. Please contact a bot maintainer..."
       );
-      console.error(e);
+      // Don't throw and let the bot handle this as an unhandled rejection. Instead,
+      // take initiative to handle it as an error so we can see the trace.
+      await this.bot.managers.error.handleErr(e);
+    }
+  }
+
+  private async handleContextMenuInteraction(
+    interaction: ContextMenuInteraction
+  ) {
+    // Check if interaction handler exists
+    const handler = this.cmCommands.get(interaction.commandName);
+    if (!handler) return;
+
+    // Execute command
+    try {
+      await handler.handleInteraction({ bot: this.bot, interaction });
+    } catch (e) {
+      await interaction.reply(
+        "Command execution failed. Please contact a bot maintainer..."
+      );
       // Don't throw and let the bot handle this as an unhandled rejection. Instead,
       // take initiative to handle it as an error so we can see the trace.
       await this.bot.managers.error.handleErr(e);
@@ -74,6 +101,9 @@ export default class InteractionManager extends Manager {
             interaction,
           });
         } catch (e) {
+          await interaction.reply(
+            "Command execution failed. Please contact a bot maintainer..."
+          );
           await this.bot.managers.error.handleErr(e);
         }
       }
@@ -139,9 +169,36 @@ export default class InteractionManager extends Manager {
     }
   }
 
+  private async registerContextMenuCommands() {
+    try {
+      // Dynamically load source files
+      this.cmCommands = new Map(
+        DynamicLoader.loadClasses(this.cmCommandPath).map((sc) => [sc.name, sc])
+      );
+
+      for (const cmdName of this.cmCommands.keys()) {
+        this.bot.logger.info(`Loaded context menu command '${cmdName}'`);
+      }
+
+      // Register commands
+      const commands = Array.from(this.slashCommands.values()).map(
+        (sc) => sc.slashCommandJson
+      );
+      await this.bot.restConnection.put(
+        Routes.applicationGuildCommands(
+          this.bot.user.id,
+          this.bot.settings.guild
+        ),
+        { body: commands }
+      );
+    } catch (error) {
+      await this.bot.managers.error.handleErr(error);
+    }
+  }
+
   private async registerButtons() {
     try {
-      // Load slash commands dynamically
+      // Dynamically load source files
       this.buttons = new Map(
         DynamicLoader.loadClasses(this.buttonPath).map((sc) => [sc.name, sc])
       );
