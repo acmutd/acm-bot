@@ -1,4 +1,5 @@
 import {
+  ButtonInteraction,
   Collection,
   CommandInteraction,
   GuildApplicationCommandPermissionData,
@@ -6,22 +7,23 @@ import {
 } from "discord.js";
 import Bot from "../../api/bot";
 import Manager from "../../api/manager";
-import BaseInteraction from "../../api/interaction";
+import BaseInteraction from "../../api/interaction/interaction";
 import DynamicLoader from "../dynamicloader";
 import { Routes } from "discord-api-types/v9";
-import SlashCommand from "../../api/slashcommand";
+import SlashCommand from "../../api/interaction/slashcommand";
+import CustomButtonInteraction from "../../api/interaction/button";
 
 export default class InteractionManager extends Manager {
   // private readonly interactionPath = process.cwd() + "/dist/interaction/";
-  private readonly slashCommandPath = process.cwd() + "/dist/slashcommand/";
+  private readonly slashCommandPath =
+    process.cwd() + "/dist/interaction/command/";
+  private readonly buttonPath = process.cwd() + "/dist/interaction/button/";
 
   private slashCommands: Map<string, SlashCommand>;
-
-  private interactions: Map<string, BaseInteraction>;
+  private buttons: Map<string, CustomButtonInteraction>;
 
   constructor(bot: Bot) {
     super(bot);
-    this.interactions = new Collection();
   }
 
   /**
@@ -30,6 +32,7 @@ export default class InteractionManager extends Manager {
   public init() {
     // this.loadInteractionHandlers();
     this.registerSlashCommands();
+    this.registerButtons();
   }
 
   /**
@@ -39,6 +42,8 @@ export default class InteractionManager extends Manager {
   public async handleInteraction(interaction: Interaction) {
     if (interaction.isCommand())
       await this.handleCommandInteraction(interaction);
+    else if (interaction.isButton())
+      await this.handleButtonInteraction(interaction);
   }
 
   private async handleCommandInteraction(interaction: CommandInteraction) {
@@ -57,6 +62,21 @@ export default class InteractionManager extends Manager {
       // Don't throw and let the bot handle this as an unhandled rejection. Instead,
       // take initiative to handle it as an error so we can see the trace.
       await this.bot.managers.error.handleErr(e);
+    }
+  }
+
+  private async handleButtonInteraction(interaction: ButtonInteraction) {
+    for (const buttonInteraction of this.buttons.values()) {
+      if (buttonInteraction.matchCustomId(interaction.customId)) {
+        try {
+          await buttonInteraction.handleInteraction({
+            bot: this.bot,
+            interaction,
+          });
+        } catch (e) {
+          await this.bot.managers.error.handleErr(e);
+        }
+      }
     }
   }
 
@@ -114,6 +134,21 @@ export default class InteractionManager extends Manager {
 
       // Bulk update all permissions
       await guildCommandManager.permissions.set({ fullPermissions });
+    } catch (error) {
+      await this.bot.managers.error.handleErr(error);
+    }
+  }
+
+  private async registerButtons() {
+    try {
+      // Load slash commands dynamically
+      this.buttons = new Map(
+        DynamicLoader.loadClasses(this.buttonPath).map((sc) => [sc.name, sc])
+      );
+
+      for (const btn of this.buttons.keys()) {
+        this.bot.logger.info(`Loaded button '${btn}'`);
+      }
     } catch (error) {
       await this.bot.managers.error.handleErr(error);
     }

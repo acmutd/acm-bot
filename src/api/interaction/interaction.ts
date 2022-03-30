@@ -1,4 +1,4 @@
-import Bot from "./bot";
+import Bot from "../bot";
 import { Interaction } from "discord.js";
 
 export interface InteractionContext {

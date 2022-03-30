@@ -1,5 +1,11 @@
 import {
+  ButtonInteraction,
+  CacheType,
+  GuildCacheMessage,
+  GuildMember,
   Message,
+  MessageActionRow,
+  MessageButton,
   MessageEmbed,
   MessageReaction,
   TextBasedChannel,
@@ -10,6 +16,7 @@ import { settings } from "../../settings";
 import Bot from "../../api/bot";
 import Manager from "../../api/manager";
 import { Circle } from "../../api/schema";
+import { APIInteractionGuildMember } from "discord-api-types";
 
 export default class CircleManager extends Manager {
   private readonly remindCron: string;
@@ -29,10 +36,20 @@ export default class CircleManager extends Manager {
     this.scheduleActivityReminder();
   }
 
+  /**
+   * Repost all circle messages. Used to update all the cards in the join circles channel, and send new ones
+   * if new ones have been created.
+   */
   public async repost() {
+    // Resolve join circles channel
     const channel = this.bot.channels.resolve(this.joinChannelId);
     const c = channel as TextChannel;
+
+    // Delete original messages
+    // TODO: Manual looped bulk delete, because bulkDelete does not work on messages > 14 days old.
     await c.bulkDelete(50);
+
+    // Send header
     await c.send(
       "https://cdn.discordapp.com/attachments/537776612238950410/826695146250567681/circles.png"
     );
@@ -42,11 +59,14 @@ export default class CircleManager extends Manager {
         `> :crown: You can apply to make your own Circle by filling out this application: <https://apply.acmutd.co/circles>\n`
     );
 
+    // Build and send circle cards
     const circles = [...this.bot.managers.database.cache.circles.values()];
     for (const circle of circles) {
       const owner = await c.guild.members.fetch(circle.owner).catch();
       const count = await this.findMemberCount(circle._id);
       const role = await c.guild.roles.fetch(circle._id);
+
+      // encodedData contains hidden data, stored within the embed as JSON string :) kinda hacky but it works
       const encodedData: any = {
         name: circle.name,
         circle: circle._id,
@@ -54,6 +74,8 @@ export default class CircleManager extends Manager {
         channel: circle.channel,
       };
       encodedData.reactions[`${circle.emoji}`] = circle._id;
+
+      // Build embed portion of the card
       const embed = new MessageEmbed({
         title: `${circle.emoji} ${circle.name} ${circle.emoji}`,
         description: `${encode(encodedData)}${circle.description}`,
@@ -63,20 +85,27 @@ export default class CircleManager extends Manager {
           height: 90,
           width: 90,
         },
-        fields: [
-          { name: "**Role**", value: `<@&${circle._id}>`, inline: true },
-          { name: "**Members**", value: `${count ?? "N/A"}`, inline: true },
-        ],
-        footer: {
-          text: `⏰ Created on ${circle.createdOn.toLocaleDateString("en-US", {
-            year: "numeric",
-            month: "long",
-            day: "numeric",
-          })}${owner ? `﹒👑 Owner: ${owner.displayName}` : ""}`,
-        },
       });
-      const msg = await c.send({ embeds: [embed] });
-      await msg.react(`${circle.emoji}`);
+
+      // Build interactive/buttons portion of the card
+      const actionRow = new MessageActionRow({
+        components: [
+          new MessageButton({
+            label: `Join/Leave ${circle.name}`,
+            customId: `circle/join/${circle._id}`,
+            style: "PRIMARY",
+            emoji: circle.emoji,
+          }),
+          new MessageButton({
+            label: `Learn More`,
+            customId: `circle/about/${circle._id}`,
+            style: "SECONDARY",
+          }),
+        ],
+      });
+
+      // Send out message
+      const msg = await c.send({ embeds: [embed], components: [actionRow] });
     }
   }
 
@@ -123,33 +152,95 @@ export default class CircleManager extends Manager {
     ).size;
   }
 
-  public async handleReactionAdd(reaction: MessageReaction, user: User) {
-    if (reaction.partial) await reaction.fetch();
-    await reaction.users.fetch();
-    if (user.bot) return;
-    if (reaction.message.embeds.length === 0) return;
-    if (!reaction.message.embeds[0].description) return;
-    const obj = decode(reaction.message.embeds[0].description);
-    if (!obj || !obj.reactions) return;
-    let reactionRes: string | undefined;
-    Object.keys(obj.reactions).forEach((n) => {
-      if (reaction.emoji.name.includes(n)) reactionRes = obj.reactions[n];
-    });
-    if (!reactionRes) return;
-    await reaction.users.remove(user.id);
+  public async handleButton(interaction: ButtonInteraction) {
+    // Parse customId
+    const match = interaction.customId.match(/circle\/([^\/]*)\/([^\/]+)/);
+    const action = match[1];
+    const circleId = match[2];
 
+    // Resolve circle
+    const circle = [...this.bot.managers.database.cache.circles.values()].find(
+      (x) => x._id == circleId
+    );
+    if (!circle) return;
+
+    if (action == "join") await this.handleJoinLeave(circle, interaction);
+    else if (action == "about") await this.handleSendAbout(circle, interaction);
+  }
+
+  public async handleJoinLeave(circle: Circle, interaction: ButtonInteraction) {
+    // Resolve the user as a guild member
     const guild = await this.bot.guilds.fetch(settings.guild);
-    const member = guild.members.resolve(user.id);
+    const member = guild.members.resolve(interaction.user.id);
     if (!member) return;
-    if (!member.roles.cache.has(reactionRes)) {
-      await member.roles.add(reactionRes);
 
-      const chan = (await guild.channels.fetch(obj.channel)) as TextChannel;
-      await chan.send(`${member}, welcome to ${obj.name}!`);
+    // Resolve circle channel
+    const chan = (await guild.channels.fetch(circle.channel)) as TextChannel;
+
+    if (!member.roles.cache.has(circle._id)) {
+      await member.roles.add(circle._id);
+      await interaction.reply({
+        content: `Thank you for joining ${circle.name}! Here's the channel: <#${circle.channel}>`,
+        ephemeral: true,
+      });
+      await chan.send(`${member}, welcome to ${circle.name}!`);
     } else {
-      await member.roles.remove(reactionRes);
+      await member.roles.remove(circle._id);
+      await interaction.reply({
+        content: `Thank you for using circles. You have left ${circle.name}.`,
+        ephemeral: true,
+      });
     }
-    await this.update(reaction.message.channel as TextChannel, reactionRes);
+  }
+
+  public async handleSendAbout(circle: Circle, interaction: ButtonInteraction) {
+    // Fetch some relevant information
+    const owner = await interaction.guild.members.fetch(circle.owner).catch();
+    const count = await this.findMemberCount(circle._id);
+    const role = await interaction.guild.roles.fetch(circle._id);
+
+    // Build embed portion of the card
+    const embed = new MessageEmbed({
+      title: `${circle.emoji} ${circle.name} ${circle.emoji}`,
+      description: circle.description,
+      color: role?.color,
+      thumbnail: {
+        url: circle.imageUrl,
+        height: 90,
+        width: 90,
+      },
+      fields: [
+        { name: "**Role**", value: `<@&${circle._id}>`, inline: true },
+        { name: "**Members**", value: `${count ?? "N/A"}`, inline: true },
+      ],
+      footer: {
+        text: `⏰ Created on ${circle.createdOn.toLocaleDateString("en-US", {
+          year: "numeric",
+          month: "long",
+          day: "numeric",
+        })}${owner ? `﹒👑 Owner: ${owner.displayName}` : ""}`,
+      },
+    });
+
+    // Build interactive/buttons portion of the card
+    const actionRow = new MessageActionRow({
+      components: [
+        new MessageButton({
+          label: `Join/Leave ${circle.name}`,
+          customId: `circle/join/${circle._id}`,
+          style: "PRIMARY",
+          emoji: circle.emoji,
+        }),
+      ],
+    });
+
+    // Send out message as ephemeral reply
+    await interaction.reply({
+      content: `You asked to learn more about ${circle.name}`,
+      embeds: [embed],
+      components: [actionRow],
+      ephemeral: true,
+    });
   }
 
   public async sendActivityReminder(payload: any) {
@@ -157,71 +248,89 @@ export default class CircleManager extends Manager {
       // Create list of inactive circles & their last messages
       const circles = [...this.bot.managers.database.cache.circles.values()];
       let inactiveCircles: [Circle, Message][] = [];
-      for (const circle of circles) {  
-        const channel = await this.bot.channels.fetch(circle.channel) as TextBasedChannel;
+      for (const circle of circles) {
+        const channel = (await this.bot.channels.fetch(
+          circle.channel
+        )) as TextBasedChannel;
 
         const lastMessage = await this.getLastUserMessageInChannel(channel);
-        if (lastMessage == undefined || (new Date()).getTime() - lastMessage.createdAt.getTime() > this.remindThresholdDays * 24 * 3600 * 1000) {
+        if (
+          lastMessage == undefined ||
+          new Date().getTime() - lastMessage.createdAt.getTime() >
+            this.remindThresholdDays * 24 * 3600 * 1000
+        ) {
           inactiveCircles.push([circle, lastMessage]);
         }
       }
 
       // Do nothing if all circles are active
-      if (inactiveCircles.length == 0)
-        return;
+      if (inactiveCircles.length == 0) return;
 
       // Fetch leader circle to send report in
-      const leaderChannel = await this.bot.channels.fetch(this.leaderChannelId) as TextBasedChannel;
+      const leaderChannel = (await this.bot.channels.fetch(
+        this.leaderChannelId
+      )) as TextBasedChannel;
 
       // Build and send report
-      let circleLeaders = inactiveCircles.map(([circle]) => `<@${circle.owner}>`);
+      let circleLeaders = inactiveCircles.map(
+        ([circle]) => `<@${circle.owner}>`
+      );
 
       let embed = new MessageEmbed({
-        title: 'Circles Inactivity Report',
-        description: `**${inactiveCircles.length}/${circles.length} circles have been inactive ` +
+        title: "Circles Inactivity Report",
+        description:
+          `**${inactiveCircles.length}/${circles.length} circles have been inactive ` +
           `for ${this.remindThresholdDays} days.**\n` +
-          inactiveCircles.map(([circle, lastMessage]) => 
-            (lastMessage == undefined ? 
-              `${circle.name} (Could not load messages)` : 
-              `[${circle.name}](${lastMessage.url})`)
-          ).join('\n'),
+          inactiveCircles
+            .map(([circle, lastMessage]) =>
+              lastMessage == undefined
+                ? `${circle.name} (Could not load messages)`
+                : `[${circle.name}](${lastMessage.url})`
+            )
+            .join("\n"),
         footer: {
-          text: 'This bot only tracks the main channel of each circle. ' +
-            'If your circle has activity in a side channel, you may ignore this message.'
-        }
+          text:
+            "This bot only tracks the main channel of each circle. " +
+            "If your circle has activity in a side channel, you may ignore this message.",
+        },
       });
 
-      await leaderChannel.send({content: circleLeaders.join(''), embeds: [embed]});
-    }
-    finally {
+      await leaderChannel.send({
+        content: circleLeaders.join(""),
+        embeds: [embed],
+      });
+    } finally {
       this.scheduleActivityReminder();
     }
   }
 
   /**
    * Deletes and re-schedules circle activity reminder, in scheduler.
-   * Override is done so that cron can be changed around as needed.  
+   * Override is done so that cron can be changed around as needed.
    */
   private scheduleActivityReminder() {
     // Delete any existing reminders
-    this.bot.managers.scheduler.deleteTask('circle_activity_reminder');
+    this.bot.managers.scheduler.deleteTask("circle_activity_reminder");
 
     // Schedule new reminder
     this.bot.managers.scheduler.createTask({
-      id: 'circle_activity_reminder',
-      type: 'circle_activity_reminder',
+      id: "circle_activity_reminder",
+      type: "circle_activity_reminder",
       cron: this.remindCron,
-    })
+    });
   }
 
-  private async getLastUserMessageInChannel(channel: TextBasedChannel): Promise<Message | undefined> {
+  private async getLastUserMessageInChannel(
+    channel: TextBasedChannel
+  ): Promise<Message | undefined> {
     // Fetch up to 100 messages from the channel
     const messages = await channel.messages.fetch({ limit: 100 });
 
     // Loop from most recent to least recent
-    for (const [snowflake, msg] of [...messages.entries()].sort((a, b) => a > b ? -1 : a < b ? 1 : 0)) {
-      if (!msg.author.bot)
-        return msg;
+    for (const [snowflake, msg] of [...messages.entries()].sort((a, b) =>
+      a > b ? -1 : a < b ? 1 : 0
+    )) {
+      if (!msg.author.bot) return msg;
     }
 
     return undefined;

@@ -1,5 +1,7 @@
-import SlashCommand from "../api/slashcommand";
-import { InteractionContext } from "../api/interaction";
+import SlashCommand, {
+  SlashCommandContext,
+} from "../../api/interaction/slashcommand";
+import { InteractionContext } from "../../api/interaction/interaction";
 import assert from "assert";
 
 export default class AdminCommand extends SlashCommand {
@@ -18,7 +20,6 @@ export default class AdminCommand extends SlashCommand {
   }
 
   buildSlashCommand() {
-    super.buildSlashCommand();
     this.slashCommand
       .addSubcommand((subcommand) =>
         subcommand
@@ -39,9 +40,7 @@ export default class AdminCommand extends SlashCommand {
   public async handleInteraction({
     bot,
     interaction,
-  }: InteractionContext): Promise<void> {
-    if (!interaction.isCommand()) return;
-
+  }: SlashCommandContext): Promise<void> {
     await interaction.deferReply({ ephemeral: true });
 
     assert(interaction.options.getSubcommand() == "lookup");
