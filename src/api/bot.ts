@@ -18,6 +18,7 @@ import ErrorManager from "../util/manager/error";
 import ReactionRoleManager from "../util/manager/rero";
 import InteractionManager from "../util/manager/interaction";
 import { REST } from "@discordjs/rest";
+import ReportManager from "../util/manager/report";
 
 export interface Config {
   token: string;
@@ -47,6 +48,7 @@ export interface ManagerList {
   express: ExpressManager;
   points: PointsManager;
   activity: ActivityManager;
+  report: ReportManager;
 }
 
 export default class Bot extends Client {
@@ -92,6 +94,7 @@ export default class Bot extends Client {
       express: new ExpressManager(this, config.endpointPath),
       points: new PointsManager(this),
       activity: new ActivityManager(this),
+      report: new ReportManager(this),
     };
     this.config = config;
   }

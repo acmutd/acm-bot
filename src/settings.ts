@@ -41,6 +41,7 @@ export interface Settings {
     error: string;
     shoutout: string;
     roles: string;
+    mod: string;
   };
   roles: {
     member: string;

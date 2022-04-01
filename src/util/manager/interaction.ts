@@ -14,6 +14,7 @@ import { Routes } from "discord-api-types/v9";
 import SlashCommand from "../../api/interaction/slashcommand";
 import CustomButtonInteraction from "../../api/interaction/button";
 import ContextMenuCommand from "../../api/interaction/contextmenucommand";
+import { ApplicationCommandType } from "discord-api-types";
 
 export default class InteractionManager extends Manager {
   // private readonly interactionPath = process.cwd() + "/dist/interaction/";
@@ -36,8 +37,7 @@ export default class InteractionManager extends Manager {
    */
   public init() {
     // this.loadInteractionHandlers();
-    this.registerSlashCommands();
-    this.registerContextMenuCommands();
+    this.registerSlashAndContextMenuCommands();
     this.registerButtons();
   }
 
@@ -74,93 +74,46 @@ export default class InteractionManager extends Manager {
     }
   }
 
-  // private async handleCommandInteraction(interaction: CommandInteraction) {
-  //   // Check if interaction handler exists
-  //   const handler = this.slashCommands.get(interaction.commandName);
-  //   if (!handler) return;
-  //
-  //   // Execute command
-  //   try {
-  //     await handler.handleInteraction({ bot: this.bot, interaction });
-  //   } catch (e) {
-  //     await interaction.reply(
-  //       "Command execution failed. Please contact a bot maintainer..."
-  //     );
-  //     // Don't throw and let the bot handle this as an unhandled rejection. Instead,
-  //     // take initiative to handle it as an error so we can see the trace.
-  //     await this.bot.managers.error.handleErr(e);
-  //   }
-  // }
-  //
-  // private async handleContextMenuInteraction(
-  //   interaction: ContextMenuInteraction
-  // ) {
-  //   // Check if interaction handler exists
-  //   const handler = this.cmCommands.get(interaction.commandName);
-  //   if (!handler) return;
-  //
-  //   // Execute command
-  //   try {
-  //     await handler.handleInteraction({ bot: this.bot, interaction });
-  //   } catch (e) {
-  //     await interaction.reply(
-  //       "Command execution failed. Please contact a bot maintainer..."
-  //     );
-  //     // Don't throw and let the bot handle this as an unhandled rejection. Instead,
-  //     // take initiative to handle it as an error so we can see the trace.
-  //     await this.bot.managers.error.handleErr(e);
-  //   }
-  // }
-  //
-  // private async handleButtonInteraction(interaction: ButtonInteraction) {
-  //   for (const buttonInteraction of this.buttons.values()) {
-  //     if (buttonInteraction.matchCustomId(interaction.customId)) {
-  //       try {
-  //         await buttonInteraction.handleInteraction({
-  //           bot: this.bot,
-  //           interaction,
-  //         });
-  //       } catch (e) {
-  //         await interaction.reply(
-  //           "Command execution failed. Please contact a bot maintainer..."
-  //         );
-  //         await this.bot.managers.error.handleErr(e);
-  //       }
-  //     }
-  //   }
-  // }
-  //
-  // private loadInteractionHandlers() {
-  //   DynamicLoader.loadClasses(this.interactionPath).forEach((interaction) => {
-  //     this.interactions.set(interaction.name, interaction);
-  //     this.bot.logger.info(`Loaded interaction '${interaction.name}'`);
-  //   });
-  // }
-
-  private async registerSlashCommands() {
+  /**
+   * Registers slash commands and context menu commands together. They must be done together,
+   * because they need to be sent in the same API call or else the second will overwrite/delete
+   * the first. Thx Discord :)
+   * @private
+   */
+  private async registerSlashAndContextMenuCommands() {
     try {
-      // Load slash commands dynamically
+      // Load commands dynamically
       this.slashCommands = new Map(
         DynamicLoader.loadClasses(this.slashCommandPath).map((sc) => [
           sc.name,
           sc,
         ])
       );
+      this.cmCommands = new Map(
+        DynamicLoader.loadClasses(this.cmCommandPath).map((sc) => [sc.name, sc])
+      );
 
       for (const cmdName of this.slashCommands.keys()) {
         this.bot.logger.info(`Loaded slash command '${cmdName}'`);
       }
+      for (const cmdName of this.cmCommands.keys()) {
+        this.bot.logger.info(`Loaded context menu command '${cmdName}'`);
+      }
 
       // Register commands
-      const commands = Array.from(this.slashCommands.values()).map(
+      const slashCommandJsons = Array.from(this.slashCommands.values()).map(
         (sc) => sc.slashCommandJson
       );
+      const contextMenuCommandJsons = Array.from(this.cmCommands.values()).map(
+        (cmc) => cmc.contextMenuCommandJson
+      );
+
       await this.bot.restConnection.put(
         Routes.applicationGuildCommands(
           this.bot.user.id,
           this.bot.settings.guild
         ),
-        { body: commands }
+        { body: slashCommandJsons.concat(contextMenuCommandJsons) }
       );
 
       // Set permissions
@@ -172,6 +125,7 @@ export default class InteractionManager extends Manager {
       const guildCommands = await guildCommandManager.fetch();
       guildCommands.forEach((cmd, snowflake) => {
         if (
+          cmd.type == "CHAT_INPUT" &&
           this.slashCommands.has(cmd.name) &&
           this.slashCommands.get(cmd.name).permissions
         ) {
@@ -179,38 +133,20 @@ export default class InteractionManager extends Manager {
             id: snowflake,
             permissions: this.slashCommands.get(cmd.name).permissions,
           });
+        } else if (
+          cmd.type == "MESSAGE" &&
+          this.cmCommands.has(cmd.name) &&
+          this.cmCommands.get(cmd.name).permissions
+        ) {
+          fullPermissions.push({
+            id: snowflake,
+            permissions: this.cmCommands.get(cmd.name).permissions,
+          });
         }
       });
 
       // Bulk update all permissions
       await guildCommandManager.permissions.set({ fullPermissions });
-    } catch (error) {
-      await this.bot.managers.error.handleErr(error);
-    }
-  }
-
-  private async registerContextMenuCommands() {
-    try {
-      // Dynamically load source files
-      this.cmCommands = new Map(
-        DynamicLoader.loadClasses(this.cmCommandPath).map((sc) => [sc.name, sc])
-      );
-
-      for (const cmdName of this.cmCommands.keys()) {
-        this.bot.logger.info(`Loaded context menu command '${cmdName}'`);
-      }
-
-      // Register commands
-      const commands = Array.from(this.cmCommands.values()).map(
-        (cmc) => cmc.contextMenuCommandJson
-      );
-      await this.bot.restConnection.put(
-        Routes.applicationGuildCommands(
-          this.bot.user.id,
-          this.bot.settings.guild
-        ),
-        { body: commands }
-      );
     } catch (error) {
       await this.bot.managers.error.handleErr(error);
     }

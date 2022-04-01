@@ -46,6 +46,7 @@ const devConfig = {
     error: "channel id",
     shoutout: "channel id",
     roles: "channel id",
+    mod: "channel id",
   },
   roles: {
     member: "role id",
@@ -104,6 +105,7 @@ const prodConfig = {
     error: "channel id",
     shoutout: "channel id",
     roles: "channel id",
+    mod: "channel id",
   },
   roles: {
     member: "role id",

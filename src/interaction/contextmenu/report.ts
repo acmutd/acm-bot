@@ -1,18 +1,15 @@
-import SlashCommand, {
-  SlashCommandContext,
-} from "../../api/interaction/slashcommand";
-import { InteractionContext } from "../../api/interaction/interaction";
 import ContextMenuCommand, {
   ContextMenuCommandContext,
 } from "../../api/interaction/contextmenucommand";
-import { ApplicationCommandType } from "discord-api-types";
-import { ContextMenuCommandType } from "@discordjs/builders";
+import { MessageActionRow, MessageButton, MessageEmbed } from "discord.js";
+import { v4 } from "uuid";
+import * as assert from "assert";
 
 export default class ReportContextMenuCommand extends ContextMenuCommand {
   public constructor() {
     super({
-      name: "report",
-      type: 3, // TODO: fix this when discord.js gets gud
+      name: "Report Message",
+      type: 3, // TODO: fix this when discord.js gets gud (tsc doesnt like the actual type)
     });
   }
 
@@ -26,8 +23,9 @@ export default class ReportContextMenuCommand extends ContextMenuCommand {
     bot,
     interaction,
   }: ContextMenuCommandContext): Promise<void> {
-    // Build prompt window to collect more information
+    // Ensure this is a message (just for the ts assert)
+    assert.ok(interaction.isMessageContextMenu());
 
-    await interaction.reply({ content: "Your report for ", ephemeral: true });
+    await bot.managers.report.handleInitialReport(interaction);
   }
 }

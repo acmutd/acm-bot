@@ -1,22 +1,16 @@
 import {
   ButtonInteraction,
-  CacheType,
-  GuildCacheMessage,
-  GuildMember,
   Message,
   MessageActionRow,
   MessageButton,
   MessageEmbed,
-  MessageReaction,
   TextBasedChannel,
   TextChannel,
-  User,
 } from "discord.js";
 import { settings } from "../../settings";
 import Bot from "../../api/bot";
 import Manager from "../../api/manager";
 import { Circle } from "../../api/schema";
-import { APIInteractionGuildMember } from "discord-api-types";
 
 export default class CircleManager extends Manager {
   private readonly remindCron: string;
@@ -62,6 +56,8 @@ export default class CircleManager extends Manager {
     // Build and send circle cards
     const circles = [...this.bot.managers.database.cache.circles.values()];
     for (const circle of circles) {
+      const owner = await c.guild.members.fetch(circle.owner).catch();
+      const count = await this.findMemberCount(circle._id);
       const role = await c.guild.roles.fetch(circle._id);
 
       // encodedData contains hidden data, stored within the embed as JSON string :) kinda hacky but it works
@@ -83,6 +79,17 @@ export default class CircleManager extends Manager {
           height: 90,
           width: 90,
         },
+        fields: [
+          { name: "**Role**", value: `<@&${circle._id}>`, inline: true },
+          { name: "**Members**", value: `${count ?? "N/A"}`, inline: true },
+        ],
+        footer: {
+          text: `⏰ Created on ${circle.createdOn.toLocaleDateString("en-US", {
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+          })}${owner ? `﹒👑 Owner: ${owner.displayName}` : ""}`,
+        },
       });
 
       // Build interactive/buttons portion of the card
@@ -98,12 +105,13 @@ export default class CircleManager extends Manager {
             label: `Learn More`,
             customId: `circle/about/${circle._id}`,
             style: "SECONDARY",
+            disabled: true,
           }),
         ],
       });
 
       // Send out message
-      const msg = await c.send({ embeds: [embed], components: [actionRow] });
+      await c.send({ embeds: [embed], components: [actionRow] });
     }
   }
 
