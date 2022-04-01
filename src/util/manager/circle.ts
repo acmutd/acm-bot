@@ -62,8 +62,6 @@ export default class CircleManager extends Manager {
     // Build and send circle cards
     const circles = [...this.bot.managers.database.cache.circles.values()];
     for (const circle of circles) {
-      const owner = await c.guild.members.fetch(circle.owner).catch();
-      const count = await this.findMemberCount(circle._id);
       const role = await c.guild.roles.fetch(circle._id);
 
       // encodedData contains hidden data, stored within the embed as JSON string :) kinda hacky but it works

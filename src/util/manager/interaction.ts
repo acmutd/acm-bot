@@ -46,17 +46,19 @@ export default class InteractionManager extends Manager {
    * @param interaction
    */
   public async handleInteraction(interaction: Interaction) {
-    if (interaction.isCommand())
-      await this.handleCommandInteraction(interaction);
-    else if (interaction.isContextMenu())
-      await this.handleContextMenuInteraction(interaction);
-    else if (interaction.isButton())
-      await this.handleButtonInteraction(interaction);
-  }
+    // Resolve the correct handler for this interaction
+    let handler: BaseInteraction;
+    if (interaction.isCommand()) {
+      handler = this.slashCommands.get(interaction.commandName);
+    } else if (interaction.isContextMenu()) {
+      handler = this.cmCommands.get(interaction.commandName);
+    } else if (interaction.isButton()) {
+      handler = [...this.buttons.values()].find((x) =>
+        x.matchCustomId(interaction.customId)
+      );
+    } else return;
 
-  private async handleCommandInteraction(interaction: CommandInteraction) {
-    // Check if interaction handler exists
-    const handler = this.slashCommands.get(interaction.commandName);
+    // Return if not found
     if (!handler) return;
 
     // Execute command
@@ -72,44 +74,62 @@ export default class InteractionManager extends Manager {
     }
   }
 
-  private async handleContextMenuInteraction(
-    interaction: ContextMenuInteraction
-  ) {
-    // Check if interaction handler exists
-    const handler = this.cmCommands.get(interaction.commandName);
-    if (!handler) return;
-
-    // Execute command
-    try {
-      await handler.handleInteraction({ bot: this.bot, interaction });
-    } catch (e) {
-      await interaction.reply(
-        "Command execution failed. Please contact a bot maintainer..."
-      );
-      // Don't throw and let the bot handle this as an unhandled rejection. Instead,
-      // take initiative to handle it as an error so we can see the trace.
-      await this.bot.managers.error.handleErr(e);
-    }
-  }
-
-  private async handleButtonInteraction(interaction: ButtonInteraction) {
-    for (const buttonInteraction of this.buttons.values()) {
-      if (buttonInteraction.matchCustomId(interaction.customId)) {
-        try {
-          await buttonInteraction.handleInteraction({
-            bot: this.bot,
-            interaction,
-          });
-        } catch (e) {
-          await interaction.reply(
-            "Command execution failed. Please contact a bot maintainer..."
-          );
-          await this.bot.managers.error.handleErr(e);
-        }
-      }
-    }
-  }
-
+  // private async handleCommandInteraction(interaction: CommandInteraction) {
+  //   // Check if interaction handler exists
+  //   const handler = this.slashCommands.get(interaction.commandName);
+  //   if (!handler) return;
+  //
+  //   // Execute command
+  //   try {
+  //     await handler.handleInteraction({ bot: this.bot, interaction });
+  //   } catch (e) {
+  //     await interaction.reply(
+  //       "Command execution failed. Please contact a bot maintainer..."
+  //     );
+  //     // Don't throw and let the bot handle this as an unhandled rejection. Instead,
+  //     // take initiative to handle it as an error so we can see the trace.
+  //     await this.bot.managers.error.handleErr(e);
+  //   }
+  // }
+  //
+  // private async handleContextMenuInteraction(
+  //   interaction: ContextMenuInteraction
+  // ) {
+  //   // Check if interaction handler exists
+  //   const handler = this.cmCommands.get(interaction.commandName);
+  //   if (!handler) return;
+  //
+  //   // Execute command
+  //   try {
+  //     await handler.handleInteraction({ bot: this.bot, interaction });
+  //   } catch (e) {
+  //     await interaction.reply(
+  //       "Command execution failed. Please contact a bot maintainer..."
+  //     );
+  //     // Don't throw and let the bot handle this as an unhandled rejection. Instead,
+  //     // take initiative to handle it as an error so we can see the trace.
+  //     await this.bot.managers.error.handleErr(e);
+  //   }
+  // }
+  //
+  // private async handleButtonInteraction(interaction: ButtonInteraction) {
+  //   for (const buttonInteraction of this.buttons.values()) {
+  //     if (buttonInteraction.matchCustomId(interaction.customId)) {
+  //       try {
+  //         await buttonInteraction.handleInteraction({
+  //           bot: this.bot,
+  //           interaction,
+  //         });
+  //       } catch (e) {
+  //         await interaction.reply(
+  //           "Command execution failed. Please contact a bot maintainer..."
+  //         );
+  //         await this.bot.managers.error.handleErr(e);
+  //       }
+  //     }
+  //   }
+  // }
+  //
   // private loadInteractionHandlers() {
   //   DynamicLoader.loadClasses(this.interactionPath).forEach((interaction) => {
   //     this.interactions.set(interaction.name, interaction);
@@ -181,8 +201,8 @@ export default class InteractionManager extends Manager {
       }
 
       // Register commands
-      const commands = Array.from(this.slashCommands.values()).map(
-        (sc) => sc.slashCommandJson
+      const commands = Array.from(this.cmCommands.values()).map(
+        (cmc) => cmc.contextMenuCommandJson
       );
       await this.bot.restConnection.put(
         Routes.applicationGuildCommands(
