@@ -16,12 +16,16 @@ import ActivityManager from "../util/manager/activity";
 import VerificationManager from "../util/manager/verification";
 import ErrorManager from "../util/manager/error";
 import ReactionRoleManager from "../util/manager/rero";
+import InteractionManager from "../util/manager/interaction";
+import { REST } from "@discordjs/rest";
+import ReportManager from "../util/manager/report";
 
 export interface Config {
   token: string;
   dbUrl: string;
   commandPath: string;
   eventPath: string;
+  endpointPath: string;
   sentryDNS: string;
   responseFormat: ResponseFormat;
   disabledCommands: string[] | undefined;
@@ -30,6 +34,7 @@ export interface Config {
 
 export interface ManagerList {
   command: CommandManager;
+  interaction: InteractionManager;
   error: ErrorManager;
   verification: VerificationManager;
   event: EventManager;
@@ -43,12 +48,14 @@ export interface ManagerList {
   express: ExpressManager;
   points: PointsManager;
   activity: ActivityManager;
+  report: ReportManager;
 }
 
 export default class Bot extends Client {
   public settings: Settings;
   public logger: LoggerUtil;
   public response: ResponseUtil;
+  public readonly restConnection: REST;
   public managers: ManagerList;
   public config: Config;
 
@@ -70,8 +77,10 @@ export default class Bot extends Client {
     this.settings = settings;
     this.logger = new LoggerUtil();
     this.response = new ResponseUtil(config.responseFormat);
+    this.restConnection = new REST({ version: "9" }).setToken(config.token);
     this.managers = {
       command: new CommandManager(this, config.commandPath),
+      interaction: new InteractionManager(this),
       error: new ErrorManager(this),
       verification: new VerificationManager(this),
       event: new EventManager(this, config.eventPath),
@@ -82,19 +91,20 @@ export default class Bot extends Client {
       rero: new ReactionRoleManager(this),
       firestore: new FirestoreManager(this),
       resolve: new ResolveManager(this),
-      express: new ExpressManager(this),
+      express: new ExpressManager(this, config.endpointPath),
       points: new PointsManager(this),
       activity: new ActivityManager(this),
+      report: new ReportManager(this),
     };
     this.config = config;
   }
 
   async start(): Promise<void> {
+    await this.login(this.config.token);
     this.logger.info("Initializing managers...");
     Object.entries(this.managers).forEach(([k, v]) => {
       v.init();
     });
-    await this.login(this.config.token);
     this.logger.info("Bot started.");
   }
 }

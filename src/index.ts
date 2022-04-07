@@ -13,6 +13,7 @@ const bot: Bot = new Bot({
   sentryDNS: settings.sentryDNS,
   commandPath: path.join(process.cwd(), "dist", "command"),
   eventPath: path.join(process.cwd(), "dist", "event"),
+  endpointPath: path.join(process.cwd(), "dist", "endpoint"),
   responseFormat: settings.responseFormat,
   disabledCommands: settings.disabledCommands,
   disabledCategories: settings.disabledCategories,
