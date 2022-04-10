@@ -3,8 +3,9 @@ import SlashCommand, {
   } from "../../api/interaction/slashcommand";
   import { InteractionContext } from "../../api/interaction/interaction";
   import { MessageEmbed } from "discord.js";
+  import { settings } from "../../../src/settings";
   
-  export default class ReportCommand extends SlashCommand {
+  export default class ShoutoutCommand extends SlashCommand {
     public constructor() {
       super({
         name: "shoutout",
@@ -29,12 +30,14 @@ import SlashCommand, {
         )
     }
   
+
     public async handleInteraction({
       bot,
       interaction,
     }: SlashCommandContext): Promise<void> {
       
-      // Send embed with instructions on reporting a specific message
+      const channel = settings.channels.shoutout
+      
       await interaction.reply({  });
     }
   }
