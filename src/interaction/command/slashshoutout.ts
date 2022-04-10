@@ -15,18 +15,18 @@ import SlashCommand, {
   
     protected buildSlashCommand() {
       this.slashCommand
-      .addSubcommand((subcommand) =>
-        subcommand
-          .addUserOption((option) =>
-            option
-              .setName("user")
-              .setDescription("User to mention")
-              .setRequired(true)
-          )
-      )
-      .addSubcommand((subcommand) =>
-        subcommand.setName("shoutout").setDescription("Type the text of the shoutout")
-      );
+      .addUserOption(option => 
+        option
+        .setName("user")
+        .setDescription("User to shout out")
+        .setRequired(true)
+        )
+      .addStringOption(option =>
+        option
+        .setName("shoutout")
+        .setDescription("Reason for the shoutout")
+        .setRequired(true)
+        )
     }
   
     public async handleInteraction({
