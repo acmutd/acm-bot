@@ -9,14 +9,25 @@ import SlashCommand, {
       super({
         name: "shoutout",
         description:
-          "Shout out someone special.",
-        optionName: "user",
-        optionDescription: "mention the user you want to shout out."
-
+          "Shout out someone special."
       });
     }
   
-    protected buildSlashCommand() {}
+    protected buildSlashCommand() {
+      this.slashCommand
+      .addSubcommand((subcommand) =>
+        subcommand
+          .addUserOption((option) =>
+            option
+              .setName("user")
+              .setDescription("User to mention")
+              .setRequired(true)
+          )
+      )
+      .addSubcommand((subcommand) =>
+        subcommand.setName("shoutout").setDescription("Type the text of the shoutout")
+      );
+    }
   
     public async handleInteraction({
       bot,
