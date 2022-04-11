@@ -19,18 +19,24 @@ import { ApplicationCommandType } from "discord-api-types";
 
 export default class InteractionManager extends Manager {
   // private readonly interactionPath = process.cwd() + "/dist/interaction/";
-  private readonly slashCommandPath =
-    path.join(process.cwd(), "dist", "interaction", "command");
-  private readonly cmCommandPath =
-    process.cwd() + "/dist/interaction/contextmenu/";
-  private readonly buttonPath = process.cwd() + "/dist/interaction/button/";
+  private slashCommandPath: string;
+  private cmCommandPath: string;
+  private buttonPath: string;
 
   private slashCommands: Map<string, SlashCommand>;
   private cmCommands: Map<string, ContextMenuCommand>;
   private buttons: Map<string, CustomButtonInteraction>;
 
-  constructor(bot: Bot) {
+  constructor(
+    bot: Bot,
+    slashCommandPath: string,
+    cmCommandPath: string,
+    buttonPath: string
+  ) {
     super(bot);
+    this.slashCommandPath = slashCommandPath;
+    this.cmCommandPath = cmCommandPath;
+    this.buttonPath = buttonPath;
   }
 
   /**
@@ -38,7 +44,6 @@ export default class InteractionManager extends Manager {
    */
   public init() {
     // this.loadInteractionHandlers();
-    this.bot.logger.info("TEST")
     this.registerSlashAndContextMenuCommands();
     this.registerButtons();
   }
@@ -85,14 +90,11 @@ export default class InteractionManager extends Manager {
   private async registerSlashAndContextMenuCommands() {
     try {
       // Load commands dynamically
-      this.bot.logger.info("REGISTERING SLASH COMMANDS")
       this.slashCommands = new Map(
-        DynamicLoader.loadClasses(this.slashCommandPath).map((sc) => {
-          this.bot.logger.info([sc.name, sc])
-          return [
+        DynamicLoader.loadClasses(this.slashCommandPath).map((sc) => [
           sc.name,
           sc,
-        ]})
+        ])
       );
       this.cmCommands = new Map(
         DynamicLoader.loadClasses(this.cmCommandPath).map((sc) => [sc.name, sc])
@@ -153,7 +155,6 @@ export default class InteractionManager extends Manager {
       // Bulk update all permissions
       await guildCommandManager.permissions.set({ fullPermissions });
     } catch (error) {
-      console.log(error)
       await this.bot.managers.error.handleErr(error);
     }
   }
