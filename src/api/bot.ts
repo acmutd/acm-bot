@@ -24,6 +24,9 @@ export interface Config {
   token: string;
   dbUrl: string;
   commandPath: string;
+  slashCommandPath: string;
+  cmCommandPath: string;
+  buttonPath: string;
   eventPath: string;
   endpointPath: string;
   sentryDNS: string;
@@ -80,7 +83,12 @@ export default class Bot extends Client {
     this.restConnection = new REST({ version: "9" }).setToken(config.token);
     this.managers = {
       command: new CommandManager(this, config.commandPath),
-      interaction: new InteractionManager(this),
+      interaction: new InteractionManager(
+        this,
+        config.slashCommandPath,
+        config.cmCommandPath,
+        config.buttonPath
+      ),
       error: new ErrorManager(this),
       verification: new VerificationManager(this),
       event: new EventManager(this, config.eventPath),
