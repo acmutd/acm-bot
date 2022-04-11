@@ -6,7 +6,7 @@
   "scripts": {
     "build": "tsc",
     "boot": "node dist/index.js",
-    "start": "npm run build && npm run boot",
+    "start": "npm run clean && npm run build && npm run boot",
     "prepare": "husky install",
     "clean": "tsc --build --clean"
   },
