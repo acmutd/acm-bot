@@ -6,6 +6,7 @@ import {
   GuildApplicationCommandPermissionData,
   Interaction,
 } from "discord.js";
+import path from "path";
 import Bot from "../../api/bot";
 import Manager from "../../api/manager";
 import BaseInteraction from "../../api/interaction/interaction";
@@ -19,7 +20,7 @@ import { ApplicationCommandType } from "discord-api-types";
 export default class InteractionManager extends Manager {
   // private readonly interactionPath = process.cwd() + "/dist/interaction/";
   private readonly slashCommandPath =
-    process.cwd() + "/dist/interaction/command/";
+    path.join(process.cwd(), "dist", "interaction", "command");
   private readonly cmCommandPath =
     process.cwd() + "/dist/interaction/contextmenu/";
   private readonly buttonPath = process.cwd() + "/dist/interaction/button/";
@@ -37,6 +38,7 @@ export default class InteractionManager extends Manager {
    */
   public init() {
     // this.loadInteractionHandlers();
+    this.bot.logger.info("TEST")
     this.registerSlashAndContextMenuCommands();
     this.registerButtons();
   }
@@ -83,11 +85,14 @@ export default class InteractionManager extends Manager {
   private async registerSlashAndContextMenuCommands() {
     try {
       // Load commands dynamically
+      this.bot.logger.info("REGISTERING SLASH COMMANDS")
       this.slashCommands = new Map(
-        DynamicLoader.loadClasses(this.slashCommandPath).map((sc) => [
+        DynamicLoader.loadClasses(this.slashCommandPath).map((sc) => {
+          this.bot.logger.info([sc.name, sc])
+          return [
           sc.name,
           sc,
-        ])
+        ]})
       );
       this.cmCommands = new Map(
         DynamicLoader.loadClasses(this.cmCommandPath).map((sc) => [sc.name, sc])
@@ -148,6 +153,7 @@ export default class InteractionManager extends Manager {
       // Bulk update all permissions
       await guildCommandManager.permissions.set({ fullPermissions });
     } catch (error) {
+      console.log(error)
       await this.bot.managers.error.handleErr(error);
     }
   }

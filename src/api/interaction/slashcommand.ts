@@ -23,6 +23,7 @@ export default abstract class SlashCommand extends BaseInteraction {
   public readonly description: string | undefined;
   public readonly permissions: ApplicationCommandPermissionData[] | undefined;
 
+
   protected readonly slashCommand: SlashCommandBuilder =
     new SlashCommandBuilder();
 
@@ -55,6 +56,8 @@ export default abstract class SlashCommand extends BaseInteraction {
     this.slashCommand.setName(this.name);
     if (this.description) this.slashCommand.setDescription(this.description);
     if (this.permissions) this.slashCommand.setDefaultPermission(false);
+    
+    
   }
 
   public abstract handleInteraction(context: SlashCommandContext);
