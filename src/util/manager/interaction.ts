@@ -37,6 +37,7 @@ export default class InteractionManager extends Manager {
    */
   public init() {
     // this.loadInteractionHandlers();
+    this.bot.logger.info("TEST")
     this.registerSlashAndContextMenuCommands();
     this.registerButtons();
   }
@@ -83,11 +84,14 @@ export default class InteractionManager extends Manager {
   private async registerSlashAndContextMenuCommands() {
     try {
       // Load commands dynamically
+      this.bot.logger.info("REGISTERING SLASH COMMANDS")
       this.slashCommands = new Map(
-        DynamicLoader.loadClasses(this.slashCommandPath).map((sc) => [
+        DynamicLoader.loadClasses(this.slashCommandPath).map((sc) => {
+          this.bot.logger.info([sc.name, sc])
+          return [
           sc.name,
           sc,
-        ])
+        ]})
       );
       this.cmCommands = new Map(
         DynamicLoader.loadClasses(this.cmCommandPath).map((sc) => [sc.name, sc])

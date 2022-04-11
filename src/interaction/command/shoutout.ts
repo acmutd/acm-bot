@@ -30,15 +30,20 @@ import SlashCommand, {
         )
     }
   
-
+    // Interaction Handled !
     public async handleInteraction({
       bot,
       interaction,
     }: SlashCommandContext): Promise<void> {
       
-      const channel = settings.channels.shoutout
+      const channel = settings.channels
       
-      await interaction.reply({  });
+      let embed = new MessageEmbed({
+        title: "Shouting out User"
+      });
+      
+      //await channel.send({ embeds: [embed] });
+      await interaction.reply({ embeds: [embed], ephemeral: true });
     }
   }
   
