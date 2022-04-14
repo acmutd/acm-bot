@@ -32,9 +32,6 @@ export default class AdminCommand extends SlashCommand {
               .setRequired(true)
           )
       )
-      .addSubcommand((subcommand) =>
-        subcommand.setName("foobar").setDescription("test")
-      );
   }
 
   public async handleInteraction({
@@ -45,14 +42,14 @@ export default class AdminCommand extends SlashCommand {
 
     assert(interaction.options.getSubcommand() == "lookup");
 
-    const user = interaction.options.getUser("user");
+    const user = interaction.options.getUser("user")!;
 
-    const nameMapping = (
-      await bot.managers.firestore.firestore
-        ?.collection("discord")
-        .doc("snowflake_to_name")
-        .get()
-    ).data();
+    const nameMappingReq = await bot.managers.firestore.firestore
+      ?.collection("discord")
+      .doc("snowflake_to_name")
+      .get();
+    if (!nameMappingReq) return;
+    const nameMapping = nameMappingReq.data();
 
     for (const snowflake in nameMapping) {
       if (nameMapping.hasOwnProperty(snowflake) && user.id == snowflake) {

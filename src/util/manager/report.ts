@@ -43,7 +43,7 @@ export default class ReportManager extends Manager {
 
   public async handleInitialReport(interaction: MessageContextMenuInteraction) {
     // Immediately fetch message
-    const message = await interaction.channel.messages.fetch(
+    const message = await interaction.channel!.messages.fetch(
       interaction.targetMessage.id
     );
 
@@ -86,8 +86,8 @@ export default class ReportManager extends Manager {
   public async handleCategorySelection(interaction: ButtonInteraction) {
     // Parse report information
     const match = interaction.customId.match(/report\/([^\/]*)\/([^\/]+)/);
-    const reportId = match[1];
-    const category = match[2];
+    const reportId = match![1];
+    const category = match![2];
 
     // Fetch report from storage
     let report = this.reports.get(reportId);
@@ -99,7 +99,7 @@ export default class ReportManager extends Manager {
       });
     }
     this.reports.delete(reportId);
-    const { message, originalInteraction } = report;
+    const { message, originalInteraction } = report!;
 
     // Build report to send out
     const reportContent =
@@ -109,8 +109,10 @@ export default class ReportManager extends Manager {
 
     const embed = new MessageEmbed({
       author: {
-        name: `${message.member.displayName} (${message.author.username}#${message.author.discriminator})`,
-        iconURL: message.member.displayAvatarURL(),
+        name: `${message.member!.displayName} (${message.author.username}#${
+          message.author.discriminator
+        })`,
+        iconURL: message.member!.displayAvatarURL(),
       },
       title: "link to message",
       url: message.url,
@@ -121,7 +123,7 @@ export default class ReportManager extends Manager {
     const modChannel = await this.bot.channels.fetch(
       this.bot.settings.channels.mod
     );
-    assert.ok(modChannel.isText());
+    assert.ok(modChannel!.isText());
 
     // Send report
     modChannel.send({

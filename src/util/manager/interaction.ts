@@ -23,9 +23,9 @@ export default class InteractionManager extends Manager {
   private cmCommandPath: string;
   private buttonPath: string;
 
-  private slashCommands: Map<string, SlashCommand>;
-  private cmCommands: Map<string, ContextMenuCommand>;
-  private buttons: Map<string, CustomButtonInteraction>;
+  private slashCommands: Map<string, SlashCommand> = new Map();
+  private cmCommands: Map<string, ContextMenuCommand> = new Map();
+  private buttons: Map<string, CustomButtonInteraction> = new Map();
 
   constructor(
     bot: Bot,
@@ -56,13 +56,15 @@ export default class InteractionManager extends Manager {
     // Resolve the correct handler for this interaction
     let handler: BaseInteraction;
     if (interaction.isCommand()) {
-      handler = this.slashCommands.get(interaction.commandName);
+      handler = this.slashCommands.get(
+        interaction.commandName
+      ) as BaseInteraction;
     } else if (interaction.isContextMenu()) {
-      handler = this.cmCommands.get(interaction.commandName);
+      handler = this.cmCommands.get(interaction.commandName) as BaseInteraction;
     } else if (interaction.isButton()) {
       handler = [...this.buttons.values()].find((x) =>
         x.matchCustomId(interaction.customId)
-      );
+      ) as BaseInteraction;
     } else return;
 
     // Return if not found
@@ -71,7 +73,7 @@ export default class InteractionManager extends Manager {
     // Execute command
     try {
       await handler.handleInteraction({ bot: this.bot, interaction });
-    } catch (e) {
+    } catch (e: any) {
       await interaction.reply(
         "Command execution failed. Please contact a bot maintainer..."
       );
@@ -117,7 +119,7 @@ export default class InteractionManager extends Manager {
 
       await this.bot.restConnection.put(
         Routes.applicationGuildCommands(
-          this.bot.user.id,
+          this.bot.user!.id,
           this.bot.settings.guild
         ),
         { body: slashCommandJsons.concat(contextMenuCommandJsons) }
@@ -134,27 +136,27 @@ export default class InteractionManager extends Manager {
         if (
           cmd.type == "CHAT_INPUT" &&
           this.slashCommands.has(cmd.name) &&
-          this.slashCommands.get(cmd.name).permissions
+          this.slashCommands.get(cmd.name)!.permissions
         ) {
           fullPermissions.push({
             id: snowflake,
-            permissions: this.slashCommands.get(cmd.name).permissions,
+            permissions: this.slashCommands.get(cmd.name)!.permissions!,
           });
         } else if (
           cmd.type == "MESSAGE" &&
           this.cmCommands.has(cmd.name) &&
-          this.cmCommands.get(cmd.name).permissions
+          this.cmCommands.get(cmd.name)!.permissions
         ) {
           fullPermissions.push({
             id: snowflake,
-            permissions: this.cmCommands.get(cmd.name).permissions,
+            permissions: this.cmCommands.get(cmd.name)!.permissions!,
           });
         }
       });
 
       // Bulk update all permissions
       await guildCommandManager.permissions.set({ fullPermissions });
-    } catch (error) {
+    } catch (error: any) {
       await this.bot.managers.error.handleErr(error);
     }
   }
@@ -169,7 +171,7 @@ export default class InteractionManager extends Manager {
       for (const btn of this.buttons.keys()) {
         this.bot.logger.info(`Loaded button '${btn}'`);
       }
-    } catch (error) {
+    } catch (error: any) {
       await this.bot.managers.error.handleErr(error);
     }
   }

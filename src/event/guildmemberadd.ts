@@ -15,10 +15,10 @@ export default class GuildMemberAddEvent extends Event {
         icon_url: "https://www.acmutd.co/png/acm-light.png",
         url: "https://acmutd.co/",
       },
-      color: `#EC7621`,
+      color: 0xec7621,
       footer: {
         text: `Powered by ACM`,
-        iconURL: bot.user!.avatarURL(),
+        icon_url: bot.user!.avatarURL() ?? "",
       },
       fields: [
         {

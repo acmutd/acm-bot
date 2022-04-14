@@ -49,7 +49,7 @@ export default abstract class SlashCommand extends BaseInteraction {
    * Do not worry about items in the config. These will be handled by the super class
    * @protected
    */
-  protected abstract buildSlashCommand();
+  protected abstract buildSlashCommand(): any;
 
   private buildSlashCommandFromConfig() {
     this.slashCommand.setName(this.name);
@@ -57,5 +57,5 @@ export default abstract class SlashCommand extends BaseInteraction {
     if (this.permissions) this.slashCommand.setDefaultPermission(false);
   }
 
-  public abstract handleInteraction(context: SlashCommandContext);
+  public abstract handleInteraction(context: SlashCommandContext): any;
 }

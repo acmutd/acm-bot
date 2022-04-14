@@ -44,8 +44,10 @@ export default class ResolveManager extends Manager {
         strategies.has("tag") ||
         strategies.has("username") ||
         strategies.has("nickname"))
-    )
-      member = (await guild.members.search({ query: toResolve })).values()[0];
+    ) {
+      const memberSearch = await guild.members.search({ query: toResolve });
+      member = memberSearch.at(0);
+    }
 
     if (lenient) {
       toResolve = ResolveManager.makeLenient(toResolve);

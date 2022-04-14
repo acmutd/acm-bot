@@ -29,10 +29,10 @@ export default abstract class CustomButtonInteraction extends CustomInteraction 
    * If it matches, expect handleInteraction to be called afterwards.
    * @param customId
    */
-  public abstract matchCustomId(customId: string);
+  public abstract matchCustomId(customId: string): boolean;
 
   /**
    * Perform actions for handling the interaction
    */
-  public abstract handleInteraction(context: ButtonInteractionContext);
+  public abstract handleInteraction(context: ButtonInteractionContext): any;
 }
