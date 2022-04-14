@@ -54,5 +54,5 @@ export default abstract class ContextMenuCommand extends BaseInteraction {
     if (this.permissions) this.cmCommand.setDefaultPermission(false);
   }
 
-  public abstract handleInteraction(context: ContextMenuCommandContext);
+  public abstract handleInteraction(context: ContextMenuCommandContext): any;
 }

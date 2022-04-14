@@ -22,7 +22,7 @@ export default class VCEventCommand extends Command {
   }
 
   public async exec({ msg, bot, args }: CommandContext) {
-    let vc: VoiceChannel | StageChannel | null | undefined;
+    let vc: VoiceChannel | StageChannel;
     if (args.length < 1) return this.sendInvalidUsage(msg, bot);
     const action = args[0];
     if (args.length > 1) {
@@ -40,9 +40,9 @@ export default class VCEventCommand extends Command {
         );
       vc = chan;
     } else {
-      vc = msg.member?.voice.channel;
-      if (!vc && action !== "list")
+      if (!msg.member?.voice.channel && action !== "list")
         return bot.response.emit(msg.channel, "Please join a voice channel.");
+      vc = msg.member?.voice.channel!;
     }
     let data;
     switch (action) {

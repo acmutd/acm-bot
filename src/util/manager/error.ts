@@ -11,7 +11,7 @@ export default class ErrorManager extends Manager {
   }
 
   init() {
-    process.on("unhandledRejection", (err) => this.handleMsg(err));
+    process.on("unhandledRejection", (err: any) => this.handleMsg(err));
     process.on("uncaughtException", (err) => this.handleErr(err));
   }
 
@@ -46,7 +46,7 @@ export default class ErrorManager extends Manager {
 
       // Create text file containing stack trace, which is previewed on desktop clients
       const traceFile = {
-        attachment: Buffer.from(err.stack),
+        attachment: Buffer.from(err.stack!),
         name: "StackTrace.txt",
       };
 

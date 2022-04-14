@@ -35,15 +35,15 @@ export default class ShoutoutCommand extends SlashCommand {
     interaction,
   }: SlashCommandContext): Promise<void> {
     const { options, member, guild } = interaction;
-    const users = options.getString("users");
-    const shoutout = options.getString("shoutout");
+    const users = options.getString("users")!;
+    const shoutout = options.getString("shoutout")!;
 
     let embed = new MessageEmbed({
       title: "Shouting out User(s)",
     });
     await interaction.reply({ embeds: [embed], ephemeral: true });
 
-    const title = `📣 ${member.user.username} gave a shoutout!`;
+    const title = `📣 ${member!.user.username} gave a shoutout!`;
 
     const reg = /^.*?(<@!?[\d]{17,18}>|\s)+/;
     const text = shoutout.replace(reg, "");
@@ -62,7 +62,7 @@ export default class ShoutoutCommand extends SlashCommand {
       color: "RANDOM",
     });
 
-    const channel = guild.channels.resolve(
+    const channel = guild!.channels.resolve(
       settings.channels.shoutout
     ) as TextChannel;
     await channel.send({ embeds: [embed] });

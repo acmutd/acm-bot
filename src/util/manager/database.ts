@@ -60,14 +60,12 @@ export default class DatabaseManager extends Manager {
         await this.recache("response");
         await this.recache("rrmessage");
         await this.recache("circle");
-      } catch (e) {
+      } catch (e: any) {
         this.bot.logger.error(e);
       }
     };
     setup().then(() => {
-      this.bot.logger.info(
-        "Cached circle, response, and reaction role data."
-      );
+      this.bot.logger.info("Cached circle, response, and reaction role data.");
     });
   }
   private async connect() {
@@ -98,7 +96,7 @@ export default class DatabaseManager extends Manager {
           doc
         );
       });
-    } catch (e) {
+    } catch (e: any) {
       this.bot.logger.error(e);
     }
   }

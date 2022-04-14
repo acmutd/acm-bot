@@ -33,7 +33,7 @@ export default class VerificationManager extends Manager {
             .doc("snowflake_to_name")
             .set(map, { merge: true });
           return;
-        } catch (err) {
+        } catch (err: any) {
           this.bot.logger.error(err);
         }
       }

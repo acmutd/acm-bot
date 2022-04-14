@@ -72,19 +72,19 @@ export default class ReactionRoleManager extends Manager {
     // Add or remove role, depending on if they have the role already
     const hasRole = member.roles.cache.has(
       rrmsg.reactionRoles[
-        reaction.emoji.id ? reaction.emoji.id : reaction.emoji.name
+        reaction.emoji.id ? reaction.emoji.id : reaction.emoji.name!
       ]
     );
     if (!hasRole)
       await member.roles.add(
         rrmsg.reactionRoles[
-          reaction.emoji.id ? reaction.emoji.id : reaction.emoji.name
+          reaction.emoji.id ? reaction.emoji.id : reaction.emoji.name!
         ]
       );
     else
       await member.roles.remove(
         rrmsg.reactionRoles[
-          reaction.emoji.id ? reaction.emoji.id : reaction.emoji.name
+          reaction.emoji.id ? reaction.emoji.id : reaction.emoji.name!
         ]
       );
 

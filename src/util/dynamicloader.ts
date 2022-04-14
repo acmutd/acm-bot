@@ -5,7 +5,7 @@ export default class DynamicLoader {
     // Add trailing slash
     path = path.endsWith("/") ? path : path + "/";
 
-    let res = [];
+    let res: any[] = [];
     fs.readdirSync(path).forEach((file) => {
       // Skip non-js files, such as map files.
       if (!file.endsWith(".js")) return;

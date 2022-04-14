@@ -56,9 +56,9 @@ export default class CircleManager extends Manager {
     // Build and send circle cards
     const circles = [...this.bot.managers.database.cache.circles.values()];
     for (const circle of circles) {
-      const owner = await c.guild.members.fetch(circle.owner).catch();
-      const count = await this.findMemberCount(circle._id);
-      const role = await c.guild.roles.fetch(circle._id);
+      const owner = await c.guild.members.fetch(circle.owner!).catch();
+      const count = await this.findMemberCount(circle._id!);
+      const role = await c.guild.roles.fetch(circle._id!);
 
       // encodedData contains hidden data, stored within the embed as JSON string :) kinda hacky but it works
       const encodedData: any = {
@@ -84,7 +84,7 @@ export default class CircleManager extends Manager {
           { name: "**Members**", value: `${count ?? "N/A"}`, inline: true },
         ],
         footer: {
-          text: `⏰ Created on ${circle.createdOn.toLocaleDateString("en-US", {
+          text: `⏰ Created on ${circle.createdOn!.toLocaleDateString("en-US", {
             year: "numeric",
             month: "long",
             day: "numeric",
@@ -139,7 +139,7 @@ export default class CircleManager extends Manager {
     const embed = new MessageEmbed({
       title: message.embeds[0].title || "",
       description: message.embeds[0].description || "",
-      color: message.embeds[0].color,
+      color: message.embeds[0].color!,
       footer: message.embeds[0].footer || {},
       thumbnail: message.embeds[0].thumbnail || {},
       fields: [
@@ -161,8 +161,8 @@ export default class CircleManager extends Manager {
   public async handleButton(interaction: ButtonInteraction) {
     // Parse customId
     const match = interaction.customId.match(/circle\/([^\/]*)\/([^\/]+)/);
-    const action = match[1];
-    const circleId = match[2];
+    const action = match![1];
+    const circleId = match![2];
 
     // Resolve circle
     const circle = [...this.bot.managers.database.cache.circles.values()].find(
@@ -181,17 +181,17 @@ export default class CircleManager extends Manager {
     if (!member) return;
 
     // Resolve circle channel
-    const chan = (await guild.channels.fetch(circle.channel)) as TextChannel;
+    const chan = (await guild.channels.fetch(circle.channel!)) as TextChannel;
 
-    if (!member.roles.cache.has(circle._id)) {
-      await member.roles.add(circle._id);
+    if (!member.roles.cache.has(circle._id!)) {
+      await member.roles.add(circle._id!);
       await interaction.reply({
         content: `Thank you for joining ${circle.name}! Here's the channel: <#${circle.channel}>`,
         ephemeral: true,
       });
       await chan.send(`${member}, welcome to ${circle.name}!`);
     } else {
-      await member.roles.remove(circle._id);
+      await member.roles.remove(circle._id!);
       await interaction.reply({
         content: `Thank you for using circles. You have left ${circle.name}.`,
         ephemeral: true,
@@ -201,9 +201,9 @@ export default class CircleManager extends Manager {
 
   public async handleSendAbout(circle: Circle, interaction: ButtonInteraction) {
     // Fetch some relevant information
-    const owner = await interaction.guild.members.fetch(circle.owner).catch();
-    const count = await this.findMemberCount(circle._id);
-    const role = await interaction.guild.roles.fetch(circle._id);
+    const owner = await interaction.guild!.members.fetch(circle.owner!).catch();
+    const count = await this.findMemberCount(circle._id!);
+    const role = await interaction.guild!.roles.fetch(circle._id!);
 
     // Build embed portion of the card
     const embed = new MessageEmbed({
@@ -220,7 +220,7 @@ export default class CircleManager extends Manager {
         { name: "**Members**", value: `${count ?? "N/A"}`, inline: true },
       ],
       footer: {
-        text: `⏰ Created on ${circle.createdOn.toLocaleDateString("en-US", {
+        text: `⏰ Created on ${circle.createdOn!.toLocaleDateString("en-US", {
           year: "numeric",
           month: "long",
           day: "numeric",
@@ -256,7 +256,7 @@ export default class CircleManager extends Manager {
       let inactiveCircles: [Circle, Message][] = [];
       for (const circle of circles) {
         const channel = (await this.bot.channels.fetch(
-          circle.channel
+          circle.channel!
         )) as TextBasedChannel;
 
         const lastMessage = await this.getLastUserMessageInChannel(channel);
@@ -265,7 +265,7 @@ export default class CircleManager extends Manager {
           new Date().getTime() - lastMessage.createdAt.getTime() >
             this.remindThresholdDays * 24 * 3600 * 1000
         ) {
-          inactiveCircles.push([circle, lastMessage]);
+          inactiveCircles.push([circle, lastMessage!]);
         }
       }
 
