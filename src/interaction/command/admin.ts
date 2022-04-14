@@ -32,9 +32,6 @@ export default class AdminCommand extends SlashCommand {
               .setRequired(true)
           )
       )
-      .addSubcommand((subcommand) =>
-        subcommand.setName("foobar").setDescription("test")
-      );
   }
 
   public async handleInteraction({

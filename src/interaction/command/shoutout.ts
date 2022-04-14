@@ -1,7 +1,6 @@
 import SlashCommand, {
   SlashCommandContext,
 } from "../../api/interaction/slashcommand";
-import { InteractionContext } from "../../api/interaction/interaction";
 import { MessageEmbed, TextChannel } from "discord.js";
 import { settings } from "../../settings";
 
@@ -45,18 +44,16 @@ export default class ShoutoutCommand extends SlashCommand {
 
     const title = `📣 ${member!.user.username} gave a shoutout!`;
 
-    const reg = /^.*?(<@!?[\d]{17,18}>|\s)+/;
-    const text = shoutout.replace(reg, "");
     embed = new MessageEmbed({
       title,
       fields: [
         {
           name: "Given to:",
-          value: users.match(reg)![0].replace(settings.prefix + "shoutout", ""),
+          value: users,
         },
         {
           name: "For:",
-          value: text,
+          value: shoutout,
         },
       ],
       color: "RANDOM",
