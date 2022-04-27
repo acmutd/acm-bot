@@ -255,6 +255,7 @@ export default class CircleManager extends Manager {
       const circles = [...this.bot.managers.database.cache.circles.values()];
       let inactiveCircles: [Circle, Message][] = [];
       for (const circle of circles) {
+        if (circle.channel === "798591687542177793") continue;
         const channel = (await this.bot.channels.fetch(
           circle.channel!
         )) as TextBasedChannel;
