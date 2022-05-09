@@ -63,5 +63,6 @@ export default class ShoutoutCommand extends SlashCommand {
       settings.channels.shoutout
     ) as TextChannel;
     await channel.send({ embeds: [embed] });
+    await channel.send(`${users}`);
   }
 }
