@@ -62,6 +62,6 @@ export default class ShoutoutCommand extends SlashCommand {
     const channel = guild!.channels.resolve(
       settings.channels.shoutout
     ) as TextChannel;
-    await channel.send({ embeds: [embed] });
+    await channel.send({ content: users, embeds: [embed] });
   }
 }
