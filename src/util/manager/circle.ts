@@ -251,6 +251,9 @@ export default class CircleManager extends Manager {
 
   public async sendActivityReminder(payload: any) {
     try {
+      // Consider disabled if threshold is non-positive
+      if (this.remindThresholdDays <= 0) return;
+
       // Create list of inactive circles & their last messages
       const circles = [...this.bot.managers.database.cache.circles.values()];
       let inactiveCircles: [Circle, Message][] = [];
