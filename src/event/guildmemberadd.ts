@@ -8,6 +8,9 @@ export default class GuildMemberAddEvent extends Event {
   }
 
   public async emit(bot: Bot, member: GuildMember) {
+    // If member previously verified, restore their member role
+    await bot.managers.verification.handleMemberJoin(member);
+
     const embed = new MessageEmbed({
       title: `**Welcome to the ACM Discord Server!** 🎉`,
       author: {

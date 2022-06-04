@@ -11,16 +11,32 @@ import Manager from "../../api/manager";
 export default class VerificationManager extends Manager {
   private readonly verificationChannelID: string;
   private readonly memberRoleID: string;
+  private verified: Map<string, string>;
 
   constructor(bot: Bot) {
     super(bot);
     this.verificationChannelID = bot.settings.channels.verification;
     this.memberRoleID = bot.settings.roles.member;
+    this.verified = new Map();
 
     this.bot = bot;
   }
 
   public async init() {
+    // Fetch verified list from firestore
+    const document = await this.bot.managers.firestore.firestore
+      ?.collection("discord")
+      .doc("snowflake_to_name")
+      .get();
+
+    if (document?.exists) {
+      this.verified = new Map(Object.entries(document.data()!));
+    } else {
+      this.bot.logger.error(
+        "Unable to fetch snowflake to name mapping for verification. Verified users will be able to re-verify."
+      );
+    }
+
     // Ensure the verification channel's last message has a verification button to the bot
     const guild = await this.bot.guilds.fetch(this.bot.settings.guild);
     const verificationChannel = await guild.channels.fetch(
@@ -56,7 +72,24 @@ export default class VerificationManager extends Manager {
     }
   }
 
+  public async handleMemberJoin(member: GuildMember) {
+    // Set nickname and return verified role
+    if (this.verified.has(member.id)) {
+      await member.setNickname(this.verified.get(member.id)!);
+      await member.roles.add(this.memberRoleID);
+    }
+  }
+
   public async handleVerificationRequest(interaction: ButtonInteraction) {
+    // Do not allow verified users to reverify
+    if (this.verified.has(interaction.user.id)) {
+      await interaction.reply({
+        content: "You've already been verified!",
+        ephemeral: true,
+      });
+      return;
+    }
+
     // Prompt for real name using modal
     const nameInput = new TextInputComponent({
       customId: "name",
@@ -94,6 +127,10 @@ export default class VerificationManager extends Manager {
           ?.collection("discord")
           .doc("snowflake_to_name")
           .set(map, { merge: true });
+          
+        // Add to local verified list
+        this.verified.set(member.id, name);
+
 
         // Reply
         await interaction.reply({
