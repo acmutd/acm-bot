@@ -33,6 +33,7 @@ export default class ErrorManager extends Manager {
 
   async handleErr(err: Error | null | undefined) {
     if (!err) return;
+    console.error(err, err.stack);
     const guild = this.bot.guilds.resolve(this.bot.settings.guild);
     if (guild) {
       // Create embed with basic information
