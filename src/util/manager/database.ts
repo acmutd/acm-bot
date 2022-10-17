@@ -15,6 +15,9 @@ import {
   RRMessageSchema,
   TaskSchema,
   CircleSchema,
+  Coper,
+  CoperSchema,
+  CoperData,
 } from "../../api/schema";
 
 export interface SchemaTypes {
@@ -23,11 +26,13 @@ export interface SchemaTypes {
   rrmessage: Model<RRMessage>;
   task: Model<TaskData>;
   circle: Model<Circle>;
+  coper: Model<Coper>;
 }
 export interface CacheTypes {
   responses: Collection<string, Response>;
   rrmessages: Collection<string, RRMessage>;
   circles: Collection<string, Circle>;
+  copers: Collection<string, Coper>;
 }
 
 export default class DatabaseManager extends Manager {
@@ -42,6 +47,7 @@ export default class DatabaseManager extends Manager {
       responses: new Collection(),
       rrmessages: new Collection(),
       circles: new Collection(),
+      copers: new Collection(),
     };
     this.url = config.dbUrl;
     this.schemas = {
@@ -50,6 +56,7 @@ export default class DatabaseManager extends Manager {
       rrmessage: RRMessageSchema,
       task: TaskSchema,
       circle: CircleSchema,
+      coper: CoperSchema,
     };
   }
 
@@ -60,6 +67,7 @@ export default class DatabaseManager extends Manager {
         await this.recache("response");
         await this.recache("rrmessage");
         await this.recache("circle");
+        await this.recache("coper");
       } catch (e: any) {
         this.bot.logger.error(e);
       }
@@ -126,6 +134,60 @@ export default class DatabaseManager extends Manager {
     await this.recache("rrmessage");
   }
   public async rrmsgDelete(id: string) {}
+  public async copersFetch(): Promise<[string, number][]> {
+    const ans: [string, number][] = [];
+    this.cache.copers.forEach((v, k) => ans.push([k, v.score ?? 0]));
+    ans.sort((a, b) => -(a[1] - b[1]));
+    return ans.slice(0, Math.min(ans.length, 5));
+  }
+  public async cope(coperId: string): Promise<boolean> {
+    try {
+      if (!this.cache.copers.has(coperId)) {
+        this.coperAdd({
+          _id: coperId,
+          score: 1,
+        });
+      } else {
+        this.coperUpdate(coperId, {
+          _id: coperId,
+          score: this.cache.copers.get(coperId)!.score! + 1,
+        });
+      }
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+  public async coperAdd(coperData: CoperData): Promise<boolean> {
+    try {
+      await this.schemas.coper.create(coperData);
+      await this.recache("coper");
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+  public async coperRemove(coperId: string): Promise<boolean> {
+    try {
+      await this.schemas.coper.findByIdAndDelete(coperId);
+      await this.recache("coper");
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+  public async coperUpdate(
+    coperId: string,
+    newData: CoperData
+  ): Promise<boolean> {
+    try {
+      await this.schemas.coper.findByIdAndUpdate(coperId, newData);
+      await this.recache("coper");
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
   public async circleAdd(circleData: CircleData): Promise<boolean> {
     try {
       await this.schemas.circle.create(circleData);
