@@ -47,6 +47,14 @@ export interface CircleData {
   channel?: string;
   owner?: string;
 }
+export interface CoperData {
+  _id: string;
+  score?: number;
+}
+export interface Coper extends Document {
+  _id: string;
+  score?: number;
+}
 export interface Circle extends Document {
   _id?: string;
   name?: string;
@@ -112,6 +120,10 @@ const circleSchema = new Schema({
   channel: String,
   owner: String,
 });
+const coperSchema = new Schema({
+  _id: String,
+  score: Number,
+});
 const guildSchema = new Schema({
   _id: String,
   channels: {
@@ -147,4 +159,5 @@ export const RRMessageSchema = model<RRMessage>(
 );
 export const TaskSchema = model<TaskData>("task", taskSchema, "tasks");
 export const CircleSchema = model<Circle>("circle", circleSchema, "circles");
+export const CoperSchema = model<Coper>("coper", coperSchema, "copers");
 export const GuildSchema = model<Guild>("guild", guildSchema, "guilds");

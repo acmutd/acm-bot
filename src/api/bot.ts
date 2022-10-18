@@ -19,6 +19,7 @@ import ReactionRoleManager from "../util/manager/rero";
 import InteractionManager from "../util/manager/interaction";
 import { REST } from "@discordjs/rest";
 import ReportManager from "../util/manager/report";
+import CopeManager from "../util/manager/cope";
 
 export interface Config {
   token: string;
@@ -52,6 +53,7 @@ export interface ManagerList {
   points: PointsManager;
   activity: ActivityManager;
   report: ReportManager;
+  cope: CopeManager;
 }
 
 export default class Bot extends Client {
@@ -103,6 +105,7 @@ export default class Bot extends Client {
       points: new PointsManager(this),
       activity: new ActivityManager(this),
       report: new ReportManager(this),
+      cope: new CopeManager(this),
     };
     this.config = config;
   }
