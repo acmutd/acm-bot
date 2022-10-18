@@ -13,9 +13,7 @@ export default class CopersCommand extends SlashCommand {
     });
   }
 
-  protected buildSlashCommand() {
-    this.slashCommand;
-  }
+  protected buildSlashCommand() {}
 
   // Interaction Handled !
   public async handleInteraction({
@@ -24,16 +22,11 @@ export default class CopersCommand extends SlashCommand {
   }: SlashCommandContext): Promise<void> {
     const { member, guild } = interaction;
 
-    let embed = new MessageEmbed({
-      title: "Fetching copers...",
-    });
-    await interaction.reply({ embeds: [embed], ephemeral: true });
-
-    const copers = await bot.managers.database.copersFetch();
+    const copers = await bot.managers.database.coperFetch();
 
     const title = `📣 ${member!.user.username} found some copers!`;
 
-    embed = new MessageEmbed({
+    const embed = new MessageEmbed({
       title,
       fields: copers.map((coper, i) => {
         return {
@@ -43,10 +36,6 @@ export default class CopersCommand extends SlashCommand {
       }) as unknown as APIEmbedField[],
       color: "RANDOM",
     });
-
-    const channel = guild!.channels.resolve(
-      settings.channels.shoutout
-    ) as TextChannel;
-    await channel.send({ embeds: [embed] });
+    await interaction.reply({ embeds: [embed], ephemeral: true });
   }
 }

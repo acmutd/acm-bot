@@ -134,13 +134,13 @@ export default class DatabaseManager extends Manager {
     await this.recache("rrmessage");
   }
   public async rrmsgDelete(id: string) {}
-  public async copersFetch(): Promise<[string, number][]> {
+  public async coperFetch(): Promise<[string, number][]> {
     const ans: [string, number][] = [];
     this.cache.copers.forEach((v, k) => ans.push([k, v.score ?? 0]));
     ans.sort((a, b) => -(a[1] - b[1]));
     return ans.slice(0, Math.min(ans.length, 5));
   }
-  public async cope(coperId: string): Promise<boolean> {
+  public async coperIncrement(coperId: string): Promise<boolean> {
     try {
       if (!this.cache.copers.has(coperId)) {
         this.coperAdd({
