@@ -15,6 +15,7 @@ const bot: Bot = new Bot({
   slashCommandPath: path.join(process.cwd(), "dist", "interaction", "command"),
   cmCommandPath: path.join(process.cwd(), "dist", "interaction", "contextmenu"),
   buttonPath: path.join(process.cwd(), "dist", "interaction", "button"),
+  modalPath: path.join(process.cwd(), "dist", "interaction", "modal"),
   eventPath: path.join(process.cwd(), "dist", "event"),
   endpointPath: path.join(process.cwd(), "dist", "endpoint"),
   responseFormat: settings.responseFormat,

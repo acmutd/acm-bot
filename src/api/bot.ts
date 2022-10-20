@@ -28,6 +28,7 @@ export interface Config {
   slashCommandPath: string;
   cmCommandPath: string;
   buttonPath: string;
+  modalPath: string;
   eventPath: string;
   endpointPath: string;
   sentryDNS: string;
@@ -89,17 +90,18 @@ export default class Bot extends Client {
         this,
         config.slashCommandPath,
         config.cmCommandPath,
-        config.buttonPath
+        config.buttonPath,
+        config.modalPath,
       ),
       error: new ErrorManager(this),
+      database: new DatabaseManager(this, config),
+      firestore: new FirestoreManager(this),
       verification: new VerificationManager(this),
       event: new EventManager(this, config.eventPath),
       indicator: new IndicatorManager(this),
-      database: new DatabaseManager(this, config),
       scheduler: new ScheduleManager(this),
       circle: new CircleManager(this),
       rero: new ReactionRoleManager(this),
-      firestore: new FirestoreManager(this),
       resolve: new ResolveManager(this),
       express: new ExpressManager(this, config.endpointPath),
       points: new PointsManager(this),
@@ -113,9 +115,9 @@ export default class Bot extends Client {
   async start(): Promise<void> {
     await this.login(this.config.token);
     this.logger.info("Initializing managers...");
-    Object.entries(this.managers).forEach(([k, v]) => {
-      v.init();
-    });
+    for (const manager of Object.values(this.managers)) {
+      await manager.init();
+    }
     this.logger.info("Bot started.");
   }
 }
