@@ -36,6 +36,6 @@ export default class CopersCommand extends SlashCommand {
       }) as unknown as APIEmbedField[],
       color: "RANDOM",
     });
-    await interaction.reply({ embeds: [embed], ephemeral: true });
+    await interaction.reply({ embeds: [embed], ephemeral: false });
   }
 }
