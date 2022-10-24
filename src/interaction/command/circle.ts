@@ -1,26 +1,15 @@
-import Command, { CommandContext } from "../api/command";
-import Bot from "../api/bot";
+import Bot from "../../api/bot";
 import {
   CategoryChannel,
   ColorResolvable,
   CommandInteraction,
-  Message,
   OverwriteResolvable,
 } from "discord.js";
-import Wizard, {
-  ColorWizardNode,
-  EmojiWizardNode,
-  GraphicWizardNode,
-  TextWizardNode,
-  UserMentionWizardNode,
-} from "../util/wizard";
-import { settings } from "../settings";
-import { CircleData } from "../api/schema";
+import { settings } from "../../settings";
+import { CircleData } from "../../api/schema";
 import SlashCommand, {
   SlashCommandContext,
-} from "../api/interaction/slashcommand";
-import { SlashCommandBuilder } from "@discordjs/builders";
-import { ApplicationCommandType } from "discord-api-types";
+} from "../../api/interaction/slashcommand";
 
 export default class CircleCommand extends SlashCommand {
   public constructor() {
@@ -52,6 +41,8 @@ export default class CircleCommand extends SlashCommand {
           "The color of the circle (used for role and embeds)"
         );
         option.setRequired(true);
+
+        option.addChoices(colorOptions as [string, string][]);
         return option;
       });
       subcommand.addStringOption((option) => {
@@ -188,3 +179,34 @@ async function addCircle(bot: Bot, interaction: CommandInteraction) {
     `Successfully created circle <@&${circleRole.id}>.`
   );
 }
+
+const colors: ColorResolvable[] = [
+  "DEFAULT",
+  "AQUA",
+  "GREEN",
+  "BLUE",
+  "PURPLE",
+  "GOLD",
+  "ORANGE",
+  "RED",
+  "GREY",
+  "DARKER_GREY",
+  "NAVY",
+  "DARK_AQUA",
+  "DARK_GREEN",
+  "DARK_BLUE",
+  "DARK_PURPLE",
+  "DARK_GOLD",
+  "DARK_ORANGE",
+  "DARK_RED",
+  "DARK_GREY",
+  "LIGHT_GREY",
+  "DARK_NAVY",
+  "LUMINOUS_VIVID_PINK",
+  "DARK_VIVID_PINK",
+];
+
+const colorOptions: [ColorResolvable, string][] = colors.map((color) => [
+  color,
+  color.toString(),
+]);
