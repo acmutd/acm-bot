@@ -117,6 +117,11 @@ export default class CircleCommand extends SlashCommand {
 
       return subcommand;
     });
+    this.slashCommand.addSubcommand((subcommand) => {
+      subcommand.setName("repost");
+      subcommand.setDescription("Repost the circle embeds");
+      return subcommand;
+    });
   }
 
   protected buildSlashCommand() {}
@@ -136,6 +141,9 @@ export default class CircleCommand extends SlashCommand {
         await interaction.deferReply();
         await createChannel(bot, interaction);
         break;
+      case "repost":
+        await bot.managers.circle.repost();
+        await interaction.reply("Updated circle data");
     }
   }
 }
@@ -256,12 +264,7 @@ async function addCircle(bot: Bot, interaction: CommandInteraction) {
     leaders: [],
     subChannels: [],
   };
-  const owner = await bot.users.fetch(circle.owner!);
-
-  if (owner.bot) {
-    await interaction.editReply("The owner cannot be a bot.");
-    return;
-  }
+  const owner = interaction.options.getMember("owner", true);
 
   const color = interaction.options.getString("color", true) as ColorResolvable;
 
@@ -271,8 +274,6 @@ async function addCircle(bot: Bot, interaction: CommandInteraction) {
     mentionable: true,
     color,
   });
-  const ownerMember = await guild.members.fetch(circle.owner!);
-  await ownerMember.roles.add(circleRole);
   const permissions: OverwriteResolvable[] = [
     {
       id: interaction.guild!.id,
@@ -300,7 +301,7 @@ async function addCircle(bot: Bot, interaction: CommandInteraction) {
   );
   circle["_id"] = circleRole.id;
   circle.channel = circleChannel.id;
-  circle.owner = owner.id;
+  circle.owner = (owner as GuildMember).id;
   const added = await bot.managers.database.circleAdd(circle);
   if (!added) {
     interaction.editReply("An error occurred while adding the circle.");
@@ -309,7 +310,7 @@ async function addCircle(bot: Bot, interaction: CommandInteraction) {
     return;
   }
 
-  addLeaderRole(interaction, circle, ownerMember);
+  addLeaderRole(interaction, circle, owner as GuildMember);
 
   await interaction.editReply(
     `Successfully created circle <@&${circleRole.id}>.`
