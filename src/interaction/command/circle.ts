@@ -3,6 +3,7 @@ import {
   CategoryChannel,
   ColorResolvable,
   CommandInteraction,
+  GuildMember,
   OverwriteResolvable,
 } from "discord.js";
 import { settings } from "../../settings";
@@ -20,9 +21,12 @@ export default class CircleCommand extends SlashCommand {
         { id: settings.roles.director, permission: true, type: "ROLE" },
       ],
     });
+    // Adding "add" subcommand
     this.slashCommand.addSubcommand((subcommand) => {
       subcommand.setName("add");
       subcommand.setDescription("Add a new circle.");
+      // Set up all the options for the subcommand
+      // Name, description, color, emoji, graphic, and owner
       subcommand.addStringOption((option) => {
         option.setName("name");
         option.setDescription("The name of the circle.");
@@ -65,53 +69,183 @@ export default class CircleCommand extends SlashCommand {
       });
       return subcommand;
     });
+    // Adding "add leader" subcommand
+    this.slashCommand.addSubcommand((subcommand) => {
+      subcommand.setName("add-leader");
+      subcommand.setDescription("Add a leader to a circle.");
+
+      // Set up all the options for the subcommand
+      // User to add, and circle to add them to
+      subcommand.addUserOption((option) => {
+        option.setName("leader");
+        option.setDescription("The leader to add to the circle (mention them)");
+        option.setRequired(true);
+        return option;
+      });
+      subcommand.addRoleOption((option) => {
+        option.setName("circle");
+        option.setDescription(
+          "The circle to add the leader to (reference the role)"
+        );
+        option.setRequired(true);
+        return option;
+      });
+      return subcommand;
+    });
+
+    // Adding "create channel" subcommand
+    this.slashCommand.addSubcommand((subcommand) => {
+      subcommand.setName("create-channel");
+      subcommand.setDescription("Create a channel for a circle");
+
+      // Set up all the options for the subcommand
+      // Channel name, and circle to add them to
+      subcommand.addStringOption((option) => {
+        option.setName("name");
+        option.setDescription("The name of the channel");
+        option.setRequired(true);
+        return option;
+      });
+      subcommand.addRoleOption((option) => {
+        option.setName("circle");
+        option.setDescription(
+          "The circle to create the channel for (reference the role)"
+        );
+        option.setRequired(true);
+        return option;
+      });
+
+      return subcommand;
+    });
   }
 
   protected buildSlashCommand() {}
 
   public async handleInteraction({ bot, interaction }: SlashCommandContext) {
-    const { member, guild } = interaction;
     const subComm = interaction.options.getSubcommand();
     switch (subComm) {
       case "add":
         await interaction.deferReply();
         await addCircle(bot, interaction);
+        break;
+      case "add-leader":
+        await interaction.deferReply();
+        await addLeader(bot, interaction);
+        break;
+      case "create-channel":
+        await interaction.deferReply();
+        await createChannel(bot, interaction);
+        break;
     }
   }
 }
 
+async function createChannel(bot: Bot, interaction: CommandInteraction) {
+  const name = interaction.options.getString("name", true);
+  const circleId = interaction.options.getRole("circle", true).id;
+  const guild = interaction.guild!;
+
+  const circle = bot.managers.database.cache.circles.get(
+    circleId
+  ) as CircleData;
+  if (!circle) {
+    await interaction.editReply({
+      content: "That circle does not exist.",
+    });
+    return;
+  }
+  const channelName = `${circle.emoji} ${name}`;
+  const channel = await guild.channels.create(channelName, {
+    type: "GUILD_TEXT",
+    parent: settings.circles.parentCategory,
+    permissionOverwrites: [
+      {
+        id: guild.roles.everyone,
+        deny: ["VIEW_CHANNEL"],
+        type: "role",
+      },
+      {
+        id: circleId,
+        allow: ["VIEW_CHANNEL"],
+        type: "role",
+      },
+    ],
+  });
+
+  bot.managers.database.circleUpdate(circleId, {
+    ...circle,
+    subChannels: [...circle.subChannels, channel.id],
+  });
+
+  await interaction.editReply({
+    content: `Created channel ${channel} for ${circle.name}.`,
+  });
+}
+
+async function addLeader(bot: Bot, interaction: CommandInteraction) {
+  const leader = interaction.options.getUser("leader", true);
+  const circleId = interaction.options.getRole("circle", true).id;
+  const guild = interaction.guild!;
+
+  const circle = bot.managers.database.cache.circles.get(
+    circleId
+  ) as CircleData;
+  if (!circle) {
+    await interaction.editReply({
+      content: "That circle does not exist.",
+    });
+    return;
+  }
+
+  const member = await guild.members.fetch(leader.id);
+  if (!member) {
+    await interaction.editReply({
+      content: "That user is not in this server.",
+    });
+    return;
+  }
+  const res = await addLeaderRole(interaction, circle, member);
+  if (!res) return;
+  await bot.managers.database.circleUpdate(circleId, {
+    ...circle,
+    leaders: [...circle.leaders, leader.id],
+  });
+  await interaction.editReply({
+    content: `Added ${leader} as a leader of ${circle.name}.`,
+  });
+}
+
+async function addLeaderRole(
+  interaction: CommandInteraction,
+  circle: CircleData,
+  member: GuildMember
+) {
+  const circleRole = await interaction.guild!.roles.fetch(circle._id!)!;
+  const roleName = `${circle.emoji} ${circle.name} Leader`;
+  const role = interaction.guild!.roles.cache.find(
+    (role) => role.name === roleName
+  );
+  if (!role) {
+    const newRole = await interaction.guild!.roles.create({
+      name: roleName,
+      color: circleRole?.color,
+      hoist: true,
+      mentionable: true,
+    });
+    await member.roles.add(newRole);
+    return true;
+  }
+  const sender = await interaction.guild!.members.fetch(interaction.user.id);
+  if (!sender.roles.cache.has(role.id)) {
+    await interaction.editReply("You do not have permission to do that.");
+    return false;
+  } else {
+    await member.roles.add(role);
+    return true;
+  }
+}
+
 async function addCircle(bot: Bot, interaction: CommandInteraction) {
-  // const wizard = new Wizard(msg, undefined, {
-  //   title: "__**Circle Creation**__ ",
-  // });
-  // wizard.addNodes([
-  //   new UserMentionWizardNode(wizard, {
-  //     title: "Owner",
-  //     description: `Who's the owner of the circle? (mention them)`,
-  //   }),
-  //   new TextWizardNode(wizard, {
-  //     title: "Name",
-  //     description: `What's the circle name?`,
-  //   }),
-  //   new TextWizardNode(wizard, {
-  //     title: "Description",
-  //     description: `What's the circle description?`,
-  //   }),
-  //   new ColorWizardNode(wizard, {
-  //     title: "Color",
-  //     description: `What's the circle color? (used for the embed & role)`,
-  //   }),
-  //   new EmojiWizardNode(wizard, {
-  //     title: "Emoji",
-  //     description: `What's the circle's emoji?`,
-  //   }),
-  //   new GraphicWizardNode(wizard, {
-  //     title: "Image",
-  //     description: `What's the circle's graphic/image? (url)`,
-  //   }),
-  // ]);
-  // const res = await wizard.start();
-  // if (res === false) return;
   const circle: CircleData = {
     name: interaction.options.getString("name", true),
     description: interaction.options.getString("description", true),
@@ -174,6 +308,8 @@ async function addCircle(bot: Bot, interaction: CommandInteraction) {
     await circleChannel.delete();
     return;
   }
+
+  addLeaderRole(interaction, circle, ownerMember);
 
   await interaction.editReply(
     `Successfully created circle <@&${circleRole.id}>.`
