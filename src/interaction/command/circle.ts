@@ -69,29 +69,6 @@ export default class CircleCommand extends SlashCommand {
       });
       return subcommand;
     });
-    // Adding "add leader" subcommand
-    this.slashCommand.addSubcommand((subcommand) => {
-      subcommand.setName("add-leader");
-      subcommand.setDescription("Add a leader to a circle.");
-
-      // Set up all the options for the subcommand
-      // User to add, and circle to add them to
-      subcommand.addUserOption((option) => {
-        option.setName("leader");
-        option.setDescription("The leader to add to the circle (mention them)");
-        option.setRequired(true);
-        return option;
-      });
-      subcommand.addRoleOption((option) => {
-        option.setName("circle");
-        option.setDescription(
-          "The circle to add the leader to (reference the role)"
-        );
-        option.setRequired(true);
-        return option;
-      });
-      return subcommand;
-    });
 
     // Adding "create channel" subcommand
     this.slashCommand.addSubcommand((subcommand) => {
@@ -124,18 +101,12 @@ export default class CircleCommand extends SlashCommand {
     });
   }
 
-  protected buildSlashCommand() {}
-
   public async handleInteraction({ bot, interaction }: SlashCommandContext) {
     const subComm = interaction.options.getSubcommand();
     switch (subComm) {
       case "add":
         await interaction.deferReply();
         await addCircle(bot, interaction);
-        break;
-      case "add-leader":
-        await interaction.deferReply();
-        await addLeader(bot, interaction);
         break;
       case "create-channel":
         await interaction.deferReply();
@@ -179,78 +150,21 @@ async function createChannel(bot: Bot, interaction: CommandInteraction) {
       },
     ],
   });
-
-  bot.managers.database.circleUpdate(circleId, {
-    ...circle,
-    subChannels: [...circle.subChannels, channel.id],
+  const newSub = [...circle.subChannels, channel.id];
+  const res = await bot.managers.database.circleUpdate(circleId, {
+    subChannels: newSub,
   });
+
+  if (!res) {
+    await interaction.editReply({
+      content: "Failed to update database",
+    });
+    return;
+  }
 
   await interaction.editReply({
     content: `Created channel ${channel} for ${circle.name}.`,
   });
-}
-
-async function addLeader(bot: Bot, interaction: CommandInteraction) {
-  const leader = interaction.options.getUser("leader", true);
-  const circleId = interaction.options.getRole("circle", true).id;
-  const guild = interaction.guild!;
-
-  const circle = bot.managers.database.cache.circles.get(
-    circleId
-  ) as CircleData;
-  if (!circle) {
-    await interaction.editReply({
-      content: "That circle does not exist.",
-    });
-    return;
-  }
-
-  const member = await guild.members.fetch(leader.id);
-  if (!member) {
-    await interaction.editReply({
-      content: "That user is not in this server.",
-    });
-    return;
-  }
-  const res = await addLeaderRole(interaction, circle, member);
-  if (!res) return;
-  await bot.managers.database.circleUpdate(circleId, {
-    ...circle,
-    leaders: [...circle.leaders, leader.id],
-  });
-  await interaction.editReply({
-    content: `Added ${leader} as a leader of ${circle.name}.`,
-  });
-}
-
-async function addLeaderRole(
-  interaction: CommandInteraction,
-  circle: CircleData,
-  member: GuildMember
-) {
-  const circleRole = await interaction.guild!.roles.fetch(circle._id!)!;
-  const roleName = `${circle.emoji} ${circle.name} Leader`;
-  const role = interaction.guild!.roles.cache.find(
-    (role) => role.name === roleName
-  );
-  if (!role) {
-    const newRole = await interaction.guild!.roles.create({
-      name: roleName,
-      color: circleRole?.color,
-      hoist: true,
-      mentionable: true,
-    });
-    await member.roles.add(newRole);
-    return true;
-  }
-  const sender = await interaction.guild!.members.fetch(interaction.user.id);
-  if (!sender.roles.cache.has(role.id)) {
-    await interaction.editReply("You do not have permission to do that.");
-    return false;
-  } else {
-    await member.roles.add(role);
-    return true;
-  }
 }
 
 async function addCircle(bot: Bot, interaction: CommandInteraction) {
@@ -261,7 +175,6 @@ async function addCircle(bot: Bot, interaction: CommandInteraction) {
     imageUrl: interaction.options.getString("graphic", true),
     createdOn: new Date(),
     owner: interaction.options.getUser("owner", true).id,
-    leaders: [],
     subChannels: [],
   };
   const owner = interaction.options.getMember("owner", true);
@@ -309,8 +222,6 @@ async function addCircle(bot: Bot, interaction: CommandInteraction) {
     await circleChannel.delete();
     return;
   }
-
-  addLeaderRole(interaction, circle, owner as GuildMember);
 
   await interaction.editReply(
     `Successfully created circle <@&${circleRole.id}>.`

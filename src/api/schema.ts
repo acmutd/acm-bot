@@ -46,7 +46,6 @@ export interface CircleData {
   createdOn?: Date;
   channel?: string;
   owner?: string;
-  leaders: string[];
   subChannels: string[];
 }
 export interface CoperData {
@@ -66,7 +65,6 @@ export interface Circle extends Document {
   createdOn?: Date;
   channel?: string;
   owner?: string;
-  leaders?: string[];
   subChannels?: string[];
 }
 export interface Guild extends Document {
@@ -123,7 +121,6 @@ const circleSchema = new Schema({
   createdOn: Date,
   channel: String,
   owner: String,
-  leaders: Array.from(String()),
   subChannels: Array.from(String()),
 });
 const coperSchema = new Schema({

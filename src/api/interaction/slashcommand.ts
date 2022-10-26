@@ -40,16 +40,8 @@ export default abstract class SlashCommand extends BaseInteraction {
     }
 
     // Build slash command json
-    this.buildSlashCommand();
     this.buildSlashCommandFromConfig();
   }
-
-  /**
-   * Child-handled customizations to the slash command.
-   * Do not worry about items in the config. These will be handled by the super class
-   * @protected
-   */
-  protected abstract buildSlashCommand(): any;
 
   private buildSlashCommandFromConfig() {
     this.slashCommand.setName(this.name);
