@@ -13,8 +13,6 @@ export default class ReportCommand extends SlashCommand {
     });
   }
 
-  protected buildSlashCommand() {}
-
   public async handleInteraction({
     bot,
     interaction,

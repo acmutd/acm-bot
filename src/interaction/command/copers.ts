@@ -13,8 +13,6 @@ export default class CopersCommand extends SlashCommand {
     });
   }
 
-  protected buildSlashCommand() {}
-
   // Interaction Handled !
   public async handleInteraction({
     bot,

@@ -11,12 +11,6 @@ export default class BeepCommand extends SlashCommand {
     });
   }
 
-  /**
-   * Simple command, additional customizations
-   * @protected
-   */
-  protected buildSlashCommand() {}
-
   public async handleInteraction({
     bot,
     interaction,

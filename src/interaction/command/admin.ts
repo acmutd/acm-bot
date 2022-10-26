@@ -17,21 +17,17 @@ export default class AdminCommand extends SlashCommand {
         },
       ],
     });
-  }
-
-  buildSlashCommand() {
-    this.slashCommand
-      .addSubcommand((subcommand) =>
-        subcommand
-          .setName("lookup")
-          .setDescription("Look up a user's name")
-          .addUserOption((option) =>
-            option
-              .setName("user")
-              .setDescription("User to look up")
-              .setRequired(true)
-          )
-      )
+    this.slashCommand.addSubcommand((subcommand) =>
+      subcommand
+        .setName("lookup")
+        .setDescription("Look up a user's name")
+        .addUserOption((option) =>
+          option
+            .setName("user")
+            .setDescription("User to look up")
+            .setRequired(true)
+        )
+    );
   }
 
   public async handleInteraction({
