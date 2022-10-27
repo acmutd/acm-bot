@@ -9,13 +9,7 @@ export default class AdminCommand extends SlashCommand {
     super({
       name: "admin",
       description: "Staff commands",
-      permissions: [
-        {
-          id: "312383932870033408",
-          type: "USER",
-          permission: true,
-        },
-      ],
+      permissions: 0,
     });
     this.slashCommand.addSubcommand((subcommand) =>
       subcommand

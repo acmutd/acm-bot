@@ -5,17 +5,20 @@ import {
   ContextMenuInteraction,
   GuildApplicationCommandPermissionData,
   Interaction,
+  Permissions,
 } from "discord.js";
 import path from "path";
 import Bot from "../../api/bot";
 import Manager from "../../api/manager";
 import BaseInteraction from "../../api/interaction/interaction";
 import DynamicLoader from "../dynamicloader";
-import { Routes } from "discord-api-types/v9";
+import {
+  ApplicationCommandPermissionType,
+  Routes,
+} from "discord-api-types/v10";
 import SlashCommand from "../../api/interaction/slashcommand";
 import CustomButtonInteraction from "../../api/interaction/button";
 import ContextMenuCommand from "../../api/interaction/contextmenucommand";
-import { ApplicationCommandType } from "discord-api-types";
 
 export default class InteractionManager extends Manager {
   // private readonly interactionPath = process.cwd() + "/dist/interaction/";
@@ -91,15 +94,19 @@ export default class InteractionManager extends Manager {
    */
   private async registerSlashAndContextMenuCommands() {
     try {
-      // Load commands dynamically
-      this.slashCommands = new Map(
-        DynamicLoader.loadClasses(this.slashCommandPath).map((sc) => [
-          sc.name,
-          sc,
-        ])
+      // Load slash commands
+      const slashCommands = await DynamicLoader.loadClasses(
+        this.slashCommandPath
       );
-      this.cmCommands = new Map(
-        DynamicLoader.loadClasses(this.cmCommandPath).map((sc) => [sc.name, sc])
+
+      this.slashCommands = new Map(slashCommands.map((sc) => [sc.name, sc]));
+
+      const cm = (await DynamicLoader.loadClasses(
+        this.cmCommandPath
+      )) as ContextMenuCommand[];
+      // Load context menu commands
+      this.cmCommands = new Map<string, ContextMenuCommand>(
+        cm.map((c) => [c.name, c])
       );
 
       for (const cmdName of this.slashCommands.keys()) {
@@ -116,46 +123,15 @@ export default class InteractionManager extends Manager {
       const contextMenuCommandJsons = Array.from(this.cmCommands.values()).map(
         (cmc) => cmc.contextMenuCommandJson
       );
-
       await this.bot.restConnection.put(
         Routes.applicationGuildCommands(
           this.bot.user!.id,
           this.bot.settings.guild
         ),
-        { body: slashCommandJsons.concat(contextMenuCommandJsons) }
+        { body: [...slashCommandJsons, ...contextMenuCommandJsons] }
       );
 
-      // Set permissions
-      let fullPermissions: GuildApplicationCommandPermissionData[] = [];
-      const guildCommandManager = await (
-        await this.bot.guilds.fetch(this.bot.settings.guild)
-      ).commands;
-
-      const guildCommands = await guildCommandManager.fetch();
-      guildCommands.forEach((cmd, snowflake) => {
-        if (
-          cmd.type == "CHAT_INPUT" &&
-          this.slashCommands.has(cmd.name) &&
-          this.slashCommands.get(cmd.name)!.permissions
-        ) {
-          fullPermissions.push({
-            id: snowflake,
-            permissions: this.slashCommands.get(cmd.name)!.permissions!,
-          });
-        } else if (
-          cmd.type == "MESSAGE" &&
-          this.cmCommands.has(cmd.name) &&
-          this.cmCommands.get(cmd.name)!.permissions
-        ) {
-          fullPermissions.push({
-            id: snowflake,
-            permissions: this.cmCommands.get(cmd.name)!.permissions!,
-          });
-        }
-      });
-
       // Bulk update all permissions
-      await guildCommandManager.permissions.set({ fullPermissions });
     } catch (error: any) {
       await this.bot.managers.error.handleErr(error);
     }

@@ -11,16 +11,24 @@ import { CircleData } from "../../api/schema";
 import SlashCommand, {
   SlashCommandContext,
 } from "../../api/interaction/slashcommand";
+import {
+  APIApplicationCommandOptionChoice,
+  PermissionFlagsBits,
+} from "discord-api-types/v10";
+
+const perms =
+  PermissionFlagsBits.ManageRoles |
+  PermissionFlagsBits.ManageChannels |
+  PermissionFlagsBits.ManageMessages;
 
 export default class CircleCommand extends SlashCommand {
   public constructor() {
     super({
       name: "circle",
       description: "A suite of command that manage ACM Community Circles.",
-      permissions: [
-        { id: settings.roles.director, permission: true, type: "ROLE" },
-      ],
+      permissions: perms,
     });
+
     // Adding "add" subcommand
     this.slashCommand.addSubcommand((subcommand) => {
       subcommand.setName("add");
@@ -46,7 +54,7 @@ export default class CircleCommand extends SlashCommand {
         );
         option.setRequired(true);
 
-        option.addChoices(colorOptions as [string, string][]);
+        option.addChoices(...colorOptions);
         return option;
       });
       subcommand.addStringOption((option) => {
@@ -94,6 +102,8 @@ export default class CircleCommand extends SlashCommand {
 
       return subcommand;
     });
+
+    // Adding "repost" subcommand
     this.slashCommand.addSubcommand((subcommand) => {
       subcommand.setName("repost");
       subcommand.setDescription("Repost the circle embeds");
@@ -215,6 +225,7 @@ async function addCircle(bot: Bot, interaction: CommandInteraction) {
   circle["_id"] = circleRole.id;
   circle.channel = circleChannel.id;
   circle.owner = (owner as GuildMember).id;
+  await (owner as GuildMember).roles.add(circleRole);
   const added = await bot.managers.database.circleAdd(circle);
   if (!added) {
     interaction.editReply("An error occurred while adding the circle.");
@@ -254,7 +265,16 @@ const colors: ColorResolvable[] = [
   "DARK_VIVID_PINK",
 ];
 
-const colorOptions: [ColorResolvable, string][] = colors.map((color) => [
+const renamed = colors.map((color) => [
+  color
+    .toString()
+    .split("_")
+    .map((s) => s[0] + s.slice(1).toLowerCase())
+    .join(" "),
   color,
-  color.toString(),
 ]);
+
+const colorOptions = renamed.map((color) => ({
+  name: color[0].toString(),
+  value: color[1].toString(),
+}));

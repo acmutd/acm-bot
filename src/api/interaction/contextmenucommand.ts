@@ -17,7 +17,7 @@ import Bot from "../bot";
 
 export interface ContextMenuCommandConfig extends InteractionConfig {
   type: ContextMenuCommandType;
-  permissions?: ApplicationCommandPermissionData[];
+  permissions?: string | number | bigint;
 }
 
 export interface ContextMenuCommandContext extends InteractionContext {
@@ -26,7 +26,7 @@ export interface ContextMenuCommandContext extends InteractionContext {
 
 export default abstract class ContextMenuCommand extends BaseInteraction {
   public readonly type: ContextMenuCommandType;
-  public readonly permissions: ApplicationCommandPermissionData[] | undefined;
+  public readonly permissions: bigint | number | string | undefined;
 
   protected readonly cmCommand: ContextMenuCommandBuilder =
     new ContextMenuCommandBuilder();
@@ -51,7 +51,8 @@ export default abstract class ContextMenuCommand extends BaseInteraction {
   private buildContextMenuCommandFromConfig() {
     this.cmCommand.setName(this.name);
     this.cmCommand.setType(this.type);
-    if (this.permissions) this.cmCommand.setDefaultPermission(false);
+    if (this.permissions)
+      this.cmCommand.setDefaultMemberPermissions(this.permissions);
   }
 
   public abstract handleInteraction(context: ContextMenuCommandContext): any;

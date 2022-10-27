@@ -12,7 +12,7 @@ import Bot from "../bot";
 
 export interface SlashCommandConfig extends InteractionConfig {
   description?: string;
-  permissions?: ApplicationCommandPermissionData[];
+  permissions?: string | number | bigint;
 }
 
 export interface SlashCommandContext extends InteractionContext {
@@ -21,7 +21,7 @@ export interface SlashCommandContext extends InteractionContext {
 
 export default abstract class SlashCommand extends BaseInteraction {
   public readonly description: string | undefined;
-  public readonly permissions: ApplicationCommandPermissionData[] | undefined;
+  public readonly permissions: string | number | bigint | undefined;
 
   protected readonly slashCommand: SlashCommandBuilder =
     new SlashCommandBuilder();
@@ -46,7 +46,8 @@ export default abstract class SlashCommand extends BaseInteraction {
   private buildSlashCommandFromConfig() {
     this.slashCommand.setName(this.name);
     if (this.description) this.slashCommand.setDescription(this.description);
-    if (this.permissions) this.slashCommand.setDefaultPermission(false);
+    if (this.permissions)
+      this.slashCommand.setDefaultMemberPermissions(this.permissions);
   }
 
   public abstract handleInteraction(context: SlashCommandContext): any;

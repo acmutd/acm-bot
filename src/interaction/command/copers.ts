@@ -3,7 +3,7 @@ import SlashCommand, {
 } from "../../api/interaction/slashcommand";
 import { MessageEmbed, TextChannel } from "discord.js";
 import { settings } from "../../settings";
-import { APIEmbedField } from "discord-api-types";
+import { APIEmbedField } from "discord-api-types/v10";
 
 export default class CopersCommand extends SlashCommand {
   public constructor() {
