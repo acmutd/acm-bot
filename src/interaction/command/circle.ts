@@ -4,17 +4,13 @@ import {
   ColorResolvable,
   CommandInteraction,
   GuildMember,
-  OverwriteResolvable,
 } from "discord.js";
 import { settings } from "../../settings";
 import { CircleData } from "../../api/schema";
 import SlashCommand, {
   SlashCommandContext,
 } from "../../api/interaction/slashcommand";
-import {
-  APIApplicationCommandOptionChoice,
-  PermissionFlagsBits,
-} from "discord-api-types/v10";
+import { PermissionFlagsBits } from "discord-api-types/v10";
 
 const perms =
   PermissionFlagsBits.ManageRoles |
@@ -53,8 +49,6 @@ export default class CircleCommand extends SlashCommand {
           "The color of the circle (used for role and embeds)"
         );
         option.setRequired(true);
-
-        option.addChoices(...colorOptions);
         return option;
       });
       subcommand.addStringOption((option) => {
@@ -167,8 +161,10 @@ async function createChannel(bot: Bot, interaction: CommandInteraction) {
 
   if (!res) {
     await interaction.editReply({
-      content: "Failed to update database",
+      content:
+        "Created channel, but failed to update circle data. Deleting the channel.",
     });
+    await channel.delete();
     return;
   }
 
@@ -197,18 +193,7 @@ async function addCircle(bot: Bot, interaction: CommandInteraction) {
     mentionable: true,
     color,
   });
-  const permissions: OverwriteResolvable[] = [
-    {
-      id: interaction.guild!.id,
-      deny: ["VIEW_CHANNEL"],
-      type: "role",
-    },
-    {
-      id: circleRole,
-      allow: ["VIEW_CHANNEL"],
-      type: "role",
-    },
-  ];
+
   const circleCategory = (await interaction.guild!.channels.fetch(
     settings.circles.parentCategory
   )) as CategoryChannel;
@@ -219,9 +204,14 @@ async function addCircle(bot: Bot, interaction: CommandInteraction) {
       type: "GUILD_TEXT",
       topic: desc,
       parent: circleCategory,
-      permissionOverwrites: permissions,
     }
   );
+  await circleChannel.permissionOverwrites.edit(interaction.guild!.id, {
+    VIEW_CHANNEL: false,
+  });
+  await circleChannel.permissionOverwrites.edit(circleRole.id, {
+    VIEW_CHANNEL: true,
+  });
   circle["_id"] = circleRole.id;
   circle.channel = circleChannel.id;
   circle.owner = (owner as GuildMember).id;
