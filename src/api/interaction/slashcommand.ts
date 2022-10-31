@@ -46,7 +46,7 @@ export default abstract class SlashCommand extends BaseInteraction {
   private buildSlashCommandFromConfig() {
     this.slashCommand.setName(this.name);
     if (this.description) this.slashCommand.setDescription(this.description);
-    if (this.permissions)
+    if (this.permissions !== undefined)
       this.slashCommand.setDefaultMemberPermissions(this.permissions);
   }
 

@@ -40,7 +40,7 @@ export default abstract class ContextMenuCommand extends BaseInteraction {
 
     // Pull slash command configs
     this.type = config.type;
-    if (config.permissions) {
+    if (config.permissions !== undefined) {
       this.permissions = config.permissions;
     }
 
@@ -51,7 +51,7 @@ export default abstract class ContextMenuCommand extends BaseInteraction {
   private buildContextMenuCommandFromConfig() {
     this.cmCommand.setName(this.name);
     this.cmCommand.setType(this.type);
-    if (this.permissions)
+    if (this.permissions !== undefined)
       this.cmCommand.setDefaultMemberPermissions(this.permissions);
   }
 
