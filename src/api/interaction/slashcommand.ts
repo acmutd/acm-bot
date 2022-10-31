@@ -35,7 +35,7 @@ export default abstract class SlashCommand extends BaseInteraction {
 
     // Pull slash command configs
     if (config.description) this.description = config.description;
-    if (config.permissions) {
+    if (config.permissions !== undefined) {
       this.permissions = config.permissions;
     }
 
