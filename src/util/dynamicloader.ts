@@ -1,4 +1,7 @@
 import fs from "fs";
+import BaseInteraction from "../api/interaction/interaction";
+import SlashCommand from "../api/interaction/slashcommand";
+import ShoutoutCommand from "../command/shoutout";
 
 export default class DynamicLoader {
   public static loadClasses(path: string, constructorArgs: any[] = []) {
@@ -12,6 +15,7 @@ export default class DynamicLoader {
 
       // Load interaction
       const obj = require(path + file);
+
       res.push(new obj.default(...constructorArgs));
     });
     return res;

@@ -10,9 +10,6 @@ export default class ShoutoutCommand extends SlashCommand {
       name: "shoutout",
       description: "Shout out someone special.",
     });
-  }
-
-  protected buildSlashCommand() {
     this.slashCommand
       .addStringOption((option) =>
         option

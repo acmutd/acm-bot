@@ -82,7 +82,7 @@ export default class Bot extends Client {
     this.settings = settings;
     this.logger = new LoggerUtil();
     this.response = new ResponseUtil(config.responseFormat);
-    this.restConnection = new REST({ version: "9" }).setToken(config.token);
+    this.restConnection = new REST({ version: "10" }).setToken(config.token);
     this.managers = {
       command: new CommandManager(this, config.commandPath),
       interaction: new InteractionManager(

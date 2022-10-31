@@ -9,29 +9,19 @@ export default class AdminCommand extends SlashCommand {
     super({
       name: "admin",
       description: "Staff commands",
-      permissions: [
-        {
-          id: "312383932870033408",
-          type: "USER",
-          permission: true,
-        },
-      ],
+      permissions: 0,
     });
-  }
-
-  buildSlashCommand() {
-    this.slashCommand
-      .addSubcommand((subcommand) =>
-        subcommand
-          .setName("lookup")
-          .setDescription("Look up a user's name")
-          .addUserOption((option) =>
-            option
-              .setName("user")
-              .setDescription("User to look up")
-              .setRequired(true)
-          )
-      )
+    this.slashCommand.addSubcommand((subcommand) =>
+      subcommand
+        .setName("lookup")
+        .setDescription("Look up a user's name")
+        .addUserOption((option) =>
+          option
+            .setName("user")
+            .setDescription("User to look up")
+            .setRequired(true)
+        )
+    );
   }
 
   public async handleInteraction({
