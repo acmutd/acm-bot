@@ -174,6 +174,7 @@ async function createChannel(bot: Bot, interaction: CommandInteraction) {
 }
 
 async function addCircle(bot: Bot, interaction: CommandInteraction) {
+  // Parse/resolve circle data
   const circle: CircleData = {
     name: interaction.options.getString("name", true),
     description: interaction.options.getString("description", true),
@@ -183,39 +184,44 @@ async function addCircle(bot: Bot, interaction: CommandInteraction) {
     owner: interaction.options.getUser("owner", true).id,
     subChannels: [],
   };
-  const owner = interaction.options.getMember("owner", true);
-
-  const color = interaction.options.getString("color", true) as ColorResolvable;
-
+  const circleOwner = interaction.options.getMember("owner", true);
   const guild = interaction.guild!;
+
+  // Create role
+  const color = interaction.options.getString("color", true) as ColorResolvable;
   const circleRole = await guild.roles.create({
     name: `${circle.emoji} ${circle.name}`,
     mentionable: true,
     color,
   });
 
-  const circleCategory = (await interaction.guild!.channels.fetch(
-    settings.circles.parentCategory
-  )) as CategoryChannel;
-  const desc = `🎗️: ${circleRole.name}`;
-  const circleChannel = await interaction.guild!.channels.create(
-    `${circle.emoji} ${circle.name}`,
-    {
-      type: "GUILD_TEXT",
-      topic: desc,
-      parent: circleCategory,
-    }
-  );
-  await circleChannel.permissionOverwrites.edit(interaction.guild!.id, {
-    VIEW_CHANNEL: false,
+  // Give role to owner
+  await (circleOwner as GuildMember).roles.add(circleRole);
+
+  // Create channel with correct perms
+  const channelName = `${circle.emoji} ${circle.name}`;
+  const channelDesc = `🎗️: ${circleRole.name}`;
+  const circleChannel = await guild.channels.create(channelName, {
+    type: "GUILD_TEXT",
+    topic: channelDesc,
+    parent: settings.circles.parentCategory,
+    permissionOverwrites: [
+      {
+        id: guild.roles.everyone,
+        deny: ["VIEW_CHANNEL"],
+        type: "role",
+      },
+      {
+        id: circleRole.id,
+        allow: ["VIEW_CHANNEL"],
+        type: "role",
+      },
+    ],
   });
-  await circleChannel.permissionOverwrites.edit(circleRole.id, {
-    VIEW_CHANNEL: true,
-  });
-  circle["_id"] = circleRole.id;
+
+  // Add circle to database
+  circle["_id"] = circleRole.id;  // circles distinguished by unique role
   circle.channel = circleChannel.id;
-  circle.owner = (owner as GuildMember).id;
-  await (owner as GuildMember).roles.add(circleRole);
   const added = await bot.managers.database.circleAdd(circle);
   if (!added) {
     interaction.editReply("An error occurred while adding the circle.");
