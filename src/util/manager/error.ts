@@ -1,5 +1,5 @@
+import { EmbedBuilder } from "@discordjs/builders";
 import Bot from "../../api/bot";
-import { MessageEmbed } from "discord.js";
 import Manager from "../../api/manager";
 
 export default class ErrorManager extends Manager {
@@ -20,14 +20,14 @@ export default class ErrorManager extends Manager {
     const msg = message.toString();
     const guild = this.bot.guilds.resolve(this.bot.settings.guild);
     if (guild) {
-      let embed = new MessageEmbed();
+      let embed = new EmbedBuilder();
       embed.setTitle(`🤖 ${this.bot.user!.username} | Unhandled Rejection`);
-      embed.addField("Error Message", msg);
-      embed.setColor("RED");
+      embed.addFields({ name: "Error Message", value: msg });
+      embed.setColor([255, 0, 0]);
       const errorChannel = await guild.channels.fetch(
         this.bot.settings.channels.error
       );
-      if (errorChannel?.isText()) errorChannel.send({ embeds: [embed] });
+      if (errorChannel?.isTextBased()) errorChannel.send({ embeds: [embed] });
     }
   }
 
@@ -37,13 +37,13 @@ export default class ErrorManager extends Manager {
     const guild = this.bot.guilds.resolve(this.bot.settings.guild);
     if (guild) {
       // Create embed with basic information
-      let embed = new MessageEmbed();
+      let embed = new EmbedBuilder();
       embed.setTitle(`🤖 ${this.bot.user!.username} | Uncaught Exception`);
-      embed.addField(
-        "Error Message",
-        (err.name || "UNKNOWN ERROR") + ": " + err.message
-      );
-      embed.setColor("RED");
+      embed.addFields({
+        name: "Error Message",
+        value: (err.name || "UNKNOWN ERROR") + ": " + err.message,
+      });
+      embed.setColor([255, 0, 0]);
 
       // Create text file containing stack trace, which is previewed on desktop clients
       const traceFile = {
@@ -55,7 +55,7 @@ export default class ErrorManager extends Manager {
       const errorChannel = await guild.channels.fetch(
         this.bot.settings.channels.error
       );
-      if (errorChannel?.isText())
+      if (errorChannel?.isTextBased())
         errorChannel.send({ embeds: [embed], files: [traceFile] });
     }
   }

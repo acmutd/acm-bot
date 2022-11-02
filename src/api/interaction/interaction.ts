@@ -1,5 +1,5 @@
 import Bot from "../bot";
-import { Interaction } from "discord.js";
+import { Interaction, UserContextMenuCommandInteraction } from "discord.js";
 
 export interface InteractionContext {
   bot: Bot;

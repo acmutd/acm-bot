@@ -1,4 +1,9 @@
-import { ColorResolvable, MessageEmbed, TextBasedChannel } from "discord.js";
+import {
+  ColorResolvable,
+  Embed,
+  EmbedBuilder,
+  TextBasedChannel,
+} from "discord.js";
 
 const emoji = {
   error: {
@@ -50,8 +55,8 @@ export default class ResponseUtil {
   private static embed(
     msg: string,
     emojiSet: { simple: string; embed: string; color: ColorResolvable }
-  ): MessageEmbed {
-    return new MessageEmbed()
+  ): EmbedBuilder {
+    return new EmbedBuilder()
       .setDescription(`${emojiSet.embed} | **${msg}**`)
       .setColor(emojiSet.color);
   }
@@ -60,7 +65,7 @@ export default class ResponseUtil {
     message: string,
     type?: ResponseType,
     format?: ResponseFormat
-  ): string | MessageEmbed {
+  ): string | EmbedBuilder {
     type = type || "normal";
     format = format || this.format;
     let em: { simple: string; embed: string; color: ColorResolvable };
@@ -102,7 +107,7 @@ export default class ResponseUtil {
 
   public emitBuild(
     channel: TextBasedChannel,
-    response: string | MessageEmbed
+    response: string | EmbedBuilder
   ): void {
     typeof response == "string"
       ? channel.send(response)

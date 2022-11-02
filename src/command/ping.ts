@@ -12,7 +12,9 @@ export default class PingCommand extends Command {
     const startTime = new Date().getTime();
     await msg.channel
       .send("Ping: This message should be deleted...")
-      .then((m) => m.delete());
+      .then((msg) => {
+        msg.delete();
+      });
     bot.response.emit(
       msg.channel,
       `:ping_pong: | ${

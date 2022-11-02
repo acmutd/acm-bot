@@ -20,6 +20,7 @@ const bot: Bot = new Bot({
   responseFormat: settings.responseFormat,
   disabledCommands: settings.disabledCommands,
   disabledCategories: settings.disabledCategories,
+  modalPath: path.join(process.cwd(), "dist", "interaction", "modal"),
 });
 
 bot.start();

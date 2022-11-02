@@ -1,8 +1,12 @@
 import SlashCommand, {
   SlashCommandContext,
 } from "../../api/interaction/slashcommand";
-import { InteractionContext } from "../../api/interaction/interaction";
 import assert from "assert";
+import { InteractionContext } from "../../api/interaction/interaction";
+import {
+  ChatInputApplicationCommandData,
+  CommandInteraction,
+} from "discord.js";
 
 export default class AdminCommand extends SlashCommand {
   public constructor() {
@@ -28,11 +32,9 @@ export default class AdminCommand extends SlashCommand {
     bot,
     interaction,
   }: SlashCommandContext): Promise<void> {
-    await interaction.deferReply({ ephemeral: true });
+    assert(interaction.options.getSubcommand() === "lookup");
 
-    assert(interaction.options.getSubcommand() == "lookup");
-
-    const user = interaction.options.getUser("user")!;
+    const user = interaction.options.getUser("user", true);
 
     const nameMappingReq = await bot.managers.firestore.firestore
       ?.collection("discord")

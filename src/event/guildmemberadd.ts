@@ -1,6 +1,7 @@
 import Event from "../api/event";
 import Bot from "../api/bot";
-import { GuildMember, MessageEmbed } from "discord.js";
+import { GuildMember } from "discord.js";
+import { EmbedBuilder } from "@discordjs/builders";
 
 export default class GuildMemberAddEvent extends Event {
   constructor(bot: Bot) {
@@ -8,7 +9,7 @@ export default class GuildMemberAddEvent extends Event {
   }
 
   public async emit(bot: Bot, member: GuildMember) {
-    const embed = new MessageEmbed({
+    const embed = new EmbedBuilder({
       title: `**Welcome to the ACM Discord Server!** 🎉`,
       author: {
         name: `The Association for Computing Machinery`,

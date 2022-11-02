@@ -1,45 +1,39 @@
-import {
-  ButtonInteraction,
-  Collection,
-  CommandInteraction,
-  ContextMenuInteraction,
-  GuildApplicationCommandPermissionData,
-  Interaction,
-  Permissions,
-} from "discord.js";
+import { Interaction } from "discord.js";
 import path from "path";
 import Bot from "../../api/bot";
 import Manager from "../../api/manager";
 import BaseInteraction from "../../api/interaction/interaction";
 import DynamicLoader from "../dynamicloader";
-import {
-  ApplicationCommandPermissionType,
-  Routes,
-} from "discord-api-types/v10";
+import { Routes } from "discord-api-types/v10";
 import SlashCommand from "../../api/interaction/slashcommand";
 import CustomButtonInteraction from "../../api/interaction/button";
 import ContextMenuCommand from "../../api/interaction/contextmenucommand";
+import BaseModal from "../../api/interaction/modal";
 
 export default class InteractionManager extends Manager {
   // private readonly interactionPath = process.cwd() + "/dist/interaction/";
   private slashCommandPath: string;
   private cmCommandPath: string;
   private buttonPath: string;
+  private modalPath: string;
 
   private slashCommands: Map<string, SlashCommand> = new Map();
   private cmCommands: Map<string, ContextMenuCommand> = new Map();
   private buttons: Map<string, CustomButtonInteraction> = new Map();
+  private modals: Map<string, BaseModal> = new Map();
 
   constructor(
     bot: Bot,
     slashCommandPath: string,
     cmCommandPath: string,
-    buttonPath: string
+    buttonPath: string,
+    modalPath: string
   ) {
     super(bot);
     this.slashCommandPath = slashCommandPath;
     this.cmCommandPath = cmCommandPath;
     this.buttonPath = buttonPath;
+    this.modalPath = modalPath;
   }
 
   /**
@@ -49,6 +43,7 @@ export default class InteractionManager extends Manager {
     // this.loadInteractionHandlers();
     this.registerSlashAndContextMenuCommands();
     this.registerButtons();
+    this.registerModals();
   }
 
   /**
@@ -58,16 +53,18 @@ export default class InteractionManager extends Manager {
   public async handleInteraction(interaction: Interaction) {
     // Resolve the correct handler for this interaction
     let handler: BaseInteraction;
-    if (interaction.isCommand()) {
+    if (interaction.isChatInputCommand()) {
       handler = this.slashCommands.get(
         interaction.commandName
       ) as BaseInteraction;
-    } else if (interaction.isContextMenu()) {
+    } else if (interaction.isContextMenuCommand()) {
       handler = this.cmCommands.get(interaction.commandName) as BaseInteraction;
     } else if (interaction.isButton()) {
       handler = [...this.buttons.values()].find((x) =>
         x.matchCustomId(interaction.customId)
       ) as BaseInteraction;
+    } else if (interaction.isModalSubmit()) {
+      handler = this.modals.get(interaction.customId) as BaseModal;
     } else return;
 
     // Return if not found
@@ -77,9 +74,14 @@ export default class InteractionManager extends Manager {
     try {
       await handler.handleInteraction({ bot: this.bot, interaction });
     } catch (e: any) {
-      await interaction.reply(
-        "Command execution failed. Please contact a bot maintainer..."
-      );
+      if (interaction.replied)
+        await interaction.editReply({
+          content: "An error occurred while handling this interaction",
+        });
+      else
+        await interaction.reply(
+          "Command execution failed. Please contact a bot maintainer..."
+        );
       // Don't throw and let the bot handle this as an unhandled rejection. Instead,
       // take initiative to handle it as an error so we can see the trace.
       await this.bot.managers.error.handleErr(e);
@@ -146,6 +148,24 @@ export default class InteractionManager extends Manager {
 
       for (const btn of this.buttons.keys()) {
         this.bot.logger.info(`Loaded button '${btn}'`);
+      }
+    } catch (error: any) {
+      await this.bot.managers.error.handleErr(error);
+    }
+  }
+
+  private async registerModals() {
+    try {
+      // Dynamically load source files
+      this.modals = new Map<string, BaseModal>(
+        DynamicLoader.loadClasses(this.modalPath).map((sc: BaseModal) => [
+          sc.name,
+          sc,
+        ])
+      );
+
+      for (const modal of this.modals.keys()) {
+        this.bot.logger.info(`Loaded modal '${modal}'`);
       }
     } catch (error: any) {
       await this.bot.managers.error.handleErr(error);
