@@ -1,8 +1,9 @@
 import SlashCommand, {
   SlashCommandContext,
 } from "../../api/interaction/slashcommand";
-import { MessageEmbed, TextChannel } from "discord.js";
+import { TextChannel } from "discord.js";
 import { settings } from "../../settings";
+import { EmbedBuilder } from "@discordjs/builders";
 
 export default class ShoutoutCommand extends SlashCommand {
   public constructor() {
@@ -31,17 +32,17 @@ export default class ShoutoutCommand extends SlashCommand {
     interaction,
   }: SlashCommandContext): Promise<void> {
     const { options, member, guild } = interaction;
-    const users = options.getString("users")!;
-    const shoutout = options.getString("shoutout")!;
+    const users = options.get("users", true).value as string;
+    const shoutout = options.get("shoutout", true).value as string;
 
-    let embed = new MessageEmbed({
+    let embed = new EmbedBuilder({
       title: "Shouting out User(s)",
     });
     await interaction.reply({ embeds: [embed], ephemeral: true });
 
     const title = `📣 ${member!.user.username} gave a shoutout!`;
 
-    embed = new MessageEmbed({
+    embed = new EmbedBuilder({
       title,
       fields: [
         {
@@ -53,7 +54,6 @@ export default class ShoutoutCommand extends SlashCommand {
           value: shoutout,
         },
       ],
-      color: "RANDOM",
     });
 
     const channel = guild!.channels.resolve(

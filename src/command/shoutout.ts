@@ -1,6 +1,7 @@
 import Command, { CommandContext } from "../api/command";
 import { settings } from "../settings";
-import { MessageEmbed, TextChannel } from "discord.js";
+import { TextChannel } from "discord.js";
+import { EmbedBuilder } from "@discordjs/builders";
 
 export default class ShoutoutCommand extends Command {
   constructor() {
@@ -31,7 +32,7 @@ export default class ShoutoutCommand extends Command {
     const reg = /^.*?(<@!?[\d]{17,18}>|\s)+/;
     const text = msg.content.replace(reg, "");
     if (text.length < 1) return this.sendInvalidUsage(msg, bot);
-    const embed = new MessageEmbed({
+    const embed = new EmbedBuilder({
       title,
       fields: [
         {
@@ -45,7 +46,6 @@ export default class ShoutoutCommand extends Command {
           value: text,
         },
       ],
-      color: "RANDOM",
     });
 
     const channel = msg.guild?.channels.resolve(

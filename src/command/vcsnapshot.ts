@@ -54,11 +54,11 @@ export default class VCSnapshotCommand extends Command {
           `Copyable: \` ${attendees.join("` `")}\``,
         allowedMentions: { users: [] },
       })
-      .catch(() =>
+      .catch(() => {
         msg.channel.send({
           content: `**VC Snapshot request failed for ${msg.author}**`,
           allowedMentions: { users: [] },
-        })
-      );
+        });
+      });
   }
 }

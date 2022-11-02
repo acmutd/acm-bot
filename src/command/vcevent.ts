@@ -1,9 +1,5 @@
-import {
-  MessageEmbed,
-  StageChannel,
-  TextBasedChannel,
-  VoiceChannel,
-} from "discord.js";
+import { EmbedBuilder } from "@discordjs/builders";
+import { StageChannel, TextBasedChannel, VoiceChannel } from "discord.js";
 import Command, { CommandContext } from "../api/command";
 import { settings } from "../settings";
 
@@ -87,7 +83,7 @@ export default class VCEventCommand extends Command {
         );
         await msg.channel.send({
           embeds: [
-            new MessageEmbed({
+            new EmbedBuilder({
               title: "Current VC Events",
               description: channels.length > 0 ? channels.join("\n") : "none",
             }),
@@ -116,7 +112,7 @@ export default class VCEventCommand extends Command {
     });
     await channel.send({
       embeds: [
-        new MessageEmbed({
+        new EmbedBuilder({
           title: `Time spent in #${voiceChannel.name}`,
           description: descriptionArr.join("\n"),
         }),

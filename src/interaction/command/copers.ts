@@ -1,9 +1,8 @@
 import SlashCommand, {
   SlashCommandContext,
 } from "../../api/interaction/slashcommand";
-import { MessageEmbed, TextChannel } from "discord.js";
-import { settings } from "../../settings";
 import { APIEmbedField } from "discord-api-types/v10";
+import { EmbedBuilder } from "@discordjs/builders";
 
 export default class CopersCommand extends SlashCommand {
   public constructor() {
@@ -24,15 +23,14 @@ export default class CopersCommand extends SlashCommand {
 
     const title = `📣 ${member!.user.username} found some copers!`;
 
-    const embed = new MessageEmbed({
+    const embed = new EmbedBuilder({
       title,
       fields: copers.map((coper, i) => {
         return {
           name: ["1st", "2nd", "3rd", "4th", "5th"][i],
           value: `<@${coper[0]}> : ${coper[1]} copium`,
         };
-      }) as unknown as APIEmbedField[],
-      color: "RANDOM",
+      }),
     });
     await interaction.reply({ embeds: [embed], ephemeral: false });
   }

@@ -1,7 +1,3 @@
-import SlashCommand, {
-  SlashCommandContext,
-} from "../../api/interaction/slashcommand";
-import { InteractionContext } from "../../api/interaction/interaction";
 import CustomButtonInteraction, {
   ButtonInteractionContext,
 } from "../../api/interaction/button";

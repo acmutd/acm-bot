@@ -1,7 +1,6 @@
 import SlashCommand, {
   SlashCommandContext,
 } from "../../api/interaction/slashcommand";
-import { InteractionContext } from "../../api/interaction/interaction";
 
 export default class BeepCommand extends SlashCommand {
   public constructor() {

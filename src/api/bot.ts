@@ -1,4 +1,4 @@
-import { Client, Intents } from "discord.js";
+import { Client, IntentsBitField, Partials } from "discord.js";
 import { settings, Settings } from "../settings";
 import ResponseUtil, { ResponseFormat } from "../util/response";
 import LoggerUtil from "../util/logger";
@@ -34,6 +34,7 @@ export interface Config {
   responseFormat: ResponseFormat;
   disabledCommands: string[] | undefined;
   disabledCategories: string[] | undefined;
+  modalPath: string;
 }
 
 export interface ManagerList {
@@ -65,19 +66,20 @@ export default class Bot extends Client {
   public config: Config;
 
   constructor(config: Config) {
-    const intents = new Intents([
-      Intents.FLAGS.GUILDS,
-      Intents.FLAGS.GUILD_MEMBERS,
-      Intents.FLAGS.GUILD_INTEGRATIONS,
-      Intents.FLAGS.GUILD_VOICE_STATES,
-      Intents.FLAGS.GUILD_MESSAGES,
-      Intents.FLAGS.GUILD_MESSAGE_REACTIONS,
-      Intents.FLAGS.DIRECT_MESSAGES,
-      Intents.FLAGS.DIRECT_MESSAGE_REACTIONS,
-    ]);
+    const intents = [
+      IntentsBitField.Flags.Guilds,
+      IntentsBitField.Flags.GuildMembers,
+      IntentsBitField.Flags.GuildIntegrations,
+      IntentsBitField.Flags.GuildVoiceStates,
+      IntentsBitField.Flags.GuildMessages,
+      IntentsBitField.Flags.GuildMessageReactions,
+      IntentsBitField.Flags.DirectMessages,
+      IntentsBitField.Flags.DirectMessageReactions,
+    ];
+
     super({
       intents,
-      partials: ["REACTION", "MESSAGE", "CHANNEL"],
+      partials: [Partials.Reaction, Partials.Message, Partials.Channel],
     });
     this.settings = settings;
     this.logger = new LoggerUtil();
@@ -89,7 +91,8 @@ export default class Bot extends Client {
         this,
         config.slashCommandPath,
         config.cmCommandPath,
-        config.buttonPath
+        config.buttonPath,
+        config.modalPath
       ),
       error: new ErrorManager(this),
       verification: new VerificationManager(this),

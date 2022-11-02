@@ -3,16 +3,18 @@ import {
   ColorResolvable,
   CommandInteraction,
   GuildMember,
-  MessageEmbed,
-  TextBasedChannel,
-  TextChannel,
+  Role,
 } from "discord.js";
 import { settings } from "../../settings";
 import { CircleData } from "../../api/schema";
 import SlashCommand, {
   SlashCommandContext,
 } from "../../api/interaction/slashcommand";
-import { PermissionFlagsBits } from "discord-api-types/v10";
+import {
+  ChannelType,
+  OverwriteType,
+  PermissionFlagsBits,
+} from "discord-api-types/v10";
 
 const perms =
   PermissionFlagsBits.ManageRoles |
@@ -133,15 +135,17 @@ export default class CircleCommand extends SlashCommand {
   }
 
   public async handleInteraction({ bot, interaction }: SlashCommandContext) {
+    // Check if the interaction is a command
+    if (!interaction.isCommand()) return;
     const subComm = interaction.options.getSubcommand();
     switch (subComm) {
       case "add":
         await interaction.deferReply();
-        await addCircle(bot, interaction);
+        await addCircle({ bot, interaction });
         break;
       case "create-channel":
         await interaction.deferReply();
-        await createChannel(bot, interaction);
+        await createChannel({ bot, interaction });
         break;
       case "repost":
         await bot.managers.circle.repost();
@@ -155,7 +159,7 @@ export default class CircleCommand extends SlashCommand {
   }
 }
 
-async function createChannel(bot: Bot, interaction: CommandInteraction) {
+async function createChannel({ bot, interaction }: SlashCommandContext) {
   const name = interaction.options.getString("name", true);
   const circleId = interaction.options.getRole("circle", true).id;
   const guild = interaction.guild!;
@@ -170,19 +174,20 @@ async function createChannel(bot: Bot, interaction: CommandInteraction) {
     return;
   }
   const channelName = `${circle.emoji} ${name}`;
-  const channel = await guild.channels.create(channelName, {
-    type: "GUILD_TEXT",
+  const channel = await guild.channels.create({
+    name: channelName,
+    type: ChannelType.GuildText,
     parent: settings.circles.parentCategory,
     permissionOverwrites: [
       {
         id: guild.roles.everyone,
-        deny: ["VIEW_CHANNEL"],
-        type: "role",
+        deny: "ViewChannel",
+        type: OverwriteType.Role,
       },
       {
         id: circleId,
-        allow: ["VIEW_CHANNEL"],
-        type: "role",
+        allow: "ViewChannel",
+        type: OverwriteType.Role,
       },
     ],
   });
@@ -205,7 +210,7 @@ async function createChannel(bot: Bot, interaction: CommandInteraction) {
   });
 }
 
-async function addCircle(bot: Bot, interaction: CommandInteraction) {
+async function addCircle({ bot, interaction }: SlashCommandContext) {
   // Parse/resolve circle data
   const circle: CircleData = {
     name: interaction.options.getString("name", true),
@@ -216,11 +221,11 @@ async function addCircle(bot: Bot, interaction: CommandInteraction) {
     owner: interaction.options.getUser("owner", true).id,
     subChannels: [],
   };
-  const circleOwner = interaction.options.getMember("owner", true);
+  const circleOwner = interaction.options.getMember("owner");
   const guild = interaction.guild!;
 
   // Create role
-  const color = interaction.options.getString("color", true) as ColorResolvable;
+  const color = interaction.options.get("color", true).value as ColorResolvable;
   const circleRole = await guild.roles.create({
     name: `${circle.emoji} ${circle.name}`,
     mentionable: true,
@@ -233,20 +238,20 @@ async function addCircle(bot: Bot, interaction: CommandInteraction) {
   // Create channel with correct perms
   const channelName = `${circle.emoji} ${circle.name}`;
   const channelDesc = `🎗️: ${circleRole.name}`;
-  const circleChannel = await guild.channels.create(channelName, {
-    type: "GUILD_TEXT",
-    topic: channelDesc,
+  const channel = await guild.channels.create({
+    name: channelName,
+    type: ChannelType.GuildText,
     parent: settings.circles.parentCategory,
     permissionOverwrites: [
       {
         id: guild.roles.everyone,
-        deny: ["VIEW_CHANNEL"],
-        type: "role",
+        deny: "ViewChannel",
+        type: OverwriteType.Role,
       },
       {
         id: circleRole.id,
-        allow: ["VIEW_CHANNEL"],
-        type: "role",
+        allow: "ViewChannel",
+        type: OverwriteType.Role,
       },
     ],
   });
@@ -258,7 +263,7 @@ async function addCircle(bot: Bot, interaction: CommandInteraction) {
   if (!added) {
     interaction.editReply("An error occurred while adding the circle.");
     await circleRole.delete();
-    await circleChannel.delete();
+    await channel.delete();
     return;
   }
 

@@ -52,11 +52,11 @@ export default class VCPingCommand extends Command {
           `Members (${attendees.length}): ${attendees.join(" ")}\n`,
         allowedMentions: { users: mentions },
       })
-      .catch(() =>
+      .catch(() => {
         msg.channel.send({
           content: `VC Ping request failed for ${msg.author}**`,
           allowedMentions: { users: [] },
-        })
-      );
+        });
+      });
   }
 }

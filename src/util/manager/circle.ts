@@ -1,9 +1,8 @@
 import {
+  APIMessageComponentEmoji,
   ButtonInteraction,
+  ButtonStyle,
   Message,
-  MessageActionRow,
-  MessageButton,
-  MessageEmbed,
   TextBasedChannel,
   TextChannel,
 } from "discord.js";
@@ -11,6 +10,12 @@ import { settings } from "../../settings";
 import Bot from "../../api/bot";
 import Manager from "../../api/manager";
 import { Circle } from "../../api/schema";
+import {
+  ActionRowBuilder,
+  ButtonBuilder,
+  EmbedBuilder,
+} from "@discordjs/builders";
+import { SlashCommandContext } from "../../api/interaction/slashcommand";
 
 export default class CircleManager extends Manager {
   private readonly remindCron: string;
@@ -34,7 +39,7 @@ export default class CircleManager extends Manager {
    * Repost all circle messages. Used to update all the cards in the join circles channel, and send new ones
    * if new ones have been created.
    */
-  public async repost() {
+  public async repost({ bot, interaction }: SlashCommandContext) {
     // Resolve join circles channel
     const channel = this.bot.channels.resolve(this.joinChannelId);
     const c = channel as TextChannel;
@@ -59,65 +64,75 @@ export default class CircleManager extends Manager {
     // Build and send circle cards
     const circles = [...this.bot.managers.database.cache.circles.values()];
     for (const circle of circles) {
-      const owner = await c.guild.members.fetch(circle.owner!).catch();
-      const count = await this.findMemberCount(circle._id!);
-      const role = await c.guild.roles.fetch(circle._id!);
+      try {
+        const owner = await c.guild.members.fetch(circle.owner!).catch();
+        const count = await this.findMemberCount(circle._id!);
+        const role = await c.guild.roles.fetch(circle._id!);
 
-      // encodedData contains hidden data, stored within the embed as JSON string :) kinda hacky but it works
-      const encodedData: any = {
-        name: circle.name,
-        circle: circle._id,
-        reactions: {},
-        channel: circle.channel,
-      };
-      encodedData.reactions[`${circle.emoji}`] = circle._id;
+        // encodedData contains hidden data, stored within the embed as JSON string :) kinda hacky but it works
+        const encodedData: any = {
+          name: circle.name,
+          circle: circle._id,
+          reactions: {},
+          channel: circle.channel,
+        };
+        encodedData.reactions[`${circle.emoji}`] = circle._id;
 
-      // Build embed portion of the card
-      const embed = new MessageEmbed({
-        title: `${circle.emoji} ${circle.name} ${circle.emoji}`,
-        description: `${encode(encodedData)}${circle.description}`,
-        color: role?.color,
-        thumbnail: validURL(circle.imageUrl)
-          ? {
-              url: circle.imageUrl,
-              height: 90,
-              width: 90,
-            }
-          : undefined,
-        fields: [
-          { name: "**Role**", value: `<@&${circle._id}>`, inline: true },
-          { name: "**Members**", value: `${count ?? "N/A"}`, inline: true },
-        ],
-        footer: {
-          text: `⏰ Created on ${circle.createdOn!.toLocaleDateString("en-US", {
-            year: "numeric",
-            month: "long",
-            day: "numeric",
-          })}${owner ? `﹒👑 Owner: ${owner.displayName}` : ""}`,
-        },
-      });
+        // Build embed portion of the card
+        const embed = new MessageEmbed({
+          title: `${circle.emoji} ${circle.name} ${circle.emoji}`,
+          description: `${encode(encodedData)}${circle.description}`,
+          color: role?.color,
+          thumbnail: validURL(circle.imageUrl)
+            ? {
+                url: circle.imageUrl,
+                height: 90,
+                width: 90,
+              }
+            : undefined,
+          fields: [
+            { name: "**Role**", value: `<@&${circle._id}>`, inline: true },
+            { name: "**Members**", value: `${count ?? "N/A"}`, inline: true },
+          ],
+          footer: {
+            text: `⏰ Created on ${circle.createdOn!.toLocaleDateString(
+              "en-US",
+              {
+                year: "numeric",
+                month: "long",
+                day: "numeric",
+              }
+            )}${owner ? `﹒👑 Owner: ${owner.displayName}` : ""}`,
+          },
+        });
 
-      // Build interactive/buttons portion of the card
-      const actionRow = new MessageActionRow({
-        components: [
-          new MessageButton({
+        const circleEmoji: APIMessageComponentEmoji = {
+          name: circle.emoji,
+        };
+
+        // Build interactive/buttons portion of the card
+        const actionRow = new ActionRowBuilder<ButtonBuilder>();
+        actionRow.addComponents([
+          new ButtonBuilder({
             label: `Join/Leave ${circle.name}`,
-            customId: `circle/join/${circle._id}`,
-            style: "PRIMARY",
-            emoji: circle.emoji,
-          }),
-          new MessageButton({
+            custom_id: `circle/join/${circle._id!}`,
+            style: ButtonStyle.Primary,
+          }).setEmoji(circleEmoji),
+          new ButtonBuilder({
             label: `Learn More`,
-            customId: `circle/about/${circle._id}`,
-            style: "SECONDARY",
+            custom_id: `circle/about/${circle._id!}`,
             disabled: true,
+            style: ButtonStyle.Secondary,
           }),
-        ],
-      });
+        ]);
 
-      // Send out message
-      await c.send({ embeds: [embed], components: [actionRow] });
+        // Send out message
+        await c.send({ embeds: [embed], components: [actionRow] });
+      } catch (e) {
+        console.log(e);
+      }
     }
+    await interaction.editReply("Done!");
   }
 
   public async update(channel: TextChannel, circleId: string) {
@@ -141,12 +156,12 @@ export default class CircleManager extends Manager {
     if (!memberField) return;
 
     const count = await this.findMemberCount(circleId);
-    const embed = new MessageEmbed({
+    const embed = new EmbedBuilder({
       title: message.embeds[0].title || "",
       description: message.embeds[0].description || "",
       color: message.embeds[0].color!,
-      footer: message.embeds[0].footer || {},
-      thumbnail: message.embeds[0].thumbnail || {},
+      footer: message.embeds[0].footer || undefined,
+      thumbnail: message.embeds[0].thumbnail || undefined,
       fields: [
         { name: "**Role**", value: `<@&${circleId}>`, inline: true },
         { name: "**Members**", value: `${count ?? "N/A"}`, inline: true },
@@ -211,12 +226,12 @@ export default class CircleManager extends Manager {
     const role = await interaction.guild!.roles.fetch(circle._id!);
 
     // Build embed portion of the card
-    const embed = new MessageEmbed({
+    const embed = new EmbedBuilder({
       title: `${circle.emoji} ${circle.name} ${circle.emoji}`,
       description: circle.description,
       color: role?.color,
       thumbnail: {
-        url: circle.imageUrl,
+        url: circle.imageUrl!,
         height: 90,
         width: 90,
       },
@@ -234,16 +249,14 @@ export default class CircleManager extends Manager {
     });
 
     // Build interactive/buttons portion of the card
-    const actionRow = new MessageActionRow({
-      components: [
-        new MessageButton({
-          label: `Join/Leave ${circle.name}`,
-          customId: `circle/join/${circle._id}`,
-          style: "PRIMARY",
-          emoji: circle.emoji,
-        }),
-      ],
-    });
+    const actionRow = new ActionRowBuilder<ButtonBuilder>();
+    actionRow.addComponents(
+      new ButtonBuilder({
+        label: `Join/Leave ${circle.name}`,
+        custom_id: `circle/join/${circle._id}`,
+        emoji: circle.emoji! as APIMessageComponentEmoji,
+      })
+    );
 
     // Send out message as ephemeral reply
     await interaction.reply({
@@ -290,7 +303,7 @@ export default class CircleManager extends Manager {
         ([circle]) => `<@${circle.owner}>`
       );
 
-      let embed = new MessageEmbed({
+      let embed = new EmbedBuilder({
         title: "Circles Inactivity Report",
         description:
           `**${inactiveCircles.length}/${circles.length} circles have been inactive ` +

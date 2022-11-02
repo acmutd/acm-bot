@@ -1,9 +1,10 @@
+import { ActivityOptions } from "discord.js";
 import { ResponseFormat } from "./util/response";
 export interface Settings {
   token: string;
   prefix: string;
   activity: {
-    type: "WATCHING" | "STREAMING" | "LISTENING";
+    type: ActivityOptions["type"];
     description: string;
   };
   sentryDNS: string;
