@@ -40,8 +40,11 @@ export default class CircleManager extends Manager {
     const c = channel as TextChannel;
 
     // Delete original messages
-    // TODO: Manual looped bulk delete, because bulkDelete does not work on messages > 14 days old.
-    await c.bulkDelete(50);
+    // manual bulk delete
+    const msgs = await c.messages.fetch({ limit: 50 });
+    // pseudo bulk delete
+    const promises = msgs.map((m) => m.delete());
+    await Promise.all(promises);
 
     // Send header
     await c.send(
@@ -74,11 +77,13 @@ export default class CircleManager extends Manager {
         title: `${circle.emoji} ${circle.name} ${circle.emoji}`,
         description: `${encode(encodedData)}${circle.description}`,
         color: role?.color,
-        thumbnail: {
-          url: circle.imageUrl,
-          height: 90,
-          width: 90,
-        },
+        thumbnail: validURL(circle.imageUrl)
+          ? {
+              url: circle.imageUrl,
+              height: 90,
+              width: 90,
+            }
+          : undefined,
         fields: [
           { name: "**Role**", value: `<@&${circle._id}>`, inline: true },
           { name: "**Members**", value: `${count ?? "N/A"}`, inline: true },
@@ -359,3 +364,13 @@ function decode(description: string | null): any {
   if (!matches || matches.length < 2) return;
   return JSON.parse(decodeURIComponent(description.match(re)![1]));
 }
+
+const validURL = (str?: string) => {
+  if (!str) return false;
+  try {
+    new URL(str);
+    return true;
+  } catch (e) {
+    return false;
+  }
+};
