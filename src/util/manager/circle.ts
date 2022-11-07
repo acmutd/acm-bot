@@ -79,7 +79,7 @@ export default class CircleManager extends Manager {
         encodedData.reactions[`${circle.emoji}`] = circle._id;
 
         // Build embed portion of the card
-        const embed = new MessageEmbed({
+        const embed = new EmbedBuilder({
           title: `${circle.emoji} ${circle.name} ${circle.emoji}`,
           description: `${encode(encodedData)}${circle.description}`,
           color: role?.color,
@@ -129,7 +129,7 @@ export default class CircleManager extends Manager {
         // Send out message
         await c.send({ embeds: [embed], components: [actionRow] });
       } catch (e) {
-        console.log(e);
+        console.error(e);
       }
     }
     await interaction.editReply("Done!");
