@@ -310,6 +310,15 @@ async function checkInactivity(bot: Bot, interaction: CommandInteraction) {
   }
   // get latest non-bot message
   const latest = sorted.find((m) => !m.author.bot);
+
+  // If no non-bot message, then no messages
+  if (!latest) {
+    await interaction.editReply(`No messages in ${channel}.`);
+    return;
+  }
+
+  // Days since last message
+  // TEMP
   const lastMessageTime = latest?.createdAt.getTime() || 0;
 
   const diff = new Date().getTime() - lastMessageTime;
