@@ -33,7 +33,6 @@ const reportCategories = [
  * Anonymous report system logic
  */
 export default class ReportManager extends Manager {
-  // TODO: If select "Other" provide modal prompt for more custom feedback
   // IMPORTANT: NO MORE THAN 5 BUTTONS/ROW, WHICH MEANS ONLY UP TO 5 CATEGORIES
 
   private reports = new Map<string, Report>();
