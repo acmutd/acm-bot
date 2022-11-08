@@ -61,8 +61,8 @@ export default class CircleManager extends Manager {
 
     // Build and send circle cards
     const circles = [...this.bot.managers.database.cache.circles.values()];
-    try {
-      for (const circle of circles) {
+    for (const circle of circles) {
+      try {
         const owner = await c.guild.members.fetch(circle.owner!).catch();
         const count = await this.findMemberCount(circle._id!);
         const role = await c.guild.roles.fetch(circle._id!);
@@ -124,9 +124,9 @@ export default class CircleManager extends Manager {
 
         // Send out message
         await c.send({ embeds: [embed], components: [actionRow] });
+      } catch (e) {
+        console.error(e);
       }
-    } catch (e) {
-      console.error(e);
     }
   }
 
