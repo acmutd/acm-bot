@@ -40,7 +40,6 @@ export default class CircleManager extends Manager {
     const c = channel as TextChannel;
 
     // Delete original messages
-    // TODO: Manual looped bulk delete, because bulkDelete does not work on messages > 14 days old.
     const msgs = await c.messages.fetch({ limit: 50 });
     const promises = msgs.map((m) => m.delete());
     try {
