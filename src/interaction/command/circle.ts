@@ -3,7 +3,9 @@ import {
   ColorResolvable,
   CommandInteraction,
   GuildMember,
+  MessageEmbed,
   TextBasedChannel,
+  TextChannel,
 } from "discord.js";
 import { settings } from "../../settings";
 import { CircleData } from "../../api/schema";
@@ -266,8 +268,7 @@ async function addCircle(bot: Bot, interaction: CommandInteraction) {
 }
 
 async function checkInactivity(bot: Bot, interaction: CommandInteraction) {
-  let days = interaction.options.getInteger("days");
-  if (!days) days = 30;
+  let days = interaction.options.getInteger("days") ?? 30;
 
   const circleId = interaction.options.getRole("circle", true).id;
 
@@ -275,56 +276,52 @@ async function checkInactivity(bot: Bot, interaction: CommandInteraction) {
   const circle = bot.managers.database.cache.circles.get(circleId);
 
   if (!circle) {
-    await interaction.editReply("That circle does not exist.");
+    await interaction.editReply({ content: "That circle does not exist." });
     return;
   }
 
-  const channel = (await bot.channels.fetch(
-    circle.channel!
-  )) as TextBasedChannel;
+  let channels = [circle.channel!];
 
-  const messages = await channel.messages.fetch({ limit: 100 });
+  if (circle?.subChannels && circle.subChannels.length > 0) {
+    channels = [...channels, ...circle.subChannels];
+  }
 
-  // Sort from newest to oldest
-  const sorted = messages.sort(
-    (a, b) => b.createdTimestamp - a.createdTimestamp
+  // Fetch last 100 most recent messages from each channel
+  const messages = await Promise.all(
+    channels.map((channel) =>
+      bot.channels
+        .fetch(channel)
+        .then((c) => (c as TextBasedChannel).messages.fetch({ limit: 100 }))
+    )
   );
 
-  for (const message of sorted.values()) {
-    if (
-      new Date().getTime() - message.createdAt.getTime() >
-        days * 24 * 3600 * 1000 &&
-      !message.author.bot
-    ) {
-      await interaction.editReply(
-        `Last message in ${channel} was ${days} days ago.`
-      );
-      return;
-    }
-  }
+  // Flatten messages into one array
+  const allMessages = messages.map((m) => [...m.values()]).flat();
 
-  // Check if all messages are from bots
-  if (sorted.every((m) => m.author.bot)) {
-    await interaction.editReply(`All messages in ${channel} are from bots.`);
-    return;
-  }
-  // get latest non-bot message
-  const latest = sorted.find((m) => !m.author.bot);
-
-  // If no non-bot message, then no messages
-  if (!latest) {
-    await interaction.editReply(`No messages in ${channel}.`);
-    return;
-  }
-
-  // Days since last message
-  // TEMP
-  const lastMessageTime = latest?.createdAt.getTime() || 0;
-
-  const diff = new Date().getTime() - lastMessageTime;
-  const diffDays = Math.floor(diff / (1000 * 3600 * 24));
-
-  await interaction.editReply(
-    `Last message in ${channel} was ${diffDays} days ago.`
+  // Filter messages by date given
+  const filtered = allMessages.filter(
+    (m) =>
+      m.createdAt.getTime() > Date.now() - days * 24 * 60 * 60 * 1000 &&
+      !m.author.bot
   );
+
+  // sort by date from newest to oldest
+  filtered.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+
+  if (filtered.length === 0) {
+    await interaction.editReply("No messages found within that time frame.");
+    return;
+  }
+
+  const embed = new MessageEmbed().addFields({
+    name: `Last ${filtered.length} messages in ${circle.name}`,
+    value: `Last message was sent in ${
+      (filtered[0].channel as TextChannel).name
+    }`,
+  });
+
+  await interaction.editReply({
+    content: `Found ${filtered.length} messages within the last ${days} days.`,
+    embeds: [embed],
+  });
 }
