@@ -6,11 +6,14 @@ import {
   MessageEmbed,
   TextBasedChannel,
   TextChannel,
+  VoiceChannel,
 } from "discord.js";
 import { settings } from "../../settings";
 import Bot from "../../api/bot";
 import Manager from "../../api/manager";
 import { Circle } from "../../api/schema";
+import { Task } from "./schedule";
+import { VCTask } from "../../interaction/command/bookvc";
 
 export default class CircleManager extends Manager {
   private readonly remindCron: string;
@@ -357,6 +360,90 @@ export default class CircleManager extends Manager {
     }
 
     return undefined;
+  }
+
+  public async sendActivity(task: VCTask, type: "start" | "warn" | "end") {
+    try {
+      switch (type) {
+        case "start": {
+          const vcId = await task.payload.eventStart();
+          // Create a new task to warn the circle 2 minutes before the event ends
+          const newTask: VCTask = {
+            ...task,
+            cron: new Date(
+              Date.now() + (task.payload.duration - 2) * 60 * 1000
+            ),
+            payload: {
+              ...task.payload,
+              type: "warn",
+              vcChannel: vcId,
+            },
+          };
+          await this.bot.managers.scheduler.createTask(newTask);
+          break;
+        }
+        case "warn": {
+          await this.sendActivityWarn(task);
+          // Add 2 extra minutes to the task to end the event
+          const newTask: VCTask = {
+            ...task,
+            cron: new Date(Date.now() + 2 * 60 * 1000),
+            payload: {
+              ...task.payload,
+              type: "end",
+            },
+          };
+          await this.bot.managers.scheduler.createTask(newTask);
+          break;
+        }
+        case "end":
+          await this.sendActivityEnd(task);
+          break;
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  }
+
+  public async sendActivityWarn(task: VCTask) {
+    // Fetch circle
+    const circle = this.bot.managers.database.cache.circles.get(
+      task.payload.circle
+    );
+    if (circle == undefined) return;
+
+    // Fetch channel
+    const channel = (await this.bot.channels.fetch(
+      circle.channel!
+    )) as TextBasedChannel;
+
+    // Send message
+    await channel.send({
+      content: `<@&${circle._id}> Event is ending soon!`,
+    });
+  }
+
+  public async sendActivityEnd(task: VCTask) {
+    // Fetch circle
+    const circle = this.bot.managers.database.cache.circles.get(
+      task.payload.circle
+    );
+    if (circle == undefined) return;
+
+    // Fetch channel
+    const channel = (await this.bot.channels.fetch(
+      circle.channel!
+    )) as TextBasedChannel;
+
+    // Send message
+    await channel.send({
+      content: `<@&${circle._id}> Event has ended! Thanks for participating!`,
+    });
+
+    const vcChannel = (await this.bot.channels.fetch(
+      task.payload.vcChannel!
+    )) as VoiceChannel;
+    await vcChannel.delete();
   }
 }
 

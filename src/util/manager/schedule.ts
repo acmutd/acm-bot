@@ -1,3 +1,4 @@
+import { VCTask } from "./../../interaction/command/bookvc";
 import { Collection } from "discord.js";
 import schedule, { Job } from "node-schedule";
 import { v4 } from "uuid";
@@ -7,6 +8,7 @@ import Manager from "../../api/manager";
 export type TaskType =
   | "reminder"
   | "circle_activity_reminder"
+  | "circle_activity";
 
 export interface Task {
   id?: string;
@@ -53,16 +55,14 @@ export default class ScheduleManager extends Manager {
    * @returns the created task, or existing task if ID already exists
    */
   public async createTask(task: Task): Promise<Task> {
-    // create local cope
+    // create local task
     const t = { ...task };
 
     // If ID passed in and already exists, return existing task
-    if (t.id && this.tasks.has(t.id))
-      return this.tasks.get(t.id)!;
+    if (t.id && this.tasks.has(t.id)) return this.tasks.get(t.id)!;
 
     // If no ID passed in, generate one
-    if (!t.id)
-      t.id = v4();
+    if (!t.id) t.id = v4();
 
     // Add task to the database
     const search = await this.bot.managers.database.schemas.task.find({
@@ -79,13 +79,13 @@ export default class ScheduleManager extends Manager {
     // Schedule task in memory
     t.job = schedule.scheduleJob(t.cron, () => this.runTask(t));
     this.tasks.set(t.id, t);
-    
+
     return t;
   }
 
   /**
-   * 
-   * @param id 
+   *
+   * @param id
    * @returns true on success, false on failure (task ID not found)
    */
   public async deleteTask(id: string): Promise<boolean> {
@@ -100,7 +100,7 @@ export default class ScheduleManager extends Manager {
   }
 
   /**
-   * 
+   *
    * @param id Task id
    * @returns Task if exists, else undefined
    */
@@ -108,7 +108,7 @@ export default class ScheduleManager extends Manager {
     return this.tasks.get(id);
   }
 
-  private async runTask(task: Task) {
+  private async runTask(task: Task | VCTask) {
     if (task.id) this.tasks.delete(task.id);
     await this.bot.managers.database.schemas.task.deleteOne({ _id: task.id });
     if (task.job) task.job.cancel();
@@ -122,6 +122,12 @@ export default class ScheduleManager extends Manager {
         break;
       case "circle_activity_reminder":
         this.bot.managers.circle.sendActivityReminder(task.payload);
+        break;
+      case "circle_activity":
+        this.bot.managers.circle.sendActivity(
+          task as VCTask,
+          task.payload.type
+        );
         break;
     }
     await this.deleteTask(task.id!);
