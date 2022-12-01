@@ -1,4 +1,4 @@
-import { ContextMenuInteraction } from "discord.js";
+import { MessageContextMenuCommandInteraction } from "discord.js";
 import {
   ContextMenuCommandBuilder,
   ContextMenuCommandType,
@@ -14,7 +14,7 @@ export interface ContextMenuCommandConfig extends InteractionConfig {
 }
 
 export interface ContextMenuCommandContext extends InteractionContext {
-  interaction: ContextMenuInteraction;
+  interaction: MessageContextMenuCommandInteraction;
 }
 
 export default abstract class ContextMenuCommand extends BaseInteraction {

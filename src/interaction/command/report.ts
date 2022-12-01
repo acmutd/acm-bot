@@ -1,7 +1,7 @@
+import { EmbedBuilder } from "discord.js";
 import SlashCommand, {
   SlashCommandContext,
 } from "../../api/interaction/slashcommand";
-import { MessageEmbed } from "discord.js";
 
 export default class ReportCommand extends SlashCommand {
   public constructor() {
@@ -16,7 +16,7 @@ export default class ReportCommand extends SlashCommand {
     bot,
     interaction,
   }: SlashCommandContext): Promise<void> {
-    let embed = new MessageEmbed({
+    let embed = new EmbedBuilder({
       title: "How to report an offending message",
       description:
         "Right click the message > `Apps` > `Report Message`\n" +

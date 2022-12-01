@@ -1,5 +1,6 @@
 import Bot from "./bot";
-import { Message, MessageEmbed } from "discord.js";
+import { Message } from "discord.js";
+import { EmbedBuilder } from "@discordjs/builders";
 
 export enum CommandType {
   PARAMS,
@@ -53,24 +54,34 @@ export default abstract class Command {
 
   public abstract exec(context: CommandContext): Promise<void>;
 
-  public infoEmbed(): MessageEmbed {
-    return new MessageEmbed()
+  public infoEmbed(): EmbedBuilder {
+    return new EmbedBuilder()
       .setTitle(`Command ${this.name}`)
       .setDescription(`**${this.description}**`)
-      .addField(
-        "Usage",
-        this.usage.length > 0
-          ? this.usage.join(", ")
-          : "No usage cases available",
-        true
-      )
-      .addField(
-        "Tags",
-        this.tags.length > 1 ? this.tags.join(", ") : "No tags",
-        true
-      )
-      .addField("Works in DMs?", this.dmWorks ? "Yes" : "No", true)
-      .addField("Cooldown", `${this.cooldown} seconds`, true);
+      .addFields(
+        {
+          name: "Usage",
+          value:
+            this.usage.length > 0
+              ? this.usage.join(", ")
+              : "No usage cases available",
+          inline: true,
+        },
+        {
+          name: "Tags",
+          value: this.tags.length > 1 ? this.tags.join(", ") : "No tags",
+        },
+        {
+          name: "Works in DMs",
+          value: this.dmWorks ? "Yes" : "No",
+          inline: true,
+        },
+        {
+          name: "Cooldown",
+          value: `${this.cooldown} seconds`,
+          inline: true,
+        }
+      );
   }
 
   public sendInvalidUsage(msg: Message, bot: Bot): void {

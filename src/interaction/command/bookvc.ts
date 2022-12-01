@@ -2,8 +2,8 @@ import { settings } from "./../../settings";
 import SlashCommand, {
   SlashCommandContext,
 } from "../../api/interaction/slashcommand";
-import { MessageEmbed, TextChannel } from "discord.js";
-import { PermissionFlagsBits } from "discord-api-types/v10";
+import { EmbedBuilder, TextChannel } from "discord.js";
+import { ChannelType, PermissionFlagsBits } from "discord-api-types/v10";
 import { Task } from "../../util/manager/schedule";
 
 export interface VCTask extends Task {
@@ -80,7 +80,7 @@ export default class BookVC extends SlashCommand {
         });
         return;
       }
-      const embed = new MessageEmbed()
+      const embed = new EmbedBuilder()
         .addFields(
           {
             name: "Event",
@@ -123,17 +123,18 @@ export default class BookVC extends SlashCommand {
       });
       const guild = interaction.guildId!;
       const eventStart = async () => {
-        const newChannel = await interaction.guild?.channels.create(title, {
-          type: "GUILD_VOICE",
+        const newChannel = await interaction.guild?.channels.create({
+          name: `${title}-${circleData.name}-vc`,
+          type: ChannelType.GuildVoice,
           parent: settings.circles.parentCategory,
           permissionOverwrites: [
             {
               id: guild,
-              deny: ["VIEW_CHANNEL"],
+              deny: "ViewChannel",
             },
             {
               id: circleRole.id,
-              allow: ["VIEW_CHANNEL"],
+              allow: "ViewChannel",
             },
           ],
         });

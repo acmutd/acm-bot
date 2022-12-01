@@ -23,7 +23,7 @@ export default class ReportContextMenuCommand extends ContextMenuCommand {
     interaction,
   }: ContextMenuCommandContext): Promise<void> {
     // Ensure this is a message (just for the ts assert)
-    assert.ok(interaction.isMessageContextMenu());
+    assert.ok(interaction.isMessageContextMenuCommand());
 
     await bot.managers.report.handleInitialReport(interaction);
   }

@@ -46,11 +46,11 @@ export default class InteractionManager extends Manager {
   public async handleInteraction(interaction: Interaction) {
     // Resolve the correct handler for this interaction
     let handler: BaseInteraction;
-    if (interaction.isCommand()) {
+    if (interaction.isChatInputCommand()) {
       handler = this.slashCommands.get(
         interaction.commandName
       ) as BaseInteraction;
-    } else if (interaction.isContextMenu()) {
+    } else if (interaction.isContextMenuCommand()) {
       handler = this.cmCommands.get(interaction.commandName) as BaseInteraction;
     } else if (interaction.isButton()) {
       handler = [...this.buttons.values()].find((x) =>

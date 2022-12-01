@@ -1,9 +1,15 @@
+import { ActivityType } from "discord.js";
 import { ResponseFormat } from "./util/response";
 export interface Settings {
   token: string;
   prefix: string;
   activity: {
-    type: "WATCHING" | "STREAMING" | "LISTENING";
+    type:
+      | ActivityType.Competing
+      | ActivityType.Listening
+      | ActivityType.Playing
+      | ActivityType.Streaming
+      | ActivityType.Watching;
     description: string;
   };
   sentryDNS: string;

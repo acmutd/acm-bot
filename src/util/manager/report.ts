@@ -1,21 +1,20 @@
+import { ButtonBuilder } from "@discordjs/builders";
+import { ActionRowBuilder } from "@discordjs/builders";
 import Manager from "../../api/manager";
 import Bot from "../../api/bot";
 import {
   ButtonInteraction,
-  ContextMenuInteraction,
-  Interaction,
+  ContextMenuCommandInteraction,
+  EmbedBuilder,
   Message,
-  MessageActionRow,
-  MessageButton,
-  MessageContextMenuInteraction,
-  MessageEmbed,
+  MessageContextMenuCommandInteraction,
 } from "discord.js";
 import { v4 } from "uuid";
 import assert from "assert";
 
 interface Report {
   message: Message;
-  originalInteraction: ContextMenuInteraction;
+  originalInteraction: ContextMenuCommandInteraction;
 }
 
 /**
@@ -41,7 +40,9 @@ export default class ReportManager extends Manager {
 
   public init(): void {}
 
-  public async handleInitialReport(interaction: MessageContextMenuInteraction) {
+  public async handleInitialReport(
+    interaction: MessageContextMenuCommandInteraction
+  ) {
     // Immediately fetch message
     const message = await interaction.channel!.messages.fetch(
       interaction.targetMessage.id
@@ -57,20 +58,19 @@ export default class ReportManager extends Manager {
     });
 
     // Prompt for report category.
-    const actionRow = new MessageActionRow({
-      components: this.reportCategories.map(
+    const actionRow = new ActionRowBuilder<ButtonBuilder>().addComponents(
+      this.reportCategories.map(
         (cat) =>
-          new MessageButton({
+          new ButtonBuilder({
             label: cat,
-            customId: `report/${reportId}/${cat}`,
-            style: "PRIMARY",
+            custom_id: `report/${reportId}/${cat}`,
           })
-      ),
-    });
+      )
+    );
 
     const content = `[Link to message](${message.url})`;
 
-    const embed = new MessageEmbed({
+    const embed = new EmbedBuilder({
       title: `Anonymous Report ${reportId}`,
       description: `Please select a category from the buttons below.`,
     });
@@ -107,7 +107,7 @@ export default class ReportManager extends Manager {
       `Category: *${category}*\n` +
       `In case the user changes names, here is a mention: <@${message.author.id}>`;
 
-    const embed = new MessageEmbed({
+    const embed = new EmbedBuilder({
       author: {
         name: `${message.member!.displayName} (${message.author.username}#${
           message.author.discriminator
@@ -123,7 +123,7 @@ export default class ReportManager extends Manager {
     const modChannel = await this.bot.channels.fetch(
       this.bot.settings.channels.mod
     );
-    assert.ok(modChannel!.isText());
+    assert.ok(modChannel!.isTextBased());
 
     // Send report
     modChannel.send({
@@ -135,17 +135,16 @@ export default class ReportManager extends Manager {
     // Remove buttons
     await originalInteraction.editReply({
       components: [
-        new MessageActionRow({
-          components: this.reportCategories.map(
+        new ActionRowBuilder<ButtonBuilder>().addComponents(
+          this.reportCategories.map(
             (cat) =>
-              new MessageButton({
+              new ButtonBuilder({
                 label: cat,
-                customId: `report/${reportId}/${cat}`,
-                style: "PRIMARY",
+                custom_id: `report/${reportId}/${cat}`,
                 disabled: true,
               })
-          ),
-        }),
+          )
+        ),
       ],
     });
 

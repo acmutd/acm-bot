@@ -1,4 +1,4 @@
-import { CommandInteraction } from "discord.js";
+import { ChatInputCommandInteraction } from "discord.js";
 import { SlashCommandBuilder } from "@discordjs/builders";
 import BaseInteraction, {
   InteractionConfig,
@@ -11,7 +11,7 @@ export interface SlashCommandConfig extends InteractionConfig {
 }
 
 export interface SlashCommandContext extends InteractionContext {
-  interaction: CommandInteraction;
+  interaction: ChatInputCommandInteraction;
 }
 
 export default abstract class SlashCommand extends BaseInteraction {

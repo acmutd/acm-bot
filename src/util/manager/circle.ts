@@ -1,9 +1,12 @@
+import { ActionRowBuilder, ButtonBuilder } from "@discordjs/builders";
 import {
+  ButtonComponent,
   ButtonInteraction,
+  ButtonStyle,
+  EmbedBuilder,
+  Emoji,
   Message,
-  MessageActionRow,
-  MessageButton,
-  MessageEmbed,
+  parseEmoji,
   TextBasedChannel,
   TextChannel,
   VoiceChannel,
@@ -78,7 +81,7 @@ export default class CircleManager extends Manager {
         encodedData.reactions[`${circle.emoji}`] = circle._id;
 
         // Build embed portion of the card
-        const embed = new MessageEmbed({
+        const embed = new EmbedBuilder({
           title: `${circle.emoji} ${circle.name} ${circle.emoji}`,
           description: `${encode(encodedData)}${circle.description}`,
           color: role?.color,
@@ -106,22 +109,20 @@ export default class CircleManager extends Manager {
         });
 
         // Build interactive/buttons portion of the card
-        const actionRow = new MessageActionRow({
-          components: [
-            new MessageButton({
-              label: `Join/Leave ${circle.name}`,
-              customId: `circle/join/${circle._id}`,
-              style: "PRIMARY",
-              emoji: circle.emoji,
-            }),
-            new MessageButton({
-              label: `Learn More`,
-              customId: `circle/about/${circle._id}`,
-              style: "SECONDARY",
-              disabled: true,
-            }),
-          ],
-        });
+        const actionRow = new ActionRowBuilder<ButtonBuilder>().addComponents(
+          new ButtonBuilder({
+            label: `Join/Leave ${circle.name}`,
+            custom_id: `circle/join/${circle._id}`,
+            emoji: {
+              id: circle.emoji,
+            },
+          }),
+          new ButtonBuilder({
+            label: `Learn More`,
+            custom_id: `circle/about/${circle._id}`,
+            disabled: true,
+          })
+        );
 
         // Send out message
         await c.send({ embeds: [embed], components: [actionRow] });
@@ -152,12 +153,16 @@ export default class CircleManager extends Manager {
     if (!memberField) return;
 
     const count = await this.findMemberCount(circleId);
-    const embed = new MessageEmbed({
+    const embed = new EmbedBuilder({
       title: message.embeds[0].title || "",
       description: message.embeds[0].description || "",
       color: message.embeds[0].color!,
-      footer: message.embeds[0].footer || {},
-      thumbnail: message.embeds[0].thumbnail || {},
+      footer: {
+        text: message.embeds[0].footer?.text || "",
+      },
+      thumbnail: {
+        url: message.embeds[0].thumbnail?.url || "",
+      },
       fields: [
         { name: "**Role**", value: `<@&${circleId}>`, inline: true },
         { name: "**Members**", value: `${count ?? "N/A"}`, inline: true },
@@ -222,12 +227,12 @@ export default class CircleManager extends Manager {
     const role = await interaction.guild!.roles.fetch(circle._id!);
 
     // Build embed portion of the card
-    const embed = new MessageEmbed({
+    const embed = new EmbedBuilder({
       title: `${circle.emoji} ${circle.name} ${circle.emoji}`,
       description: circle.description,
       color: role?.color,
       thumbnail: {
-        url: circle.imageUrl,
+        url: circle.imageUrl!,
         height: 90,
         width: 90,
       },
@@ -245,16 +250,15 @@ export default class CircleManager extends Manager {
     });
 
     // Build interactive/buttons portion of the card
-    const actionRow = new MessageActionRow({
-      components: [
-        new MessageButton({
-          label: `Join/Leave ${circle.name}`,
-          customId: `circle/join/${circle._id}`,
-          style: "PRIMARY",
-          emoji: circle.emoji,
-        }),
-      ],
-    });
+    const actionRow = new ActionRowBuilder<ButtonBuilder>().addComponents(
+      new ButtonBuilder({
+        label: `Join/Leave ${circle.name}`,
+        custom_id: `circle/join/${circle._id}`,
+        emoji: {
+          id: circle.emoji,
+        },
+      })
+    );
 
     // Send out message as ephemeral reply
     await interaction.reply({
@@ -301,7 +305,7 @@ export default class CircleManager extends Manager {
         ([circle]) => `<@${circle.owner}>`
       );
 
-      let embed = new MessageEmbed({
+      let embed = new EmbedBuilder({
         title: "Circles Inactivity Report",
         description:
           `**${inactiveCircles.length}/${circles.length} circles have been inactive ` +
