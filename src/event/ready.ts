@@ -14,7 +14,7 @@ export default class ReadyEvent extends Event {
       );
 
       // Set status
-      await bot.user.setActivity(bot.settings.activity.description, {
+      bot.user.setActivity(bot.settings.activity.description, {
         type: bot.settings.activity.type,
       });
     }

@@ -1,5 +1,5 @@
 import {
-  MessageEmbed,
+  Colors,
   MessageReaction,
   TextChannel,
   User,
@@ -8,6 +8,7 @@ import {
 import Bot from "../../api/bot";
 import { settings } from "../../settings";
 import Manager from "../../api/manager";
+import { EmbedBuilder } from "@discordjs/builders";
 
 interface UserPointsData {
   first_name: string;
@@ -85,8 +86,8 @@ export default class PointsManager extends Manager {
     reaction.message.reactions
       .removeAll()
       .then(() => reaction.message.react("🎉"));
-    let embed = new MessageEmbed({
-      color: "GREEN",
+    let embed = new EmbedBuilder({
+      color: Colors.Green,
       description: `**${user} has approved \`${encodedData.activity}\` for <@${encodedData.snowflake}>!**\n[link to original message](${msg.url})`,
     });
     return msg.channel.send({ embeds: [embed] });
@@ -118,7 +119,7 @@ export default class PointsManager extends Manager {
       activity: answers[2].choice.label,
       points,
     };
-    let embed = new MessageEmbed({
+    let embed = new EmbedBuilder({
       title: `Response for ${userData.full_name}`,
       description: `[\u200B](http://fake.fake?data=${encodeURIComponent(
         JSON.stringify(data)
@@ -130,8 +131,10 @@ export default class PointsManager extends Manager {
       },
     });
     if (answers[4].type === "text")
-      embed.description += "\n*" + answers[4].text + "*";
-    else embed.image = { url: answers[4].file_url };
+      embed.setDescription(
+        embed.data.description + "\n*" + answers[4].text + "*"
+      );
+    else embed.setImage(answers[4].file_url);
     const msg = await confirmationChannel.send({ embeds: [embed] });
     await msg.react("✅");
   }
@@ -226,14 +229,13 @@ export default class PointsManager extends Manager {
       await member
         .send({
           embeds: [
-            new MessageEmbed({
-              color: "#ec7621",
+            new EmbedBuilder({
               title: "Mentor/Mentee Registration Confirmation",
               description: `Hello **${data.full_name}**, thank you for registering!\n`,
               footer: {
                 text: "If you did not recently request this action, please contact an ACM staff member.",
               },
-            }),
+            }).setColor([236, 118, 33]),
           ],
         })
         .catch(() =>

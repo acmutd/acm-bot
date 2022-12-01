@@ -1,8 +1,7 @@
 import { settings } from "../settings";
 import {
+  Attachment,
   Message,
-  MessageAttachment,
-  MessageEmbed,
   StageChannel,
   User,
   VoiceChannel,
@@ -10,6 +9,7 @@ import {
 import Command, { CommandContext } from "../api/command";
 import Bot from "../api/bot";
 import axios from "axios";
+import { EmbedBuilder } from "@discordjs/builders";
 
 export default class PointsCommand extends Command {
   constructor() {
@@ -87,19 +87,19 @@ export default class PointsCommand extends Command {
         const data = await bot.managers.points.getUser(user.id);
         if (data != undefined) {
           // we build a nice embed scorecard
-          let scorecardEmbed = new MessageEmbed({
-            color: "#93c2db",
+          let scorecardEmbed = new EmbedBuilder({
             author: {
               name: `${user.tag} (${data.full_name})`,
-              iconURL: user.avatarURL() ?? "",
+              icon_url: user.avatarURL() ?? "",
             },
             title: `${data?.points} points`,
             description: "\n",
             footer: {
               text: "ACM Education",
-              iconURL: "https://i.imgur.com/THllTFL.png",
+              icon_url: "https://i.imgur.com/THllTFL.png",
             },
           });
+          scorecardEmbed.setColor([147, 194, 219]);
 
           // add score breakdown if it exists
           let userActivities = [];
@@ -114,8 +114,9 @@ export default class PointsCommand extends Command {
               return a.toLowerCase().localeCompare(b.toLowerCase());
             });
             // finally, add to description
-            scorecardEmbed.description =
-              "__**Activities**__\n" + userActivities.join("\n");
+            scorecardEmbed.setDescription(
+              "__**Activities**__\n" + userActivities.join("\n")
+            );
           }
 
           await msg.channel.send({ embeds: [scorecardEmbed] });
@@ -254,7 +255,7 @@ export default class PointsCommand extends Command {
 
         await msg.channel.send({
           embeds: [
-            new MessageEmbed({
+            new EmbedBuilder({
               title: "Leaderboard",
               description: descriptionArr.join("\n"),
             }),
@@ -323,7 +324,7 @@ export default class PointsCommand extends Command {
 
         await msg.channel.send({
           embeds: [
-            new MessageEmbed({
+            new EmbedBuilder({
               title: "🎉 The winners (and how many times they won)",
               description: winningUsers.join("\n"),
             }),
@@ -409,7 +410,7 @@ export default class PointsCommand extends Command {
 
           await msg.channel.send({
             embeds: [
-              new MessageEmbed({
+              new EmbedBuilder({
                 title: "Time spent in VC",
                 description: descriptionArr.join("\n"),
               }),
@@ -525,7 +526,7 @@ async function processAttachments(
 
 async function processCSV(
   bot: Bot,
-  attachment: MessageAttachment
+  attachment: Attachment
 ): Promise<Set<string>> {
   let csvRaw: string;
   const netIds = new Set<string>();

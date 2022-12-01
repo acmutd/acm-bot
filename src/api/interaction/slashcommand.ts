@@ -1,5 +1,5 @@
 import {
-  ApplicationCommandPermissionData,
+  ChatInputCommandInteraction,
   CommandInteraction,
   Interaction,
 } from "discord.js";
@@ -16,7 +16,7 @@ export interface SlashCommandConfig extends InteractionConfig {
 }
 
 export interface SlashCommandContext extends InteractionContext {
-  interaction: CommandInteraction;
+  interaction: ChatInputCommandInteraction;
 }
 
 export default abstract class SlashCommand extends BaseInteraction {

@@ -1,15 +1,14 @@
 import ContextMenuCommand, {
   ContextMenuCommandContext,
 } from "../../api/interaction/contextmenucommand";
-import { MessageActionRow, MessageButton, MessageEmbed } from "discord.js";
-import { v4 } from "uuid";
 import * as assert from "assert";
+import { ApplicationCommandType } from "discord.js";
 
 export default class ReportContextMenuCommand extends ContextMenuCommand {
   public constructor() {
     super({
       name: "Report Message",
-      type: 3, // TODO: fix this when discord.js gets gud (tsc doesnt like the actual type)
+      type: ApplicationCommandType.User,
     });
   }
 
@@ -24,7 +23,8 @@ export default class ReportContextMenuCommand extends ContextMenuCommand {
     interaction,
   }: ContextMenuCommandContext): Promise<void> {
     // Ensure this is a message (just for the ts assert)
-    assert.ok(interaction.isMessageContextMenu());
+
+    assert.ok(interaction.isContextMenuCommand());
 
     await bot.managers.report.handleInitialReport(interaction);
   }

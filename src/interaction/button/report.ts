@@ -1,8 +1,6 @@
 import CustomButtonInteraction, {
   ButtonInteractionContext,
 } from "../../api/interaction/button";
-import { MessageActionRow, MessageButton, MessageEmbed } from "discord.js";
-import * as assert from "assert";
 
 export default class ReportButton extends CustomButtonInteraction {
   public constructor() {

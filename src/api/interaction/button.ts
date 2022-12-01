@@ -1,8 +1,4 @@
-import {
-  ApplicationCommandPermissionData,
-  ButtonInteraction,
-  Interaction,
-} from "discord.js";
+import { ButtonInteraction, Interaction } from "discord.js";
 import { SlashCommandBuilder } from "@discordjs/builders";
 import CustomInteraction, {
   InteractionConfig,

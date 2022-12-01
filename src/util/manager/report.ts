@@ -2,36 +2,38 @@ import Manager from "../../api/manager";
 import Bot from "../../api/bot";
 import {
   ButtonInteraction,
-  ContextMenuInteraction,
-  Interaction,
   Message,
-  MessageActionRow,
-  MessageButton,
-  MessageContextMenuInteraction,
-  MessageEmbed,
+  ButtonBuilder,
+  ButtonStyle,
+  ContextMenuCommandInteraction,
 } from "discord.js";
 import { v4 } from "uuid";
 import assert from "assert";
+import ReportModal from "../../interaction/modal/report";
+import {
+  ActionRowBuilder,
+  EmbedBuilder,
+  ModalBuilder,
+} from "@discordjs/builders";
 
 interface Report {
   message: Message;
-  originalInteraction: ContextMenuInteraction;
+  originalInteraction: ContextMenuCommandInteraction;
 }
 
+const reportCategories = [
+  // Container for holding in-progress reports
+  "Offensive",
+  "Spam & Ads",
+  "Illegal or NSFW",
+  "Uncomfortable",
+  "Other",
+];
 /**
  * Anonymous report system logic
  */
 export default class ReportManager extends Manager {
-  // TODO: If select "Other" provide modal prompt for more custom feedback
   // IMPORTANT: NO MORE THAN 5 BUTTONS/ROW, WHICH MEANS ONLY UP TO 5 CATEGORIES
-  private readonly reportCategories = [
-    // Container for holding in-progress reports
-    "Offensive",
-    "Spam & Ads",
-    "Illegal or NSFW",
-    "Uncomfortable",
-    "Other",
-  ];
 
   private reports = new Map<string, Report>();
 
@@ -41,11 +43,11 @@ export default class ReportManager extends Manager {
 
   public init(): void {}
 
-  public async handleInitialReport(interaction: MessageContextMenuInteraction) {
+  public async handleInitialReport(interaction: ContextMenuCommandInteraction) {
+    console.log("handling initial report");
+
     // Immediately fetch message
-    const message = await interaction.channel!.messages.fetch(
-      interaction.targetMessage.id
-    );
+    const message = interaction.options.getMessage("message", true);
 
     // Generate a report ID
     const reportId = v4().toString();
@@ -56,21 +58,10 @@ export default class ReportManager extends Manager {
       originalInteraction: interaction,
     });
 
-    // Prompt for report category.
-    const actionRow = new MessageActionRow({
-      components: this.reportCategories.map(
-        (cat) =>
-          new MessageButton({
-            label: cat,
-            customId: `report/${reportId}/${cat}`,
-            style: "PRIMARY",
-          })
-      ),
-    });
-
+    const actionRow = getReportComponents(reportId);
     const content = `[Link to message](${message.url})`;
 
-    const embed = new MessageEmbed({
+    const embed = new EmbedBuilder({
       title: `Anonymous Report ${reportId}`,
       description: `Please select a category from the buttons below.`,
     });
@@ -97,9 +88,22 @@ export default class ReportManager extends Manager {
           "It looks like you're trying to respond to a previous interaction.",
         ephemeral: true,
       });
+      return;
     }
     this.reports.delete(reportId);
-    const { message, originalInteraction } = report!;
+    const { message, originalInteraction } = report;
+
+    let userReportMessage: string | undefined;
+    if (category === "Other") {
+      const report = new ReportModal();
+
+      await interaction.showModal(report);
+      await interaction.awaitModalSubmit({ time: 20000 }).then((res) => {
+        console.log(res);
+        userReportMessage = res.fields.getTextInputValue("report-text");
+        res.reply("Your report has been submitted.");
+      });
+    }
 
     // Build report to send out
     const reportContent =
@@ -107,23 +111,26 @@ export default class ReportManager extends Manager {
       `Category: *${category}*\n` +
       `In case the user changes names, here is a mention: <@${message.author.id}>`;
 
-    const embed = new MessageEmbed({
+    const embed = new EmbedBuilder({
       author: {
-        name: `${message.member!.displayName} (${message.author.username}#${
-          message.author.discriminator
-        })`,
-        iconURL: message.member!.displayAvatarURL(),
+        name: `${message.member?.displayName} (${message.author.username}#${message.author.discriminator})`,
+        icon_url: message.member?.displayAvatarURL(),
       },
       title: "link to message",
       url: message.url,
       description: message.content,
-      timestamp: message.createdTimestamp,
-    });
+    }).setTimestamp(message.createdTimestamp);
+    if (userReportMessage !== undefined) {
+      embed.addFields({
+        name: "User's report message",
+        value: userReportMessage,
+      });
+    }
 
     const modChannel = await this.bot.channels.fetch(
       this.bot.settings.channels.mod
     );
-    assert.ok(modChannel!.isText());
+    assert.ok(modChannel!.isTextBased());
 
     // Send report
     modChannel.send({
@@ -132,28 +139,35 @@ export default class ReportManager extends Manager {
       allowedMentions: { users: [] },
     });
 
+    const actionRow = getReportComponents(reportId, true);
     // Remove buttons
     await originalInteraction.editReply({
-      components: [
-        new MessageActionRow({
-          components: this.reportCategories.map(
-            (cat) =>
-              new MessageButton({
-                label: cat,
-                customId: `report/${reportId}/${cat}`,
-                style: "PRIMARY",
-                disabled: true,
-              })
-          ),
-        }),
-      ],
+      components: [actionRow],
     });
 
     // Send confirmation to reporter
-    await interaction.reply({
+    await interaction.editReply({
       content:
         "Your anonymous report has been passed to the mods. Thank you for keeping ACM safe!",
-      ephemeral: true,
     });
   }
 }
+
+const getReportComponents = (reportId: string, disabled = false) => {
+  const buttons = reportCategories.map(
+    (cat) =>
+      new ButtonBuilder({
+        customId: `report/${reportId}/${cat}`,
+        label: cat,
+        style: ButtonStyle.Primary,
+        disabled,
+      })
+  );
+
+  // Prompt for report category.
+  const actionRow = new ActionRowBuilder<ButtonBuilder>().addComponents(
+    buttons
+  );
+
+  return actionRow;
+};
