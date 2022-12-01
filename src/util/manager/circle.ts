@@ -123,6 +123,7 @@ export default class CircleManager extends Manager {
               label: `Learn More`,
               custom_id: `circle/about/${circle._id!}`,
               disabled: true,
+              style: ButtonStyle.Secondary,
             }),
           ]);
 
@@ -135,7 +136,7 @@ export default class CircleManager extends Manager {
         console.error(e);
       }
     }
-    await interaction.editReply("Done!");
+    await interaction.followUp("Done!");
   }
 
   public async update(channel: TextChannel, circleId: string) {

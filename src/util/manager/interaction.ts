@@ -74,14 +74,9 @@ export default class InteractionManager extends Manager {
     try {
       await handler.handleInteraction({ bot: this.bot, interaction });
     } catch (e: any) {
-      if (interaction.replied)
-        await interaction.editReply({
-          content: "An error occurred while handling this interaction",
-        });
-      else
-        await interaction.reply(
-          "Command execution failed. Please contact a bot maintainer..."
-        );
+      await interaction.followUp(
+        "Command execution failed. Please contact a bot maintainer..."
+      );
       // Don't throw and let the bot handle this as an unhandled rejection. Instead,
       // take initiative to handle it as an error so we can see the trace.
       await this.bot.managers.error.handleErr(e);
