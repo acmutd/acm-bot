@@ -1,5 +1,6 @@
 import Bot from "../../api/bot";
 import {
+  ChatInputCommandInteraction,
   ColorResolvable,
   CommandInteraction,
   GuildMember,
@@ -148,7 +149,7 @@ export default class CircleCommand extends SlashCommand {
         await createChannel({ bot, interaction });
         break;
       case "repost":
-        await bot.managers.circle.repost();
+        await bot.managers.circle.repost({ bot, interaction });
         await interaction.reply("Updated circle data");
         break;
       case "inactivity":
@@ -258,7 +259,7 @@ async function addCircle({ bot, interaction }: SlashCommandContext) {
 
   // Add circle to database
   circle["_id"] = circleRole.id; // circles distinguished by unique role
-  circle.channel = circleChannel.id;
+  circle.channel = channel.id;
   const added = await bot.managers.database.circleAdd(circle);
   if (!added) {
     interaction.editReply("An error occurred while adding the circle.");
@@ -272,7 +273,10 @@ async function addCircle({ bot, interaction }: SlashCommandContext) {
   );
 }
 
-async function checkInactivity(bot: Bot, interaction: CommandInteraction) {
+async function checkInactivity(
+  bot: Bot,
+  interaction: ChatInputCommandInteraction
+) {
   let days = interaction.options.getInteger("days");
   if (!days) days = 30;
 
@@ -291,9 +295,12 @@ async function checkInactivity(bot: Bot, interaction: CommandInteraction) {
   )) as TextBasedChannel;
 
   const messages = await channel.messages.fetch({ limit: 100 });
+  const filtered = [...messages.values()]
+    // Filter out messages from bots
+    .filter((msg) => !msg.author.bot);
 
   // Sort from newest to oldest
-  const sorted = messages.sort(
+  const sorted = filtered.sort(
     (a, b) => b.createdTimestamp - a.createdTimestamp
   );
 
@@ -310,13 +317,8 @@ async function checkInactivity(bot: Bot, interaction: CommandInteraction) {
     }
   }
 
-  // Check if all messages are from bots
-  if (sorted.every((m) => m.author.bot)) {
-    await interaction.editReply(`All messages in ${channel} are from bots.`);
-    return;
-  }
-  // get latest non-bot message
-  const latest = sorted.find((m) => !m.author.bot);
+  // get the latest non-bot message
+  const latest = sorted[0];
   const lastMessageTime = latest?.createdAt.getTime() || 0;
 
   const diff = new Date().getTime() - lastMessageTime;
