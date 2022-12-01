@@ -1,10 +1,10 @@
 import Bot from "../../api/bot";
 import {
-  CategoryChannel,
+  ChatInputCommandInteraction,
   ColorResolvable,
   CommandInteraction,
   GuildMember,
-  Role,
+  TextBasedChannel,
 } from "discord.js";
 import { settings } from "../../settings";
 import { CircleData } from "../../api/schema";
@@ -108,6 +108,31 @@ export default class CircleCommand extends SlashCommand {
       subcommand.setDescription("Repost the circle embeds");
       return subcommand;
     });
+
+    // Adding "inactivity" subcommand
+    this.slashCommand.addSubcommand((subcommand) => {
+      subcommand.setName("inactivity");
+      subcommand.setDescription("Check for inactivity");
+
+      subcommand.addRoleOption((option) => {
+        option.setName("circle");
+        option.setDescription(
+          "The circle to check for inactivity (circle's role)"
+        );
+        option.setRequired(true);
+        return option;
+      });
+
+      subcommand.addIntegerOption((option) => {
+        option.setName("days");
+        option.setDescription(
+          "The number of days to check for inactivity (defaults to 30)"
+        );
+        return option;
+      });
+
+      return subcommand;
+    });
   }
 
   public async handleInteraction({ bot, interaction }: SlashCommandContext) {
@@ -117,15 +142,19 @@ export default class CircleCommand extends SlashCommand {
     switch (subComm) {
       case "add":
         await interaction.deferReply();
-        await addCircle({ bot, interaction });
+        await addCircle(bot, interaction);
         break;
       case "create-channel":
         await interaction.deferReply();
         await createChannel({ bot, interaction });
         break;
       case "repost":
-        await interaction.deferReply();
         await bot.managers.circle.repost({ bot, interaction });
+        await interaction.reply("Updated circle data");
+        break;
+      case "inactivity":
+        await interaction.deferReply({ ephemeral: true });
+        await checkInactivity(bot, interaction);
         break;
     }
   }
@@ -241,5 +270,61 @@ async function addCircle({ bot, interaction }: SlashCommandContext) {
 
   await interaction.editReply(
     `Successfully created circle <@&${circleRole.id}>.`
+  );
+}
+
+async function checkInactivity(
+  bot: Bot,
+  interaction: ChatInputCommandInteraction
+) {
+  let days = interaction.options.getInteger("days");
+  if (!days) days = 30;
+
+  const circleId = interaction.options.getRole("circle", true).id;
+
+  // Fetch last 100 messages from circle channel
+  const circle = bot.managers.database.cache.circles.get(circleId);
+
+  if (!circle) {
+    await interaction.editReply("That circle does not exist.");
+    return;
+  }
+
+  const channel = (await bot.channels.fetch(
+    circle.channel!
+  )) as TextBasedChannel;
+
+  const messages = await channel.messages.fetch({ limit: 100 });
+  const filtered = [...messages.values()]
+    // Filter out messages from bots
+    .filter((msg) => !msg.author.bot);
+
+  // Sort from newest to oldest
+  const sorted = filtered.sort(
+    (a, b) => b.createdTimestamp - a.createdTimestamp
+  );
+
+  for (const message of sorted.values()) {
+    if (
+      new Date().getTime() - message.createdAt.getTime() >
+        days * 24 * 3600 * 1000 &&
+      !message.author.bot
+    ) {
+      await interaction.editReply(
+        `Last message in ${channel} was ${days} days ago.`
+      );
+      return;
+    }
+  }
+
+  // get the latest non-bot message
+  const latest = sorted[0];
+  const lastMessageTime = latest?.createdAt.getTime() || 0;
+
+  const diff = new Date().getTime() - lastMessageTime;
+  const diffDays = Math.floor(diff / (1000 * 3600 * 24));
+
+  await interaction.editReply(
+    `Last message in ${channel} was ${diffDays} days ago.`
   );
 }
