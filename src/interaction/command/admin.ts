@@ -1,7 +1,6 @@
 import SlashCommand, {
   SlashCommandContext,
 } from "../../api/interaction/slashcommand";
-import { InteractionContext } from "../../api/interaction/interaction";
 import assert from "assert";
 
 export default class AdminCommand extends SlashCommand {

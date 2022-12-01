@@ -1,6 +1,6 @@
 import Event from "../api/event";
 import Bot from "../api/bot";
-import { Interaction, Message } from "discord.js";
+import { Interaction } from "discord.js";
 
 export default class InteractionCreateEvent extends Event {
   constructor(bot: Bot) {

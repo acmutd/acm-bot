@@ -3,7 +3,6 @@ import Command from "../../api/command";
 import Bot from "../../api/bot";
 import Manager from "../../api/manager";
 import { settings } from "../../settings";
-import * as fs from "fs";
 import shlex from "shlex";
 import DynamicLoader from "../dynamicloader";
 

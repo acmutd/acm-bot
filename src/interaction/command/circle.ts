@@ -1,10 +1,5 @@
 import Bot from "../../api/bot";
-import {
-  CategoryChannel,
-  ColorResolvable,
-  CommandInteraction,
-  GuildMember,
-} from "discord.js";
+import { ColorResolvable, CommandInteraction, GuildMember } from "discord.js";
 import { settings } from "../../settings";
 import { CircleData } from "../../api/schema";
 import SlashCommand, {
@@ -220,7 +215,7 @@ async function addCircle(bot: Bot, interaction: CommandInteraction) {
   });
 
   // Add circle to database
-  circle["_id"] = circleRole.id;  // circles distinguished by unique role
+  circle["_id"] = circleRole.id; // circles distinguished by unique role
   circle.channel = circleChannel.id;
   const added = await bot.managers.database.circleAdd(circle);
   if (!added) {

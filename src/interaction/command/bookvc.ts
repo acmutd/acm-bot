@@ -1,10 +1,9 @@
 import { settings } from "./../../settings";
-import { Job } from "node-schedule";
 import SlashCommand, {
   SlashCommandContext,
 } from "../../api/interaction/slashcommand";
 import { MessageEmbed, TextChannel } from "discord.js";
-import { APIEmbedField, PermissionFlagsBits } from "discord-api-types/v10";
+import { PermissionFlagsBits } from "discord-api-types/v10";
 import { Task } from "../../util/manager/schedule";
 
 export interface VCTask extends Task {

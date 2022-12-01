@@ -1,8 +1,7 @@
 import SlashCommand, {
   SlashCommandContext,
 } from "../../api/interaction/slashcommand";
-import { MessageEmbed, TextChannel } from "discord.js";
-import { settings } from "../../settings";
+import { MessageEmbed } from "discord.js";
 import { APIEmbedField } from "discord-api-types/v10";
 
 export default class CopersCommand extends SlashCommand {

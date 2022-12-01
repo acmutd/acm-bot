@@ -1,19 +1,12 @@
-import {
-  ApplicationCommandPermissionData,
-  CommandInteraction,
-  ContextMenuInteraction,
-  Interaction,
-} from "discord.js";
+import { ContextMenuInteraction } from "discord.js";
 import {
   ContextMenuCommandBuilder,
   ContextMenuCommandType,
-  SlashCommandBuilder,
 } from "@discordjs/builders";
 import BaseInteraction, {
   InteractionConfig,
   InteractionContext,
 } from "./interaction";
-import Bot from "../bot";
 
 export interface ContextMenuCommandConfig extends InteractionConfig {
   type: ContextMenuCommandType;

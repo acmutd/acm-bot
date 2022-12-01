@@ -1,7 +1,6 @@
 import SlashCommand, {
   SlashCommandContext,
 } from "../../api/interaction/slashcommand";
-import { InteractionContext } from "../../api/interaction/interaction";
 import { MessageEmbed } from "discord.js";
 
 export default class ReportCommand extends SlashCommand {

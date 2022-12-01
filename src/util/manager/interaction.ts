@@ -1,21 +1,9 @@
-import {
-  ButtonInteraction,
-  Collection,
-  CommandInteraction,
-  ContextMenuInteraction,
-  GuildApplicationCommandPermissionData,
-  Interaction,
-  Permissions,
-} from "discord.js";
-import path from "path";
+import { Interaction } from "discord.js";
 import Bot from "../../api/bot";
 import Manager from "../../api/manager";
 import BaseInteraction from "../../api/interaction/interaction";
 import DynamicLoader from "../dynamicloader";
-import {
-  ApplicationCommandPermissionType,
-  Routes,
-} from "discord-api-types/v10";
+import { Routes } from "discord-api-types/v10";
 import SlashCommand from "../../api/interaction/slashcommand";
 import CustomButtonInteraction from "../../api/interaction/button";
 import ContextMenuCommand from "../../api/interaction/contextmenucommand";
