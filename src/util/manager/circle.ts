@@ -85,7 +85,7 @@ export default class CircleManager extends Manager {
           color: role?.color,
           thumbnail: validURL(circle.imageUrl)
             ? {
-                url: circle.imageUrl,
+                url: circle.imageUrl!,
                 height: 90,
                 width: 90,
               }
