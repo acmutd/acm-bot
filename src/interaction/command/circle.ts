@@ -51,7 +51,7 @@ export default class CircleCommand extends SlashCommand {
       subcommand.addStringOption((option) => {
         option.setName("color");
         option.setDescription(
-          "The color of the circle (used for role and embeds)"
+          "The color of the circle (used for role and embeds) in rgb"
         );
         option.setRequired(true);
         return option;
@@ -142,15 +142,15 @@ export default class CircleCommand extends SlashCommand {
     switch (subComm) {
       case "add":
         await interaction.deferReply();
-        await addCircle(bot, interaction);
+        await addCircle({ bot, interaction });
         break;
       case "create-channel":
         await interaction.deferReply();
         await createChannel({ bot, interaction });
         break;
       case "repost":
+        await interaction.deferReply();
         await bot.managers.circle.repost({ bot, interaction });
-        await interaction.reply("Updated circle data");
         break;
       case "inactivity":
         await interaction.deferReply({ ephemeral: true });
@@ -226,7 +226,7 @@ async function addCircle({ bot, interaction }: SlashCommandContext) {
   const guild = interaction.guild!;
 
   // Create role
-  const color = interaction.options.get("color", true).value as ColorResolvable;
+  const color = interaction.options.getString("color", true) as ColorResolvable;
   const circleRole = await guild.roles.create({
     name: `${circle.emoji} ${circle.name}`,
     mentionable: true,
@@ -260,15 +260,16 @@ async function addCircle({ bot, interaction }: SlashCommandContext) {
   // Add circle to database
   circle["_id"] = circleRole.id; // circles distinguished by unique role
   circle.channel = channel.id;
+  circle.description = channelDesc;
   const added = await bot.managers.database.circleAdd(circle);
   if (!added) {
-    interaction.editReply("An error occurred while adding the circle.");
+    await interaction.followUp("An error occurred while adding the circle.");
     await circleRole.delete();
     await channel.delete();
     return;
   }
 
-  await interaction.editReply(
+  await interaction.followUp(
     `Successfully created circle <@&${circleRole.id}>.`
   );
 }
