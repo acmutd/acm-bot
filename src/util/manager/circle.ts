@@ -12,7 +12,6 @@ import { settings } from "../../settings";
 import Bot from "../../api/bot";
 import Manager from "../../api/manager";
 import { Circle } from "../../api/schema";
-import { Task } from "./schedule";
 import { VCTask } from "../../interaction/command/bookvc";
 
 export default class CircleManager extends Manager {
