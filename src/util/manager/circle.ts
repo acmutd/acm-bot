@@ -45,8 +45,11 @@ export default class CircleManager extends Manager {
     const c = channel as TextChannel;
 
     // Delete original messages
-    // TODO: Manual looped bulk delete, because bulkDelete does not work on messages > 14 days old.
-    await c.bulkDelete(50);
+    // manual bulk delete
+    const msgs = await c.messages.fetch({ limit: 50 });
+    // pseudo bulk delete
+    const promises = msgs.map((m) => m.delete());
+    await Promise.all(promises);
 
     // Send header
     await c.send(
@@ -62,73 +65,74 @@ export default class CircleManager extends Manager {
     const circles = [...this.bot.managers.database.cache.circles.values()];
     for (const circle of circles) {
       try {
-        const owner = await c.guild.members.fetch(circle.owner!).catch();
-        const count = await this.findMemberCount(circle._id!);
-        const role = await c.guild.roles.fetch(circle._id!);
+        try {
+          const owner = await c.guild.members.fetch(circle.owner!).catch();
+          const count = await this.findMemberCount(circle._id!);
+          const role = await c.guild.roles.fetch(circle._id!);
 
-        // encodedData contains hidden data, stored within the embed as JSON string :) kinda hacky but it works
-        const encodedData: any = {
-          name: circle.name,
-          circle: circle._id,
-          reactions: {},
-          channel: circle.channel,
-        };
-        encodedData.reactions[`${circle.emoji}`] = circle._id;
+          // encodedData contains hidden data, stored within the embed as JSON string :) kinda hacky but it works
+          const encodedData: any = {
+            name: circle.name,
+            circle: circle._id,
+            reactions: {},
+            channel: circle.channel,
+          };
+          encodedData.reactions[`${circle.emoji}`] = circle._id;
 
-        // Build embed portion of the card
-        console.log(circle.name, circle.emoji);
-        const embed = new EmbedBuilder({
-          title: `${circle.emoji} ${circle.name} ${circle.emoji}`,
-          description: `${encode(encodedData)}${circle.description}`,
-          color: role?.color,
-          // Check if the thumbnail is a valid URL
-          thumbnail: circle.imageUrl?.startsWith("http")
-            ? {
-                url: circle.imageUrl,
-                width: 90,
-                height: 90,
-              }
-            : undefined,
-          fields: [
-            { name: "**Role**", value: `<@&${circle._id}>`, inline: true },
-            { name: "**Members**", value: `${count ?? "N/A"}`, inline: true },
-          ],
-          footer: {
-            text: `⏰ Created on ${circle.createdOn!.toLocaleDateString(
-              "en-US",
-              {
-                year: "numeric",
-                month: "long",
-                day: "numeric",
-              }
-            )}${owner ? `﹒👑 Owner: ${owner.displayName}` : ""}`,
-          },
-        });
+          // Build embed portion of the card
+          const embed = new EmbedBuilder({
+            title: `${circle.emoji} ${circle.name} ${circle.emoji}`,
+            description: `${encode(encodedData)}${circle.description}`,
+            color: role?.color,
+            thumbnail: validURL(circle.imageUrl)
+              ? {
+                  url: circle.imageUrl!,
+                  height: 90,
+                  width: 90,
+                }
+              : undefined,
+            fields: [
+              { name: "**Role**", value: `<@&${circle._id}>`, inline: true },
+              { name: "**Members**", value: `${count ?? "N/A"}`, inline: true },
+            ],
+            footer: {
+              text: `⏰ Created on ${circle.createdOn!.toLocaleDateString(
+                "en-US",
+                {
+                  year: "numeric",
+                  month: "long",
+                  day: "numeric",
+                }
+              )}${owner ? `﹒👑 Owner: ${owner.displayName}` : ""}`,
+            },
+          });
 
-        const circleEmoji: APIMessageComponentEmoji = {
-          name: circle.emoji,
-        };
+          const circleEmoji: APIMessageComponentEmoji = {
+            name: circle.emoji,
+          };
 
-        // Build interactive/buttons portion of the card
-        const actionRow = new ActionRowBuilder<ButtonBuilder>();
-        actionRow.addComponents([
-          new ButtonBuilder({
-            label: `Join/Leave ${circle.name}`,
-            custom_id: `circle/join/${circle._id!}`,
-            style: ButtonStyle.Primary,
-          }).setEmoji(circleEmoji),
-          new ButtonBuilder({
-            label: `Learn More`,
-            custom_id: `circle/about/${circle._id!}`,
-            disabled: true,
-            style: ButtonStyle.Secondary,
-          }),
-        ]);
+          // Build interactive/buttons portion of the card
+          const actionRow = new ActionRowBuilder<ButtonBuilder>();
+          actionRow.addComponents([
+            new ButtonBuilder({
+              label: `Join/Leave ${circle.name}`,
+              custom_id: `circle/join/${circle._id!}`,
+              style: ButtonStyle.Primary,
+            }).setEmoji(circleEmoji),
+            new ButtonBuilder({
+              label: `Learn More`,
+              custom_id: `circle/about/${circle._id!}`,
+              disabled: true,
+            }),
+          ]);
 
-        // Send out message
-        await c.send({ embeds: [embed], components: [actionRow] });
+          // Send out message
+          await c.send({ embeds: [embed], components: [actionRow] });
+        } catch (e) {
+          console.log(e);
+        }
       } catch (e) {
-        console.log(e);
+        console.error(e);
       }
     }
     await interaction.editReply("Done!");
@@ -376,3 +380,13 @@ function decode(description: string | null): any {
   if (!matches || matches.length < 2) return;
   return JSON.parse(decodeURIComponent(description.match(re)![1]));
 }
+
+const validURL = (str?: string) => {
+  if (!str) return false;
+  try {
+    new URL(str);
+    return true;
+  } catch (e) {
+    return false;
+  }
+};
