@@ -99,11 +99,13 @@ export default class BookVC extends SlashCommand {
             value: `${duration} minutes`,
           }
         )
-        .setColor(circleRole.color);
+        .setColor(circleRole.color)
+        .setTitle(`${circle.emoji} ${circle.name}`);
       const circleChannel = circle.channel!;
       const textChannel = (await bot.managers.database.bot.channels.fetch(
         circleChannel
       )) as TextChannel | null;
+
       if (!textChannel) {
         await interaction.reply({
           content: "The circle channel doesn't exist",
@@ -111,20 +113,21 @@ export default class BookVC extends SlashCommand {
         });
         return;
       }
-      const circleData = bot.managers.database.cache.circles.get(
-        circleRole.id
-      )!;
+
       await textChannel.send({
+        content: `<@&${circleRole.id}>`,
         embeds: [embed],
       });
+
       await interaction.reply({
         content: "Event created",
         ephemeral: true,
       });
       const guild = interaction.guildId!;
+
       const eventStart = async () => {
         const newChannel = await interaction.guild?.channels.create({
-          name: `${title}-${circleData.name}-vc`,
+          name: `${title}-${circle.name}-vc`,
           type: ChannelType.GuildVoice,
           parent: settings.circles.parentCategory,
           permissionOverwrites: [
@@ -138,14 +141,15 @@ export default class BookVC extends SlashCommand {
             },
           ],
         });
+
         await textChannel.send({
-          content: `<@&${circleRole.id}> The event is starting! Join <#${newChannel?.id}>!`,
+          content: `<@&${circleRole.id}> The event ${title} is starting! Join <#${newChannel?.id}>!`,
         });
         return newChannel!.id;
       };
 
       const task: VCTask = {
-        cron: new Date(Date.now() + timeTillStart * 60000),
+        cron: new Date(Date.now() + timeTillStart * millisecondsInMinute),
         type: "circle_activity",
         payload: {
           eventStart,
@@ -162,3 +166,5 @@ export default class BookVC extends SlashCommand {
     }
   }
 }
+
+const millisecondsInMinute = 60000;

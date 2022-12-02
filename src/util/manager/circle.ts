@@ -1,12 +1,8 @@
 import { ActionRowBuilder, ButtonBuilder } from "@discordjs/builders";
 import {
-  ButtonComponent,
   ButtonInteraction,
-  ButtonStyle,
   EmbedBuilder,
-  Emoji,
   Message,
-  parseEmoji,
   TextBasedChannel,
   TextChannel,
   VoiceChannel,
@@ -16,6 +12,8 @@ import Bot from "../../api/bot";
 import Manager from "../../api/manager";
 import { Circle } from "../../api/schema";
 import { VCTask } from "../../interaction/command/bookvc";
+
+const minutesInMs = 60000;
 
 export default class CircleManager extends Manager {
   private readonly remindCron: string;
@@ -374,7 +372,7 @@ export default class CircleManager extends Manager {
           const newTask: VCTask = {
             ...task,
             cron: new Date(
-              Date.now() + (task.payload.duration - 2) * 60 * 1000
+              Date.now() + (task.payload.duration - 2) * minutesInMs
             ),
             payload: {
               ...task.payload,
@@ -390,7 +388,7 @@ export default class CircleManager extends Manager {
           // Add 2 extra minutes to the task to end the event
           const newTask: VCTask = {
             ...task,
-            cron: new Date(Date.now() + 2 * 60 * 1000),
+            cron: new Date((task.cron as Date).getTime() + 4 * minutesInMs),
             payload: {
               ...task.payload,
               type: "end",
