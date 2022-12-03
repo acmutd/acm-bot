@@ -1,7 +1,5 @@
-import {
-  ContextMenuCommandInteraction,
-  MessageContextMenuCommandInteraction,
-} from "discord.js";
+import { MessageContextMenuCommandInteraction } from "discord.js";
+
 import {
   ContextMenuCommandBuilder,
   ContextMenuCommandType,

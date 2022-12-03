@@ -98,9 +98,7 @@ export default class PointsCommand extends Command {
               text: "ACM Education",
               icon_url: "https://i.imgur.com/THllTFL.png",
             },
-          });
-          scorecardEmbed.setColor([147, 194, 219]);
-
+          }).setColor([147, 194, 219]);
           // add score breakdown if it exists
           let userActivities = [];
           if (data?.activities) {

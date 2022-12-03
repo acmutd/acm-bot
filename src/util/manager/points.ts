@@ -1,5 +1,6 @@
 import {
-  Colors,
+  EmbedBuilder,
+
   MessageReaction,
   TextChannel,
   User,
@@ -87,9 +88,8 @@ export default class PointsManager extends Manager {
       .removeAll()
       .then(() => reaction.message.react("🎉"));
     let embed = new EmbedBuilder({
-      color: Colors.Green,
       description: `**${user} has approved \`${encodedData.activity}\` for <@${encodedData.snowflake}>!**\n[link to original message](${msg.url})`,
-    });
+    }).setColor("Green");
     return msg.channel.send({ embeds: [embed] });
   }
 

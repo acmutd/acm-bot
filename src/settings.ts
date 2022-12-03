@@ -1,10 +1,17 @@
-import { ActivityOptions } from "discord.js";
+import { ActivityType } from "discord.js";
+
 import { ResponseFormat } from "./util/response";
 export interface Settings {
   token: string;
   prefix: string;
   activity: {
-    type: ActivityOptions["type"];
+    type:
+      | ActivityType.Competing
+      | ActivityType.Listening
+      | ActivityType.Playing
+      | ActivityType.Streaming
+      | ActivityType.Watching;
+
     description: string;
   };
   sentryDNS: string;

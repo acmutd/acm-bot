@@ -1,11 +1,14 @@
+import { ButtonBuilder } from "@discordjs/builders";
+import { ActionRowBuilder } from "@discordjs/builders";
 import Manager from "../../api/manager";
 import Bot from "../../api/bot";
 import {
   ButtonInteraction,
-  Message,
-  ButtonBuilder,
-  ButtonStyle,
   ContextMenuCommandInteraction,
+  EmbedBuilder,
+  Message,
+  MessageContextMenuCommandInteraction,
+
 } from "discord.js";
 import { v4 } from "uuid";
 import assert from "assert";
@@ -43,8 +46,9 @@ export default class ReportManager extends Manager {
 
   public init(): void {}
 
-  public async handleInitialReport(interaction: ContextMenuCommandInteraction) {
-    console.log("handling initial report");
+  public async handleInitialReport(
+    interaction: MessageContextMenuCommandInteraction
+  ) {
 
     // Immediately fetch message
     const message = interaction.options.getMessage("message", true);
@@ -58,7 +62,17 @@ export default class ReportManager extends Manager {
       originalInteraction: interaction,
     });
 
-    const actionRow = getReportComponents(reportId);
+    // Prompt for report category.
+    const actionRow = new ActionRowBuilder<ButtonBuilder>().addComponents(
+      this.reportCategories.map(
+        (cat) =>
+          new ButtonBuilder({
+            label: cat,
+            custom_id: `report/${reportId}/${cat}`,
+          })
+      )
+    );
+
     const content = `[Link to message](${message.url})`;
 
     const embed = new EmbedBuilder({
@@ -142,7 +156,19 @@ export default class ReportManager extends Manager {
     const actionRow = getReportComponents(reportId, true);
     // Remove buttons
     await originalInteraction.editReply({
-      components: [actionRow],
+      components: [
+        new ActionRowBuilder<ButtonBuilder>().addComponents(
+          this.reportCategories.map(
+            (cat) =>
+              new ButtonBuilder({
+                label: cat,
+                custom_id: `report/${reportId}/${cat}`,
+                disabled: true,
+              })
+          )
+        ),
+      ],
+
     });
 
     // Send confirmation to reporter

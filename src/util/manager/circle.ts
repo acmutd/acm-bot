@@ -1,21 +1,22 @@
+import { ActionRowBuilder, ButtonBuilder } from "@discordjs/builders";
 import {
   APIMessageComponentEmoji,
   ButtonInteraction,
-  ButtonStyle,
+  EmbedBuilder,
+
   Message,
   TextBasedChannel,
   TextChannel,
+  VoiceChannel,
 } from "discord.js";
 import { settings } from "../../settings";
 import Bot from "../../api/bot";
 import Manager from "../../api/manager";
 import { Circle } from "../../api/schema";
-import {
-  ActionRowBuilder,
-  ButtonBuilder,
-  EmbedBuilder,
-} from "@discordjs/builders";
-import { SlashCommandContext } from "../../api/interaction/slashcommand";
+import { VCTask } from "../../interaction/command/bookvc";
+
+const minutesInMs = 60000;
+
 
 export default class CircleManager extends Manager {
   private readonly remindCron: string;
@@ -45,11 +46,14 @@ export default class CircleManager extends Manager {
     const c = channel as TextChannel;
 
     // Delete original messages
-    // manual bulk delete
     const msgs = await c.messages.fetch({ limit: 50 });
-    // pseudo bulk delete
     const promises = msgs.map((m) => m.delete());
-    await Promise.all(promises);
+    try {
+      await Promise.all(promises);
+    } catch (e) {
+      console.error(e);
+    }
+
 
     // Send header
     await c.send(
@@ -65,73 +69,65 @@ export default class CircleManager extends Manager {
     const circles = [...this.bot.managers.database.cache.circles.values()];
     for (const circle of circles) {
       try {
-        try {
-          const owner = await c.guild.members.fetch(circle.owner!).catch();
-          const count = await this.findMemberCount(circle._id!);
-          const role = await c.guild.roles.fetch(circle._id!);
+        const owner = await c.guild.members.fetch(circle.owner!).catch();
+        const count = await this.findMemberCount(circle._id!);
+        const role = await c.guild.roles.fetch(circle._id!);
 
-          // encodedData contains hidden data, stored within the embed as JSON string :) kinda hacky but it works
-          const encodedData: any = {
-            name: circle.name,
-            circle: circle._id,
-            reactions: {},
-            channel: circle.channel,
-          };
-          encodedData.reactions[`${circle.emoji}`] = circle._id;
+        // encodedData contains hidden data, stored within the embed as JSON string :) kinda hacky but it works
+        const encodedData: any = {
+          name: circle.name,
+          circle: circle._id,
+          reactions: {},
+          channel: circle.channel,
+        };
+        encodedData.reactions[`${circle.emoji}`] = circle._id;
 
-          // Build embed portion of the card
-          const embed = new EmbedBuilder({
-            title: `${circle.emoji} ${circle.name} ${circle.emoji}`,
-            description: `${encode(encodedData)}${circle.description}`,
-            color: role?.color,
-            thumbnail: validURL(circle.imageUrl)
-              ? {
-                  url: circle.imageUrl!,
-                  height: 90,
-                  width: 90,
-                }
-              : undefined,
-            fields: [
-              { name: "**Role**", value: `<@&${circle._id}>`, inline: true },
-              { name: "**Members**", value: `${count ?? "N/A"}`, inline: true },
-            ],
-            footer: {
-              text: `⏰ Created on ${circle.createdOn!.toLocaleDateString(
-                "en-US",
-                {
-                  year: "numeric",
-                  month: "long",
-                  day: "numeric",
-                }
-              )}${owner ? `﹒👑 Owner: ${owner.displayName}` : ""}`,
+        // Build embed portion of the card
+        const embed = new EmbedBuilder({
+          title: `${circle.emoji} ${circle.name} ${circle.emoji}`,
+          description: `${encode(encodedData)}${circle.description}`,
+          color: role?.color,
+          thumbnail: circle.imageUrl?.startsWith("http")
+            ? {
+                url: circle.imageUrl,
+                height: 90,
+                width: 90,
+              }
+            : undefined,
+          fields: [
+            { name: "**Role**", value: `<@&${circle._id}>`, inline: true },
+            { name: "**Members**", value: `${count ?? "N/A"}`, inline: true },
+          ],
+          footer: {
+            text: `⏰ Created on ${circle.createdOn!.toLocaleDateString(
+              "en-US",
+              {
+                year: "numeric",
+                month: "long",
+                day: "numeric",
+              }
+            )}${owner ? `﹒👑 Owner: ${owner.displayName}` : ""}`,
+          },
+        });
+
+        // Build interactive/buttons portion of the card
+        const actionRow = new ActionRowBuilder<ButtonBuilder>().addComponents(
+          new ButtonBuilder({
+            label: `Join/Leave ${circle.name}`,
+            custom_id: `circle/join/${circle._id}`,
+            emoji: {
+              id: circle.emoji,
             },
-          });
+          }),
+          new ButtonBuilder({
+            label: `Learn More`,
+            custom_id: `circle/about/${circle._id}`,
+            disabled: true,
+          })
+        );
 
-          const circleEmoji: APIMessageComponentEmoji = {
-            name: circle.emoji,
-          };
-
-          // Build interactive/buttons portion of the card
-          const actionRow = new ActionRowBuilder<ButtonBuilder>();
-          actionRow.addComponents([
-            new ButtonBuilder({
-              label: `Join/Leave ${circle.name}`,
-              custom_id: `circle/join/${circle._id!}`,
-              style: ButtonStyle.Primary,
-            }).setEmoji(circleEmoji),
-            new ButtonBuilder({
-              label: `Learn More`,
-              custom_id: `circle/about/${circle._id!}`,
-              disabled: true,
-              style: ButtonStyle.Secondary,
-            }),
-          ]);
-
-          // Send out message
-          await c.send({ embeds: [embed], components: [actionRow] });
-        } catch (e) {
-          console.log(e);
-        }
+        // Send out message
+        await c.send({ embeds: [embed], components: [actionRow] });
       } catch (e) {
         console.error(e);
       }
@@ -164,8 +160,13 @@ export default class CircleManager extends Manager {
       title: message.embeds[0].title || "",
       description: message.embeds[0].description || "",
       color: message.embeds[0].color!,
-      footer: message.embeds[0].footer || undefined,
-      thumbnail: message.embeds[0].thumbnail || undefined,
+      footer: {
+        text: message.embeds[0].footer?.text || "",
+      },
+      thumbnail: {
+        url: message.embeds[0].thumbnail?.url || "",
+      },
+
       fields: [
         { name: "**Role**", value: `<@&${circleId}>`, inline: true },
         { name: "**Members**", value: `${count ?? "N/A"}`, inline: true },
@@ -253,12 +254,14 @@ export default class CircleManager extends Manager {
     });
 
     // Build interactive/buttons portion of the card
-    const actionRow = new ActionRowBuilder<ButtonBuilder>();
-    actionRow.addComponents(
+    const actionRow = new ActionRowBuilder<ButtonBuilder>().addComponents(
       new ButtonBuilder({
         label: `Join/Leave ${circle.name}`,
         custom_id: `circle/join/${circle._id}`,
-        emoji: circle.emoji! as APIMessageComponentEmoji,
+        emoji: {
+          id: circle.emoji,
+        },
+
       })
     );
 
@@ -365,6 +368,90 @@ export default class CircleManager extends Manager {
     }
 
     return undefined;
+  }
+
+  public async sendActivity(task: VCTask, type: "start" | "warn" | "end") {
+    try {
+      switch (type) {
+        case "start": {
+          const vcId = await task.payload.eventStart();
+          // Create a new task to warn the circle 2 minutes before the event ends
+          const newTask: VCTask = {
+            ...task,
+            cron: new Date(
+              Date.now() + (task.payload.duration - 2) * minutesInMs
+            ),
+            payload: {
+              ...task.payload,
+              type: "warn",
+              vcChannel: vcId,
+            },
+          };
+          await this.bot.managers.scheduler.createTask(newTask);
+          break;
+        }
+        case "warn": {
+          await this.sendActivityWarn(task);
+          // Add 2 extra minutes to the task to end the event
+          const newTask: VCTask = {
+            ...task,
+            cron: new Date((task.cron as Date).getTime() + 4 * minutesInMs),
+            payload: {
+              ...task.payload,
+              type: "end",
+            },
+          };
+          await this.bot.managers.scheduler.createTask(newTask);
+          break;
+        }
+        case "end":
+          await this.sendActivityEnd(task);
+          break;
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  }
+
+  public async sendActivityWarn(task: VCTask) {
+    // Fetch circle
+    const circle = this.bot.managers.database.cache.circles.get(
+      task.payload.circle
+    );
+    if (circle == undefined) return;
+
+    // Fetch channel
+    const channel = (await this.bot.channels.fetch(
+      circle.channel!
+    )) as TextBasedChannel;
+
+    // Send message
+    await channel.send({
+      content: `<@&${circle._id}> Event is ending soon!`,
+    });
+  }
+
+  public async sendActivityEnd(task: VCTask) {
+    // Fetch circle
+    const circle = this.bot.managers.database.cache.circles.get(
+      task.payload.circle
+    );
+    if (circle == undefined) return;
+
+    // Fetch channel
+    const channel = (await this.bot.channels.fetch(
+      circle.channel!
+    )) as TextBasedChannel;
+
+    // Send message
+    await channel.send({
+      content: `<@&${circle._id}> Event has ended! Thanks for participating!`,
+    });
+
+    const vcChannel = (await this.bot.channels.fetch(
+      task.payload.vcChannel!
+    )) as VoiceChannel;
+    await vcChannel.delete();
   }
 }
 

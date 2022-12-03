@@ -1,5 +1,4 @@
 import { Interaction } from "discord.js";
-import path from "path";
 import Bot from "../../api/bot";
 import Manager from "../../api/manager";
 import BaseInteraction from "../../api/interaction/interaction";

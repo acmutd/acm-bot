@@ -46,7 +46,7 @@ export default class ShoutoutCommand extends Command {
           value: text,
         },
       ],
-    });
+    }).setColor(null);
 
     const channel = msg.guild?.channels.resolve(
       settings.channels.shoutout

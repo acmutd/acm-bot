@@ -1,6 +1,5 @@
 import Manager from "../../api/manager";
 import Bot from "../../api/bot";
-import * as fs from "fs";
 import DynamicLoader from "../dynamicloader";
 
 declare function require(name: string): any;

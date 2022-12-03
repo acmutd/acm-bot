@@ -1,4 +1,5 @@
-import { EmbedBuilder } from "@discordjs/builders";
+import { EmbedBuilder } from "discord.js";
+
 import Bot from "../../api/bot";
 import Manager from "../../api/manager";
 
@@ -23,7 +24,8 @@ export default class ErrorManager extends Manager {
       let embed = new EmbedBuilder();
       embed.setTitle(`🤖 ${this.bot.user!.username} | Unhandled Rejection`);
       embed.addFields({ name: "Error Message", value: msg });
-      embed.setColor([255, 0, 0]);
+      embed.setColor("Red");
+
       const errorChannel = await guild.channels.fetch(
         this.bot.settings.channels.error
       );
@@ -43,7 +45,8 @@ export default class ErrorManager extends Manager {
         name: "Error Message",
         value: (err.name || "UNKNOWN ERROR") + ": " + err.message,
       });
-      embed.setColor([255, 0, 0]);
+      embed.setColor("Red");
+
 
       // Create text file containing stack trace, which is previewed on desktop clients
       const traceFile = {

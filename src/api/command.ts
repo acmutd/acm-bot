@@ -58,7 +58,9 @@ export default abstract class Command {
     return new EmbedBuilder()
       .setTitle(`Command ${this.name}`)
       .setDescription(`**${this.description}**`)
-      .addFields([
+
+      .addFields(
+
         {
           name: "Usage",
           value:
@@ -70,6 +72,7 @@ export default abstract class Command {
         {
           name: "Tags",
           value: this.tags.length > 1 ? this.tags.join(", ") : "No tags",
+
           inline: true,
         },
         {
@@ -79,10 +82,11 @@ export default abstract class Command {
         },
         {
           name: "Cooldown",
-          value: this.cooldown > 0 ? `${this.cooldown} seconds` : "None",
+          value: `${this.cooldown} seconds`,
           inline: true,
-        },
-      ]);
+        }
+      );
+
   }
 
   public sendInvalidUsage(msg: Message, bot: Bot): void {

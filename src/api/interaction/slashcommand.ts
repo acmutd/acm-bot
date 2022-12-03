@@ -1,14 +1,9 @@
-import {
-  ChatInputCommandInteraction,
-  CommandInteraction,
-  Interaction,
-} from "discord.js";
+import { ChatInputCommandInteraction } from "discord.js";
 import { SlashCommandBuilder } from "@discordjs/builders";
 import BaseInteraction, {
   InteractionConfig,
   InteractionContext,
 } from "./interaction";
-import Bot from "../bot";
 
 export interface SlashCommandConfig extends InteractionConfig {
   description?: string;

@@ -1,6 +1,6 @@
 import fs from "fs";
 import bodyParser from "body-parser";
-import express, { Express, Request, Response } from "express";
+import express, { Express } from "express";
 import http from "http";
 import Bot from "../../api/bot";
 import { settings } from "../../settings";

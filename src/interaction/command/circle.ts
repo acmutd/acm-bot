@@ -160,7 +160,10 @@ export default class CircleCommand extends SlashCommand {
   }
 }
 
-async function createChannel({ bot, interaction }: SlashCommandContext) {
+async function createChannel(
+  bot: Bot,
+  interaction: ChatInputCommandInteraction
+) {
   const name = interaction.options.getString("name", true);
   const circleId = interaction.options.getRole("circle", true).id;
   const guild = interaction.guild!;
@@ -211,7 +214,8 @@ async function createChannel({ bot, interaction }: SlashCommandContext) {
   });
 }
 
-async function addCircle({ bot, interaction }: SlashCommandContext) {
+async function addCircle(bot: Bot, interaction: ChatInputCommandInteraction) {
+
   // Parse/resolve circle data
   const circle: CircleData = {
     name: interaction.options.getString("name", true),
@@ -239,9 +243,11 @@ async function addCircle({ bot, interaction }: SlashCommandContext) {
   // Create channel with correct perms
   const channelName = `${circle.emoji} ${circle.name}`;
   const channelDesc = `🎗️: ${circleRole.name}`;
-  const channel = await guild.channels.create({
+  const circleChannel = await guild.channels.create({
     name: channelName,
     type: ChannelType.GuildText,
+    topic: channelDesc,
+
     parent: settings.circles.parentCategory,
     permissionOverwrites: [
       {

@@ -1,8 +1,4 @@
 import fs from "fs";
-import BaseInteraction from "../api/interaction/interaction";
-import SlashCommand from "../api/interaction/slashcommand";
-import ShoutoutCommand from "../command/shoutout";
-
 export default class DynamicLoader {
   public static loadClasses(path: string, constructorArgs: any[] = []) {
     // Add trailing slash

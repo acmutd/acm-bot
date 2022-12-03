@@ -1,9 +1,4 @@
-import {
-  ColorResolvable,
-  Embed,
-  EmbedBuilder,
-  TextBasedChannel,
-} from "discord.js";
+import { ColorResolvable, EmbedBuilder, TextBasedChannel } from "discord.js";
 
 const emoji = {
   error: {

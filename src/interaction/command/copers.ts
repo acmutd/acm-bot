@@ -1,3 +1,4 @@
+import { EmbedBuilder } from "discord.js";
 import SlashCommand, {
   SlashCommandContext,
 } from "../../api/interaction/slashcommand";

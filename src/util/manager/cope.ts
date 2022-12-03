@@ -1,4 +1,4 @@
-import { MessageReaction, TextChannel, User } from "discord.js";
+import { MessageReaction } from "discord.js";
 import Bot from "../../api/bot";
 import Manager from "../../api/manager";
 

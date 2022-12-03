@@ -1,8 +1,7 @@
+import { EmbedBuilder } from "discord.js";
 import SlashCommand, {
   SlashCommandContext,
 } from "../../api/interaction/slashcommand";
-import { InteractionContext } from "../../api/interaction/interaction";
-import { EmbedBuilder } from "discord.js";
 
 export default class ReportCommand extends SlashCommand {
   public constructor() {
