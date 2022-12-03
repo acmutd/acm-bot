@@ -8,29 +8,35 @@ import {
   EmbedBuilder,
   Message,
   MessageContextMenuCommandInteraction,
+
 } from "discord.js";
 import { v4 } from "uuid";
 import assert from "assert";
+import ReportModal from "../../interaction/modal/report";
+import {
+  ActionRowBuilder,
+  EmbedBuilder,
+  ModalBuilder,
+} from "@discordjs/builders";
 
 interface Report {
   message: Message;
   originalInteraction: ContextMenuCommandInteraction;
 }
 
+const reportCategories = [
+  // Container for holding in-progress reports
+  "Offensive",
+  "Spam & Ads",
+  "Illegal or NSFW",
+  "Uncomfortable",
+  "Other",
+];
 /**
  * Anonymous report system logic
  */
 export default class ReportManager extends Manager {
-  // TODO: If select "Other" provide modal prompt for more custom feedback
   // IMPORTANT: NO MORE THAN 5 BUTTONS/ROW, WHICH MEANS ONLY UP TO 5 CATEGORIES
-  private readonly reportCategories = [
-    // Container for holding in-progress reports
-    "Offensive",
-    "Spam & Ads",
-    "Illegal or NSFW",
-    "Uncomfortable",
-    "Other",
-  ];
 
   private reports = new Map<string, Report>();
 
@@ -43,10 +49,9 @@ export default class ReportManager extends Manager {
   public async handleInitialReport(
     interaction: MessageContextMenuCommandInteraction
   ) {
+
     // Immediately fetch message
-    const message = await interaction.channel!.messages.fetch(
-      interaction.targetMessage.id
-    );
+    const message = interaction.options.getMessage("message", true);
 
     // Generate a report ID
     const reportId = v4().toString();
@@ -97,9 +102,22 @@ export default class ReportManager extends Manager {
           "It looks like you're trying to respond to a previous interaction.",
         ephemeral: true,
       });
+      return;
     }
     this.reports.delete(reportId);
-    const { message, originalInteraction } = report!;
+    const { message, originalInteraction } = report;
+
+    let userReportMessage: string | undefined;
+    if (category === "Other") {
+      const report = new ReportModal();
+
+      await interaction.showModal(report);
+      await interaction.awaitModalSubmit({ time: 20000 }).then((res) => {
+        console.log(res);
+        userReportMessage = res.fields.getTextInputValue("report-text");
+        res.reply("Your report has been submitted.");
+      });
+    }
 
     // Build report to send out
     const reportContent =
@@ -109,16 +127,19 @@ export default class ReportManager extends Manager {
 
     const embed = new EmbedBuilder({
       author: {
-        name: `${message.member!.displayName} (${message.author.username}#${
-          message.author.discriminator
-        })`,
-        iconURL: message.member!.displayAvatarURL(),
+        name: `${message.member?.displayName} (${message.author.username}#${message.author.discriminator})`,
+        icon_url: message.member?.displayAvatarURL(),
       },
       title: "link to message",
       url: message.url,
       description: message.content,
-      timestamp: message.createdTimestamp,
-    });
+    }).setTimestamp(message.createdTimestamp);
+    if (userReportMessage !== undefined) {
+      embed.addFields({
+        name: "User's report message",
+        value: userReportMessage,
+      });
+    }
 
     const modChannel = await this.bot.channels.fetch(
       this.bot.settings.channels.mod
@@ -132,6 +153,7 @@ export default class ReportManager extends Manager {
       allowedMentions: { users: [] },
     });
 
+    const actionRow = getReportComponents(reportId, true);
     // Remove buttons
     await originalInteraction.editReply({
       components: [
@@ -146,13 +168,32 @@ export default class ReportManager extends Manager {
           )
         ),
       ],
+
     });
 
     // Send confirmation to reporter
-    await interaction.reply({
+    await interaction.editReply({
       content:
         "Your anonymous report has been passed to the mods. Thank you for keeping ACM safe!",
-      ephemeral: true,
     });
   }
 }
+
+const getReportComponents = (reportId: string, disabled = false) => {
+  const buttons = reportCategories.map(
+    (cat) =>
+      new ButtonBuilder({
+        customId: `report/${reportId}/${cat}`,
+        label: cat,
+        style: ButtonStyle.Primary,
+        disabled,
+      })
+  );
+
+  // Prompt for report category.
+  const actionRow = new ActionRowBuilder<ButtonBuilder>().addComponents(
+    buttons
+  );
+
+  return actionRow;
+};

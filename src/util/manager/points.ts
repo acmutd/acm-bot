@@ -1,5 +1,6 @@
 import {
   EmbedBuilder,
+
   MessageReaction,
   TextChannel,
   User,
@@ -8,6 +9,7 @@ import {
 import Bot from "../../api/bot";
 import { settings } from "../../settings";
 import Manager from "../../api/manager";
+import { EmbedBuilder } from "@discordjs/builders";
 
 interface UserPointsData {
   first_name: string;

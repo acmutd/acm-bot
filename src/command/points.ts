@@ -99,7 +99,6 @@ export default class PointsCommand extends Command {
               icon_url: "https://i.imgur.com/THllTFL.png",
             },
           }).setColor([147, 194, 219]);
-
           // add score breakdown if it exists
           let userActivities = [];
           if (data?.activities) {

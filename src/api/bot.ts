@@ -34,6 +34,7 @@ export interface Config {
   responseFormat: ResponseFormat;
   disabledCommands: string[] | undefined;
   disabledCategories: string[] | undefined;
+  modalPath: string;
 }
 
 export interface ManagerList {
@@ -75,6 +76,7 @@ export default class Bot extends Client {
       IntentsBitField.Flags.DirectMessages,
       IntentsBitField.Flags.DirectMessageReactions,
     ];
+
     super({
       intents,
       partials: [Partials.Reaction, Partials.Message, Partials.Channel],
@@ -89,7 +91,8 @@ export default class Bot extends Client {
         this,
         config.slashCommandPath,
         config.cmCommandPath,
-        config.buttonPath
+        config.buttonPath,
+        config.modalPath
       ),
       error: new ErrorManager(this),
       verification: new VerificationManager(this),

@@ -3,6 +3,7 @@ import SlashCommand, {
   SlashCommandContext,
 } from "../../api/interaction/slashcommand";
 import { APIEmbedField } from "discord-api-types/v10";
+import { EmbedBuilder } from "@discordjs/builders";
 
 export default class CopersCommand extends SlashCommand {
   public constructor() {
@@ -30,7 +31,7 @@ export default class CopersCommand extends SlashCommand {
           name: ["1st", "2nd", "3rd", "4th", "5th"][i],
           value: `<@${coper[0]}> : ${coper[1]} copium`,
         };
-      }) as unknown as APIEmbedField[],
+      }),
     });
     await interaction.reply({ embeds: [embed], ephemeral: false });
   }

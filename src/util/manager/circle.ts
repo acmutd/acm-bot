@@ -1,7 +1,9 @@
 import { ActionRowBuilder, ButtonBuilder } from "@discordjs/builders";
 import {
+  APIMessageComponentEmoji,
   ButtonInteraction,
   EmbedBuilder,
+
   Message,
   TextBasedChannel,
   TextChannel,
@@ -14,6 +16,7 @@ import { Circle } from "../../api/schema";
 import { VCTask } from "../../interaction/command/bookvc";
 
 const minutesInMs = 60000;
+
 
 export default class CircleManager extends Manager {
   private readonly remindCron: string;
@@ -37,7 +40,7 @@ export default class CircleManager extends Manager {
    * Repost all circle messages. Used to update all the cards in the join circles channel, and send new ones
    * if new ones have been created.
    */
-  public async repost() {
+  public async repost({ bot, interaction }: SlashCommandContext) {
     // Resolve join circles channel
     const channel = this.bot.channels.resolve(this.joinChannelId);
     const c = channel as TextChannel;
@@ -50,6 +53,7 @@ export default class CircleManager extends Manager {
     } catch (e) {
       console.error(e);
     }
+
 
     // Send header
     await c.send(
@@ -128,6 +132,7 @@ export default class CircleManager extends Manager {
         console.error(e);
       }
     }
+    await interaction.followUp("Done!");
   }
 
   public async update(channel: TextChannel, circleId: string) {
@@ -161,6 +166,7 @@ export default class CircleManager extends Manager {
       thumbnail: {
         url: message.embeds[0].thumbnail?.url || "",
       },
+
       fields: [
         { name: "**Role**", value: `<@&${circleId}>`, inline: true },
         { name: "**Members**", value: `${count ?? "N/A"}`, inline: true },
@@ -255,6 +261,7 @@ export default class CircleManager extends Manager {
         emoji: {
           id: circle.emoji,
         },
+
       })
     );
 
@@ -461,3 +468,13 @@ function decode(description: string | null): any {
   if (!matches || matches.length < 2) return;
   return JSON.parse(decodeURIComponent(description.match(re)![1]));
 }
+
+const validURL = (str?: string) => {
+  if (!str) return false;
+  try {
+    new URL(str);
+    return true;
+  } catch (e) {
+    return false;
+  }
+};

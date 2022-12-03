@@ -58,7 +58,9 @@ export default abstract class Command {
     return new EmbedBuilder()
       .setTitle(`Command ${this.name}`)
       .setDescription(`**${this.description}**`)
+
       .addFields(
+
         {
           name: "Usage",
           value:
@@ -70,9 +72,11 @@ export default abstract class Command {
         {
           name: "Tags",
           value: this.tags.length > 1 ? this.tags.join(", ") : "No tags",
+
+          inline: true,
         },
         {
-          name: "Works in DMs",
+          name: "Works in DMs?",
           value: this.dmWorks ? "Yes" : "No",
           inline: true,
         },
@@ -82,6 +86,7 @@ export default abstract class Command {
           inline: true,
         }
       );
+
   }
 
   public sendInvalidUsage(msg: Message, bot: Bot): void {
