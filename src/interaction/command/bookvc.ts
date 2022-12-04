@@ -115,7 +115,7 @@ export default class BookVC extends SlashCommand {
       }
 
       await textChannel.send({
-        content: `<@&${circleRole.id}>`,
+        content: `<@&${circleRole.id}> ${title} event has been created. See below for more details`,
         embeds: [embed],
       });
 

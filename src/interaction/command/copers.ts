@@ -1,8 +1,6 @@
-import { EmbedBuilder } from "discord.js";
 import SlashCommand, {
   SlashCommandContext,
 } from "../../api/interaction/slashcommand";
-import { APIEmbedField } from "discord-api-types/v10";
 import { EmbedBuilder } from "@discordjs/builders";
 
 export default class CopersCommand extends SlashCommand {
