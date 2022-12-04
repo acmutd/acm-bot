@@ -1,23 +1,17 @@
 import { ButtonBuilder } from "@discordjs/builders";
-import { ActionRowBuilder } from "@discordjs/builders";
 import Manager from "../../api/manager";
 import Bot from "../../api/bot";
 import {
   ButtonInteraction,
+  ButtonStyle,
   ContextMenuCommandInteraction,
-  EmbedBuilder,
   Message,
   MessageContextMenuCommandInteraction,
-
 } from "discord.js";
 import { v4 } from "uuid";
 import assert from "assert";
 import ReportModal from "../../interaction/modal/report";
-import {
-  ActionRowBuilder,
-  EmbedBuilder,
-  ModalBuilder,
-} from "@discordjs/builders";
+import { ActionRowBuilder, EmbedBuilder } from "@discordjs/builders";
 
 interface Report {
   message: Message;
@@ -49,7 +43,6 @@ export default class ReportManager extends Manager {
   public async handleInitialReport(
     interaction: MessageContextMenuCommandInteraction
   ) {
-
     // Immediately fetch message
     const message = interaction.options.getMessage("message", true);
 
@@ -64,7 +57,7 @@ export default class ReportManager extends Manager {
 
     // Prompt for report category.
     const actionRow = new ActionRowBuilder<ButtonBuilder>().addComponents(
-      this.reportCategories.map(
+      reportCategories.map(
         (cat) =>
           new ButtonBuilder({
             label: cat,
@@ -158,7 +151,7 @@ export default class ReportManager extends Manager {
     await originalInteraction.editReply({
       components: [
         new ActionRowBuilder<ButtonBuilder>().addComponents(
-          this.reportCategories.map(
+          reportCategories.map(
             (cat) =>
               new ButtonBuilder({
                 label: cat,
@@ -168,7 +161,6 @@ export default class ReportManager extends Manager {
           )
         ),
       ],
-
     });
 
     // Send confirmation to reporter
@@ -183,7 +175,7 @@ const getReportComponents = (reportId: string, disabled = false) => {
   const buttons = reportCategories.map(
     (cat) =>
       new ButtonBuilder({
-        customId: `report/${reportId}/${cat}`,
+        custom_id: `report/${reportId}/${cat}`,
         label: cat,
         style: ButtonStyle.Primary,
         disabled,

@@ -142,11 +142,11 @@ export default class CircleCommand extends SlashCommand {
     switch (subComm) {
       case "add":
         await interaction.deferReply();
-        await addCircle({ bot, interaction });
+        await addCircle(bot, interaction);
         break;
       case "create-channel":
         await interaction.deferReply();
-        await createChannel({ bot, interaction });
+        await createChannel(bot, interaction);
         break;
       case "repost":
         await interaction.deferReply();
@@ -215,7 +215,6 @@ async function createChannel(
 }
 
 async function addCircle(bot: Bot, interaction: ChatInputCommandInteraction) {
-
   // Parse/resolve circle data
   const circle: CircleData = {
     name: interaction.options.getString("name", true),
@@ -265,13 +264,13 @@ async function addCircle(bot: Bot, interaction: ChatInputCommandInteraction) {
 
   // Add circle to database
   circle["_id"] = circleRole.id; // circles distinguished by unique role
-  circle.channel = channel.id;
+  circle.channel = circleChannel.id;
   circle.description = channelDesc;
   const added = await bot.managers.database.circleAdd(circle);
   if (!added) {
     await interaction.followUp("An error occurred while adding the circle.");
     await circleRole.delete();
-    await channel.delete();
+    await circleChannel.delete();
     return;
   }
 
@@ -326,8 +325,13 @@ async function checkInactivity(
 
   // get the latest non-bot message
   const latest = sorted[0];
-  const lastMessageTime = latest?.createdAt.getTime() || 0;
-
+  if (!latest) {
+    await interaction.editReply(
+      `No messages found in ${channel}. Last message was ${days} days ago.`
+    );
+    return;
+  }
+  const lastMessageTime = latest.createdTimestamp;
   const diff = new Date().getTime() - lastMessageTime;
   const diffDays = Math.floor(diff / (1000 * 3600 * 24));
 

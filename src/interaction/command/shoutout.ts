@@ -1,7 +1,7 @@
 import SlashCommand, {
   SlashCommandContext,
 } from "../../api/interaction/slashcommand";
-import { EmbedBuilder, TextChannel } from "discord.js";
+import { TextChannel } from "discord.js";
 
 import { settings } from "../../settings";
 import { EmbedBuilder } from "@discordjs/builders";

@@ -1,11 +1,4 @@
-import {
-  EmbedBuilder,
-
-  MessageReaction,
-  TextChannel,
-  User,
-  VoiceChannel,
-} from "discord.js";
+import { MessageReaction, TextChannel, User, VoiceChannel } from "discord.js";
 import Bot from "../../api/bot";
 import { settings } from "../../settings";
 import Manager from "../../api/manager";
@@ -89,7 +82,7 @@ export default class PointsManager extends Manager {
       .then(() => reaction.message.react("🎉"));
     let embed = new EmbedBuilder({
       description: `**${user} has approved \`${encodedData.activity}\` for <@${encodedData.snowflake}>!**\n[link to original message](${msg.url})`,
-    }).setColor("Green");
+    }).setColor([0, 255, 0]);
     return msg.channel.send({ embeds: [embed] });
   }
 

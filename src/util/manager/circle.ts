@@ -1,9 +1,7 @@
 import { ActionRowBuilder, ButtonBuilder } from "@discordjs/builders";
 import {
-  APIMessageComponentEmoji,
   ButtonInteraction,
   EmbedBuilder,
-
   Message,
   TextBasedChannel,
   TextChannel,
@@ -14,9 +12,9 @@ import Bot from "../../api/bot";
 import Manager from "../../api/manager";
 import { Circle } from "../../api/schema";
 import { VCTask } from "../../interaction/command/bookvc";
+import { SlashCommandContext } from "../../api/interaction/slashcommand";
 
 const minutesInMs = 60000;
-
 
 export default class CircleManager extends Manager {
   private readonly remindCron: string;
@@ -40,7 +38,7 @@ export default class CircleManager extends Manager {
    * Repost all circle messages. Used to update all the cards in the join circles channel, and send new ones
    * if new ones have been created.
    */
-  public async repost({ bot, interaction }: SlashCommandContext) {
+  public async repost({ interaction }: SlashCommandContext) {
     // Resolve join circles channel
     const channel = this.bot.channels.resolve(this.joinChannelId);
     const c = channel as TextChannel;
@@ -53,7 +51,6 @@ export default class CircleManager extends Manager {
     } catch (e) {
       console.error(e);
     }
-
 
     // Send header
     await c.send(
@@ -261,7 +258,6 @@ export default class CircleManager extends Manager {
         emoji: {
           id: circle.emoji,
         },
-
       })
     );
 
