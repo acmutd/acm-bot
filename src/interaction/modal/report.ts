@@ -17,8 +17,7 @@ export default class ReportModal extends BaseModal {
       .setMinLength(1)
       .setMaxLength(1000)
       .setLabel("Report text")
-      .setRequired(true)
-      .setValue("test");
+      .setRequired(true);
     messageActionRow.addComponents(textInput);
     this.addComponents(messageActionRow);
   }

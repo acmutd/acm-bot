@@ -62,6 +62,7 @@ export default class ReportManager extends Manager {
           new ButtonBuilder({
             label: cat,
             custom_id: `report/${reportId}/${cat}`,
+            style: ButtonStyle.Primary,
           })
       )
     );
@@ -106,9 +107,11 @@ export default class ReportManager extends Manager {
 
       await interaction.showModal(report);
       await interaction.awaitModalSubmit({ time: 20000 }).then((res) => {
-        console.log(res);
         userReportMessage = res.fields.getTextInputValue("report-text");
-        res.reply("Your report has been submitted.");
+        res.reply({
+          content: "Your report has been submitted.",
+          ephemeral: true,
+        });
       });
     }
 
@@ -157,6 +160,7 @@ export default class ReportManager extends Manager {
                 label: cat,
                 custom_id: `report/${reportId}/${cat}`,
                 disabled: true,
+                style: ButtonStyle.Primary,
               })
           )
         ),
