@@ -121,9 +121,11 @@ export default class ReportManager extends Manager {
       `Category: *${category}*\n` +
       `In case the user changes names, here is a mention: <@${message.author.id}>`;
 
+    const authorMember = await message.member?.fetch();
+
     const embed = new EmbedBuilder({
       author: {
-        name: `${message.member?.displayName} (${message.author.username}#${message.author.discriminator})`,
+        name: `${authorMember?.displayName} (${message.author.username}#${message.author.discriminator})`,
         icon_url: message.member?.displayAvatarURL(),
       },
       title: "link to message",
@@ -167,11 +169,20 @@ export default class ReportManager extends Manager {
       ],
     });
 
-    // Send confirmation to reporter
-    await interaction.editReply({
-      content:
-        "Your anonymous report has been passed to the mods. Thank you for keeping ACM safe!",
-    });
+    if (interaction.replied || interaction.deferred) {
+      // Send confirmation to reporter
+      await interaction.editReply({
+        content:
+          "Your anonymous report has been passed to the mods. Thank you for keeping ACM safe!",
+      });
+    } else {
+      // Send confirmation to reporter
+      await interaction.reply({
+        content:
+          "Your anonymous report has been passed to the mods. Thank you for keeping ACM safe!",
+        ephemeral: true,
+      });
+    }
   }
 }
 
