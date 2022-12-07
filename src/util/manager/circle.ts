@@ -79,6 +79,13 @@ export default class CircleManager extends Manager {
         };
         encodedData.reactions[`${circle.emoji}`] = circle._id;
 
+        // Try to parse the emoji as a custom emoji
+        let guildEmoji = interaction.guild?.emojis.cache.find(
+          (e) => e.name === circle.emoji
+        )?.id;
+        // If it's not a custom emoji, then it is a unicode emoji and its ID is the emoji itself
+        guildEmoji = guildEmoji ?? circle.emoji;
+
         // Build embed portion of the card
         const embed = new EmbedBuilder({
           title: `${circle.emoji} ${circle.name} ${circle.emoji}`,

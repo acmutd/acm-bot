@@ -4,6 +4,7 @@ import {
   ColorResolvable,
   CommandInteraction,
   GuildMember,
+  parseEmoji,
   TextBasedChannel,
 } from "discord.js";
 import { settings } from "../../settings";
@@ -215,11 +216,33 @@ async function createChannel(
 }
 
 async function addCircle(bot: Bot, interaction: ChatInputCommandInteraction) {
+  // Parse emoji first
+  const emojiName = interaction.options.getString("emoji", true);
+  let emojiParsed = interaction.client.emojis.cache.find(
+    (e) => e.name === emojiName
+  );
+
+  let unicodeEmoji;
+
+  if (!emojiParsed) {
+    // Try to parse it as a unicode emoji
+    try {
+      unicodeEmoji = parseEmoji(emojiName);
+    } catch (e) {
+      await interaction.editReply({
+        content: "Invalid emoji.",
+      });
+      return;
+    }
+  }
+
   // Parse/resolve circle data
   const circle: CircleData = {
     name: interaction.options.getString("name", true),
     description: interaction.options.getString("description", true),
-    emoji: interaction.options.getString("emoji", true),
+    emoji: emojiParsed
+      ? (emojiParsed.name as string | undefined)
+      : (unicodeEmoji?.id as string | undefined),
     imageUrl: interaction.options.getString("graphic", true),
     createdOn: new Date(),
     owner: interaction.options.getUser("owner", true).id,
