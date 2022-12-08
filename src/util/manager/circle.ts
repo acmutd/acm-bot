@@ -1,8 +1,10 @@
 import { ActionRowBuilder, ButtonBuilder } from "@discordjs/builders";
 import {
   ButtonInteraction,
+  ButtonStyle,
   EmbedBuilder,
   Message,
+  parseEmoji,
   TextBasedChannel,
   TextChannel,
   VoiceChannel,
@@ -69,7 +71,6 @@ export default class CircleManager extends Manager {
         const owner = await c.guild.members.fetch(circle.owner!).catch();
         const count = await this.findMemberCount(circle._id!);
         const role = await c.guild.roles.fetch(circle._id!);
-
         // encodedData contains hidden data, stored within the embed as JSON string :) kinda hacky but it works
         const encodedData: any = {
           name: circle.name,
@@ -79,7 +80,6 @@ export default class CircleManager extends Manager {
         };
         encodedData.reactions[`${circle.emoji}`] = circle._id;
 
-        // Build embed portion of the card
         const embed = new EmbedBuilder({
           title: `${circle.emoji} ${circle.name} ${circle.emoji}`,
           description: `${encode(encodedData)}${circle.description}`,
@@ -106,20 +106,23 @@ export default class CircleManager extends Manager {
             )}${owner ? `﹒👑 Owner: ${owner.displayName}` : ""}`,
           },
         });
-
+        const parsedEmoji = parseEmoji(circle.emoji!);
         // Build interactive/buttons portion of the card
         const actionRow = new ActionRowBuilder<ButtonBuilder>().addComponents(
           new ButtonBuilder({
             label: `Join/Leave ${circle.name}`,
             custom_id: `circle/join/${circle._id}`,
             emoji: {
-              id: circle.emoji,
+              name: parsedEmoji?.name,
+              id: parsedEmoji?.id || undefined,
             },
+            style: ButtonStyle.Primary,
           }),
           new ButtonBuilder({
             label: `Learn More`,
             custom_id: `circle/about/${circle._id}`,
             disabled: true,
+            style: ButtonStyle.Secondary,
           })
         );
 
@@ -464,13 +467,3 @@ function decode(description: string | null): any {
   if (!matches || matches.length < 2) return;
   return JSON.parse(decodeURIComponent(description.match(re)![1]));
 }
-
-const validURL = (str?: string) => {
-  if (!str) return false;
-  try {
-    new URL(str);
-    return true;
-  } catch (e) {
-    return false;
-  }
-};

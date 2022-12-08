@@ -2,8 +2,8 @@ import Bot from "../../api/bot";
 import {
   ChatInputCommandInteraction,
   ColorResolvable,
-  CommandInteraction,
   GuildMember,
+  parseEmoji,
   TextBasedChannel,
 } from "discord.js";
 import { settings } from "../../settings";
@@ -58,7 +58,9 @@ export default class CircleCommand extends SlashCommand {
       });
       subcommand.addStringOption((option) => {
         option.setName("emoji");
-        option.setDescription("The emoji of the circle");
+        option.setDescription(
+          "The emoji of the circle (insert emoji, cannot be special server emojis)"
+        );
         option.setRequired(true);
         return option;
       });
@@ -225,6 +227,7 @@ async function addCircle(bot: Bot, interaction: ChatInputCommandInteraction) {
     owner: interaction.options.getUser("owner", true).id,
     subChannels: [],
   };
+
   const circleOwner = interaction.options.getMember("owner");
   const guild = interaction.guild!;
 
