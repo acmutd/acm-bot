@@ -25,7 +25,6 @@ export default class CircleCommand extends SlashCommand {
       description: "A suite of command that manage ACM Community Circles.",
       permissions: CIRCLE_PERMS,
     });
-
     // Adding "add" subcommand
     this.slashCommand.addSubcommand((subcommand) => {
       return (
@@ -75,7 +74,6 @@ export default class CircleCommand extends SlashCommand {
           })
       );
     });
-
     // Adding "create channel" subcommand
     this.slashCommand.addSubcommand((subcommand) => {
       return (
@@ -101,14 +99,12 @@ export default class CircleCommand extends SlashCommand {
           })
       );
     });
-
     // Adding "repost" subcommand
     this.slashCommand.addSubcommand((subcommand) => {
       return subcommand
         .setName("repost")
         .setDescription("Repost the circle embeds");
     });
-
     // Adding "inactivity" subcommand
     this.slashCommand.addSubcommand((subcommand) => {
       return subcommand
@@ -299,20 +295,17 @@ const createCircleData = (
     subChannels: [],
   };
 };
-
 const createChannel = async (
   circle: CircleData,
   circleRole: Role,
   guild: Guild
 ) => {
-  // Create channel with correct perms
   const channelName = `${circle.emoji} ${circle.name}`;
   const channelDesc = `🎗️: ${circleRole.name}`;
   return await guild.channels.create({
     name: channelName,
     type: ChannelType.GuildText,
     topic: channelDesc,
-
     parent: settings.circles.parentCategory,
     permissionOverwrites: [
       {
@@ -328,14 +321,12 @@ const createChannel = async (
     ],
   });
 };
-
 const handleAddCircle = async (
   bot: Bot,
   circle: CircleData,
   role: Role,
   channel: TextChannel
 ) => {
-  // Add circle to database
   circle["_id"] = role.id; // circles distinguished by unique role
   circle.channel = channel.id;
   circle.description = channel.topic || undefined;
