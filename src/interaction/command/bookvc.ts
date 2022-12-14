@@ -1,10 +1,18 @@
-import { settings } from "./../../settings";
+import { ChannelType } from "discord-api-types/v10";
+import {
+  ChatInputCommandInteraction,
+  EmbedBuilder,
+  Role,
+  TextChannel,
+} from "discord.js";
+
 import SlashCommand, {
   SlashCommandContext,
 } from "../../api/interaction/slashcommand";
-import { EmbedBuilder, TextChannel } from "discord.js";
-import { ChannelType, PermissionFlagsBits } from "discord-api-types/v10";
 import { Task } from "../../util/manager/schedule";
+import { Circle } from "./../../api/schema";
+import { settings } from "./../../settings";
+import { CIRCLE_PERMS } from "./../../util/perms";
 
 export interface VCTask extends Task {
   payload: {
@@ -17,17 +25,12 @@ export interface VCTask extends Task {
   };
 }
 
-const perms =
-  PermissionFlagsBits.ManageRoles |
-  PermissionFlagsBits.ManageChannels |
-  PermissionFlagsBits.ManageMessages;
-
 export default class BookVC extends SlashCommand {
   public constructor() {
     super({
       name: "bookvc",
       description: "Setup a time to host a VC event for a circle",
-      permissions: perms,
+      permissions: CIRCLE_PERMS,
     });
     this.slashCommand.addNumberOption((option) => {
       return option
@@ -62,60 +65,26 @@ export default class BookVC extends SlashCommand {
   }
 
   // Interaction Handled !
-  public async handleInteraction({
-    bot,
-    interaction,
-  }: SlashCommandContext): Promise<void> {
+  public async handleInteraction({ bot, interaction }: SlashCommandContext) {
+    const circleRole = interaction.options.getRole("circle", true) as Role;
+    const circle = bot.managers.database.cache.circles.get(circleRole.id);
     try {
-      const timeTillStart = interaction.options.getNumber("minutes", true);
-      const circleRole = interaction.options.getRole("circle", true);
-      const description = interaction.options.getString("description", true);
-      const title = interaction.options.getString("title", true);
-      const duration = interaction.options.getNumber("duration", true);
-      const circle = bot.managers.database.cache.circles.get(circleRole.id);
-      if (!circle) {
-        await interaction.reply({
+      if (!circle || !circle.channel)
+        return await interaction.reply({
           content: "That circle doesn't exist",
           ephemeral: true,
         });
-        return;
-      }
-      const embed = new EmbedBuilder()
-        .addFields(
-          {
-            name: "Event",
-            value: title,
-          },
-          {
-            name: "Description",
-            value: description,
-          },
-          {
-            name: "Starts in",
-            value: `${timeTillStart} minutes`,
-          },
-          {
-            name: "Duration",
-            value: `${duration} minutes`,
-          }
-        )
-        .setColor(circleRole.color)
-        .setTitle(`${circle.emoji} ${circle.name}`);
-      const circleChannel = circle.channel!;
-      const textChannel = (await bot.managers.database.bot.channels.fetch(
-        circleChannel
-      )) as TextChannel | null;
-
-      if (!textChannel) {
-        await interaction.reply({
+      const textChannel = await bot.channels.fetch(circle.channel);
+      if (!textChannel || !(textChannel instanceof TextChannel))
+        return await interaction.reply({
           content: "The circle channel doesn't exist",
           ephemeral: true,
         });
-        return;
-      }
+
+      const embed = createEmbed(interaction, circleRole, circle);
 
       await textChannel.send({
-        content: `<@&${circleRole.id}> ${title} event has been created. See below for more details`,
+        content: `<@&${circleRole.id}> a new  event has been created. See below for more details`,
         embeds: [embed],
       });
 
@@ -125,46 +94,74 @@ export default class BookVC extends SlashCommand {
       });
       const guild = interaction.guildId!;
 
-      const eventStart = async () => {
-        const newChannel = await interaction.guild?.channels.create({
-          name: `${title}-${circle.name}-vc`,
-          type: ChannelType.GuildVoice,
-          parent: settings.circles.parentCategory,
-          permissionOverwrites: [
-            {
-              id: guild,
-              deny: "ViewChannel",
-            },
-            {
-              id: circleRole.id,
-              allow: "ViewChannel",
-            },
-          ],
-        });
-
-        await textChannel.send({
-          content: `<@&${circleRole.id}> The event ${title} is starting! Join <#${newChannel?.id}>!`,
-        });
-        return newChannel!.id;
-      };
-
-      const task: VCTask = {
-        cron: new Date(Date.now() + timeTillStart * millisecondsInMinute),
-        type: "circle_activity",
-        payload: {
-          eventStart,
-          duration,
-          circle: circleRole.id,
-          channel: circleChannel,
-          type: "start",
-        },
-      };
-
+      const task = createCron(
+        interaction,
+        circle,
+        guild,
+        circleRole.id,
+        textChannel
+      );
       await bot.managers.scheduler.createTask(task);
     } catch (e) {
-      console.log(e);
+      await bot.managers.error.handleErr(e as any);
     }
   }
 }
+const createEmbed = (
+  interaction: ChatInputCommandInteraction,
+  role: Role,
+  circle: Circle
+) => {
+  const timeTillStart = interaction.options.getNumber("minutes", true);
+  const description = interaction.options.getString("description", true);
+  const title = interaction.options.getString("title", true);
+  const duration = interaction.options.getNumber("duration", true);
+  return new EmbedBuilder()
+    .addFields(
+      { name: "Event", value: title },
+      { name: "Description", value: description },
+      { name: "Starts in", value: `${timeTillStart} minutes` },
+      { name: "Duration", value: `${duration} minutes` }
+    )
+    .setColor(role.color)
+    .setTitle(`${circle.emoji} ${circle.name}`);
+};
+const createCron = (
+  interaction: ChatInputCommandInteraction,
+  circle: Circle,
+  guild: string,
+  roleId: string,
+  textChannel: TextChannel
+): VCTask => {
+  const eventStart = async () => {
+    const newChannel = await interaction.guild?.channels.create({
+      name: `${interaction.options.getString("title")}-${circle.name}-vc`,
+      type: ChannelType.GuildVoice,
+      parent: settings.circles.parentCategory,
+      permissionOverwrites: [
+        { id: guild, deny: "ViewChannel" },
+        { id: roleId, allow: "ViewChannel" },
+      ],
+    });
 
+    await textChannel.send(
+      `<@&${roleId}> The event is starting! Join <#${newChannel?.id}>!`
+    );
+    return newChannel!.id;
+  };
+  return {
+    cron: new Date(
+      Date.now() +
+        interaction.options.getNumber("minutes", true) * millisecondsInMinute
+    ),
+    type: "circle_activity",
+    payload: {
+      eventStart,
+      duration: interaction.options.getNumber("duration", true),
+      circle: roleId,
+      channel: circle.channel!,
+      type: "start",
+    },
+  };
+};
 const millisecondsInMinute = 60000;

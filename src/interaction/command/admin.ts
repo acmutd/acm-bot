@@ -1,12 +1,8 @@
+import assert from "assert";
+
 import SlashCommand, {
   SlashCommandContext,
 } from "../../api/interaction/slashcommand";
-import assert from "assert";
-import { InteractionContext } from "../../api/interaction/interaction";
-import {
-  ChatInputApplicationCommandData,
-  CommandInteraction,
-} from "discord.js";
 
 export default class AdminCommand extends SlashCommand {
   public constructor() {

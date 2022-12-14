@@ -46,14 +46,8 @@ export default class ShoutoutCommand extends SlashCommand {
     embed = new EmbedBuilder({
       title,
       fields: [
-        {
-          name: "Given to:",
-          value: users,
-        },
-        {
-          name: "For:",
-          value: shoutout,
-        },
+        { name: "Given to:", value: users },
+        { name: "For:", value: shoutout },
       ],
     });
 

@@ -3,18 +3,19 @@ import {
   ButtonInteraction,
   ButtonStyle,
   EmbedBuilder,
+  GuildMember,
   Message,
   parseEmoji,
-  TextBasedChannel,
   TextChannel,
   VoiceChannel,
 } from "discord.js";
-import { settings } from "../../settings";
+
 import Bot from "../../api/bot";
+import { SlashCommandContext } from "../../api/interaction/slashcommand";
 import Manager from "../../api/manager";
 import { Circle } from "../../api/schema";
 import { VCTask } from "../../interaction/command/bookvc";
-import { SlashCommandContext } from "../../api/interaction/slashcommand";
+import { settings } from "../../settings";
 
 const minutesInMs = 60000;
 
@@ -42,97 +43,102 @@ export default class CircleManager extends Manager {
    */
   public async repost({ interaction }: SlashCommandContext) {
     // Resolve join circles channel
-    const channel = this.bot.channels.resolve(this.joinChannelId);
-    const c = channel as TextChannel;
-
-    // Delete original messages
-    const msgs = await c.messages.fetch({ limit: 50 });
-    const promises = msgs.map((m) => m.delete());
-    try {
-      await Promise.all(promises);
-    } catch (e) {
-      console.error(e);
+    const c = await this.getChannel(this.joinChannelId);
+    if (!c) {
+      this.bot.managers.error.handleErr(new Error("Join channel not found"));
+      return await interaction.followUp({
+        content: "Join channel not found",
+        ephemeral: true,
+      });
     }
+    await this.deleteOriginal(c);
+    await this.sendHeader(c);
+    // Build and send circle cards
+    const circles = [...this.bot.managers.database.cache.circles.values()];
+    for (const circle of circles) await this.sendCircleCard(c, circle);
 
-    // Send header
-    await c.send(
+    await interaction.followUp("Done!");
+  }
+
+  public async sendHeader(channel: TextChannel) {
+    await channel.send(
       "https://cdn.discordapp.com/attachments/537776612238950410/826695146250567681/circles.png"
     );
-    await c.send(
+    await channel.send(
       `> :yellow_circle: Circles are interest groups made by the community!\n` +
         `> :door: Join one by reacting to the emoji attached to each.\n` +
         `> :crown: You can apply to make your own Circle by filling out this application: <https://apply.acmutd.co/circles>\n`
     );
+  }
 
-    // Build and send circle cards
-    const circles = [...this.bot.managers.database.cache.circles.values()];
-    for (const circle of circles) {
-      try {
-        const owner = await c.guild.members.fetch(circle.owner!).catch();
-        const count = await this.findMemberCount(circle._id!);
-        const role = await c.guild.roles.fetch(circle._id!);
-        // encodedData contains hidden data, stored within the embed as JSON string :) kinda hacky but it works
-        const encodedData: any = {
-          name: circle.name,
-          circle: circle._id,
-          reactions: {},
-          channel: circle.channel,
-        };
-        encodedData.reactions[`${circle.emoji}`] = circle._id;
-
-        const embed = new EmbedBuilder({
-          title: `${circle.emoji} ${circle.name} ${circle.emoji}`,
-          description: `${encode(encodedData)}${circle.description}`,
-          color: role?.color,
-          thumbnail: circle.imageUrl?.startsWith("http")
-            ? {
-                url: circle.imageUrl,
-                height: 90,
-                width: 90,
-              }
-            : undefined,
-          fields: [
-            { name: "**Role**", value: `<@&${circle._id}>`, inline: true },
-            { name: "**Members**", value: `${count ?? "N/A"}`, inline: true },
-          ],
-          footer: {
-            text: `⏰ Created on ${circle.createdOn!.toLocaleDateString(
-              "en-US",
-              {
-                year: "numeric",
-                month: "long",
-                day: "numeric",
-              }
-            )}${owner ? `﹒👑 Owner: ${owner.displayName}` : ""}`,
-          },
-        });
-        const parsedEmoji = parseEmoji(circle.emoji!);
-        // Build interactive/buttons portion of the card
-        const actionRow = new ActionRowBuilder<ButtonBuilder>().addComponents(
-          new ButtonBuilder({
-            label: `Join/Leave ${circle.name}`,
-            custom_id: `circle/join/${circle._id}`,
-            emoji: {
-              name: parsedEmoji?.name,
-              id: parsedEmoji?.id || undefined,
-            },
-            style: ButtonStyle.Primary,
-          }),
-          new ButtonBuilder({
-            label: `Learn More`,
-            custom_id: `circle/about/${circle._id}`,
-            disabled: true,
-            style: ButtonStyle.Secondary,
-          })
-        );
-
-        // Send out message
-        await c.send({ embeds: [embed], components: [actionRow] });
-      } catch (e) {
-        console.error(e);
-      }
+  public async deleteOriginal(channel: TextChannel) {
+    const msgs = await channel.messages.fetch({ limit: 50 });
+    const promises = msgs.map((m) => m.delete());
+    try {
+      await Promise.allSettled(promises);
+    } catch (e) {
+      this.bot.managers.error.handleErr(e as any);
     }
-    await interaction.followUp("Done!");
+  }
+
+  public async sendCircleCard(channel: TextChannel, circle: Circle) {
+    try {
+      const owner = await channel.guild.members.fetch(circle.owner!).catch();
+      const count = await this.findMemberCount(circle._id!);
+      const role = await channel.guild.roles.fetch(circle._id!);
+      // encodedData contains hidden data, stored within the embed as JSON string :) kinda hacky but it works
+      const encodedData: any = {
+        name: circle.name,
+        circle: circle._id,
+        reactions: {},
+        channel: circle.channel,
+      };
+      encodedData.reactions[`${circle.emoji}`] = circle._id;
+
+      const embed = new EmbedBuilder({
+        title: `${circle.emoji} ${circle.name} ${circle.emoji}`,
+        description: `${encode(encodedData)}${circle.description}`,
+        color: role?.color,
+        thumbnail: circle.imageUrl?.startsWith("http")
+          ? { url: circle.imageUrl, height: 90, width: 90 }
+          : undefined,
+        fields: [
+          { name: "**Role**", value: `<@&${circle._id}>`, inline: true },
+          { name: "**Members**", value: `${count ?? "N/A"}`, inline: true },
+        ],
+        footer: {
+          text: `⏰ Created on ${circle.createdOn!.toLocaleDateString("en-US", {
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+          })}${owner ? `﹒👑 Owner: ${owner.displayName}` : ""}`,
+        },
+      });
+      const parsedEmoji = parseEmoji(circle.emoji!);
+      // Build interactive/buttons portion of the card
+      const actionRow = new ActionRowBuilder<ButtonBuilder>().addComponents(
+        new ButtonBuilder({
+          label: `Join/Leave ${circle.name}`,
+          custom_id: `circle/join/${circle._id}`,
+          emoji: {
+            name: parsedEmoji?.name,
+            id: parsedEmoji?.id || undefined,
+          },
+          style: ButtonStyle.Primary,
+        }),
+        new ButtonBuilder({
+          label: `Learn More`,
+          custom_id: `circle/about/${circle._id}`,
+          disabled: true,
+          style: ButtonStyle.Secondary,
+        })
+      );
+
+      // Send out message
+      await channel.send({ embeds: [embed], components: [actionRow] });
+    } catch (e) {
+      this.bot.managers.error.handleErr(e as any);
+    }
   }
 
   public async update(channel: TextChannel, circleId: string) {
@@ -188,11 +194,8 @@ export default class CircleManager extends Manager {
     const match = interaction.customId.match(/circle\/([^\/]*)\/([^\/]+)/);
     const action = match![1];
     const circleId = match![2];
-
     // Resolve circle
-    const circle = [...this.bot.managers.database.cache.circles.values()].find(
-      (x) => x._id == circleId
-    );
+    const circle = this.getCircle(circleId);
     if (!circle) return;
 
     if (action == "join") await this.handleJoinLeave(circle, interaction);
@@ -206,22 +209,11 @@ export default class CircleManager extends Manager {
     if (!member) return;
 
     // Resolve circle channel
-    const chan = (await guild.channels.fetch(circle.channel!)) as TextChannel;
-
-    if (!member.roles.cache.has(circle._id!)) {
-      await member.roles.add(circle._id!);
-      await interaction.reply({
-        content: `Thank you for joining ${circle.name}! Here's the channel: <#${circle.channel}>`,
-        ephemeral: true,
-      });
-      await chan.send(`${member}, welcome to ${circle.name}!`);
-    } else {
-      await member.roles.remove(circle._id!);
-      await interaction.reply({
-        content: `Thank you for using circles. You have left ${circle.name}.`,
-        ephemeral: true,
-      });
-    }
+    const chan = await this.getCircleChannel(circle.channel!);
+    if (!chan) return;
+    if (!member.roles.cache.has(circle._id!))
+      return await addRole(member, circle, interaction, chan);
+    return await removeRole(member, circle, interaction);
   }
 
   public async handleSendAbout(circle: Circle, interaction: ButtonInteraction) {
@@ -235,11 +227,7 @@ export default class CircleManager extends Manager {
       title: `${circle.emoji} ${circle.name} ${circle.emoji}`,
       description: circle.description,
       color: role?.color,
-      thumbnail: {
-        url: circle.imageUrl!,
-        height: 90,
-        width: 90,
-      },
+      thumbnail: { url: circle.imageUrl!, height: 90, width: 90 },
       fields: [
         { name: "**Role**", value: `<@&${circle._id}>`, inline: true },
         { name: "**Members**", value: `${count ?? "N/A"}`, inline: true },
@@ -258,12 +246,9 @@ export default class CircleManager extends Manager {
       new ButtonBuilder({
         label: `Join/Leave ${circle.name}`,
         custom_id: `circle/join/${circle._id}`,
-        emoji: {
-          id: circle.emoji,
-        },
+        emoji: { id: circle.emoji },
       })
     );
-
     // Send out message as ephemeral reply
     await interaction.reply({
       content: `You asked to learn more about ${circle.name}`,
@@ -284,7 +269,7 @@ export default class CircleManager extends Manager {
       for (const circle of circles) {
         const channel = (await this.bot.channels.fetch(
           circle.channel!
-        )) as TextBasedChannel;
+        )) as TextChannel;
 
         const lastMessage = await this.getLastUserMessageInChannel(channel);
         if (
@@ -302,7 +287,7 @@ export default class CircleManager extends Manager {
       // Fetch leader circle to send report in
       const leaderChannel = (await this.bot.channels.fetch(
         this.leaderChannelId
-      )) as TextBasedChannel;
+      )) as TextChannel;
 
       // Build and send report
       let circleLeaders = inactiveCircles.map(
@@ -353,105 +338,88 @@ export default class CircleManager extends Manager {
     });
   }
 
-  private async getLastUserMessageInChannel(
-    channel: TextBasedChannel
-  ): Promise<Message | undefined> {
+  private async getLastUserMessageInChannel(channel: TextChannel) {
     // Fetch up to 100 messages from the channel
     const messages = await channel.messages.fetch({ limit: 100 });
-
     // Loop from most recent to least recent
-    for (const [snowflake, msg] of [...messages.entries()].sort((a, b) =>
+    for (const [_, msg] of [...messages.entries()].sort((a, b) =>
       a > b ? -1 : a < b ? 1 : 0
-    )) {
+    ))
       if (!msg.author.bot) return msg;
-    }
-
+    // No user messages found
     return undefined;
   }
 
   public async sendActivity(task: VCTask, type: "start" | "warn" | "end") {
-    try {
-      switch (type) {
-        case "start": {
-          const vcId = await task.payload.eventStart();
-          // Create a new task to warn the circle 2 minutes before the event ends
-          const newTask: VCTask = {
-            ...task,
-            cron: new Date(
-              Date.now() + (task.payload.duration - 2) * minutesInMs
-            ),
-            payload: {
-              ...task.payload,
-              type: "warn",
-              vcChannel: vcId,
-            },
-          };
-          await this.bot.managers.scheduler.createTask(newTask);
-          break;
-        }
-        case "warn": {
-          await this.sendActivityWarn(task);
-          // Add 2 extra minutes to the task to end the event
-          const newTask: VCTask = {
-            ...task,
-            cron: new Date((task.cron as Date).getTime() + 4 * minutesInMs),
-            payload: {
-              ...task.payload,
-              type: "end",
-            },
-          };
-          await this.bot.managers.scheduler.createTask(newTask);
-          break;
-        }
-        case "end":
-          await this.sendActivityEnd(task);
-          break;
-      }
-    } catch (e) {
-      console.error(e);
+    switch (type) {
+      case "start":
+        const warnTask = await handleStart(task);
+        await this.bot.managers.scheduler.createTask(warnTask);
+        break;
+      case "warn":
+        const channel = await this.getCircleChannel(task.payload.circle)!;
+        const endTask = await handleWarning(task, channel!);
+        await this.bot.managers.scheduler.createTask(endTask);
+        break;
+      case "end":
+        await this.sendActivityEnd(task);
+        break;
     }
   }
 
-  public async sendActivityWarn(task: VCTask) {
-    // Fetch circle
-    const circle = this.bot.managers.database.cache.circles.get(
-      task.payload.circle
-    );
-    if (circle == undefined) return;
+  public getCircle(id: string) {
+    return this.bot.managers.database.cache.circles.get(id);
+  }
 
-    // Fetch channel
-    const channel = (await this.bot.channels.fetch(
-      circle.channel!
-    )) as TextBasedChannel;
+  public async getChannel(id: string) {
+    const channel = await this.bot.channels.fetch(id);
+    if (!channel) return undefined;
+    return channel as TextChannel;
+  }
 
-    // Send message
-    await channel.send({
-      content: `<@&${circle._id}> Event is ending soon!`,
-    });
+  public async getCircleChannel(id: string) {
+    const circle = this.getCircle(id);
+    if (circle == undefined) return undefined;
+    return await this.getChannel(circle.channel!);
   }
 
   public async sendActivityEnd(task: VCTask) {
-    // Fetch circle
-    const circle = this.bot.managers.database.cache.circles.get(
-      task.payload.circle
-    );
-    if (circle == undefined) return;
-
-    // Fetch channel
-    const channel = (await this.bot.channels.fetch(
-      circle.channel!
-    )) as TextBasedChannel;
-
+    const channel = await this.getCircleChannel(task.payload.circle)!;
     // Send message
-    await channel.send({
-      content: `<@&${circle._id}> Event has ended! Thanks for participating!`,
+    await channel!.send({
+      content: `<@&${task.payload.circle}> Event has ended! Thanks for participating!`,
     });
 
-    const vcChannel = (await this.bot.channels.fetch(
-      task.payload.vcChannel!
-    )) as VoiceChannel;
+    const vcChannel = await this.bot.channels.fetch(task.payload.vcChannel!);
+    if (vcChannel == undefined || !(vcChannel instanceof VoiceChannel)) return;
     await vcChannel.delete();
   }
+}
+
+async function removeRole(
+  member: GuildMember,
+  circle: Circle,
+  interaction: ButtonInteraction
+) {
+  await member.roles.remove(circle._id!);
+  return await interaction.reply({
+    content: `Thank you for using circles. You have left ${circle.name}.`,
+    ephemeral: true,
+  });
+}
+
+async function addRole(
+  member: GuildMember,
+  circle: Circle,
+  interaction: ButtonInteraction,
+  chan: TextChannel
+) {
+  await member.roles.add(circle._id!);
+  await interaction.reply({
+    content: `Thank you for joining ${circle.name}! Here's the channel: <#${circle.channel}>`,
+    ephemeral: true,
+  });
+  return await chan.send(`${member}, welcome to ${circle.name}!`);
 }
 
 function encode(obj: any): string {
@@ -467,3 +435,35 @@ function decode(description: string | null): any {
   if (!matches || matches.length < 2) return;
   return JSON.parse(decodeURIComponent(description.match(re)![1]));
 }
+
+const handleStart = async (task: VCTask) => {
+  const vcId = await task.payload.eventStart();
+  // Create a new task to warn the circle 2 minutes before the event ends
+  return {
+    ...task,
+    cron: new Date(Date.now() + (task.payload.duration - 2) * minutesInMs),
+    payload: {
+      ...task.payload,
+      type: "warn",
+      vcChannel: vcId,
+    },
+  };
+};
+
+const handleWarning = async (
+  task: VCTask,
+  channel: TextChannel
+): Promise<VCTask> => {
+  // Send message
+  await channel.send({
+    content: `<@&${task.payload.circle}> Event is ending soon!`,
+  });
+  return {
+    ...task,
+    cron: new Date((task.cron as Date).getTime() + 4 * minutesInMs),
+    payload: {
+      ...task.payload,
+      type: "end",
+    },
+  };
+};
