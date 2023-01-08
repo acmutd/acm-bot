@@ -16,7 +16,7 @@ export default class CopersCommand extends SlashCommand {
     bot,
     interaction,
   }: SlashCommandContext): Promise<void> {
-    const { member, guild } = interaction;
+    const { member } = interaction;
 
     const copers = await bot.managers.database.coperFetch();
 
@@ -24,12 +24,10 @@ export default class CopersCommand extends SlashCommand {
 
     const embed = new EmbedBuilder({
       title,
-      fields: copers.map((coper, i) => {
-        return {
-          name: ["1st", "2nd", "3rd", "4th", "5th"][i],
-          value: `<@${coper[0]}> : ${coper[1]} copium`,
-        };
-      }),
+      fields: copers.map((coper, i) => ({
+        name: ["1st", "2nd", "3rd", "4th", "5th"][i],
+        value: `<@${coper[0]}> : ${coper[1]} copium`,
+      })),
     });
     await interaction.reply({ embeds: [embed], ephemeral: false });
   }
