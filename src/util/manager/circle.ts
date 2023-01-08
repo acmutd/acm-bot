@@ -66,8 +66,8 @@ export default class CircleManager extends Manager {
     );
     await channel.send(
       `> :yellow_circle: Circles are interest groups made by the community!\n` +
-        `> :door: Join one by reacting to the emoji attached to each.\n` +
-        `> :crown: You can apply to make your own Circle by filling out this application: <https://apply.acmutd.co/circles>\n`
+      `> :door: Join one by reacting to the emoji attached to each.\n` +
+      `> :crown: You can apply to make your own Circle by filling out this application: <https://apply.acmutd.co/circles>\n`
     );
   }
 
@@ -97,7 +97,6 @@ export default class CircleManager extends Manager {
 
       const embed = new EmbedBuilder({
         title: `${circle.emoji} ${circle.name} ${circle.emoji}`,
-        description: `${encode(encodedData)}${circle.description}`,
         color: role?.color,
         thumbnail: circle.imageUrl?.startsWith("http")
           ? { url: circle.imageUrl, height: 90, width: 90 }
@@ -113,7 +112,7 @@ export default class CircleManager extends Manager {
             day: "numeric",
           })}${owner ? `﹒👑 Owner: ${owner.displayName}` : ""}`,
         },
-      });
+      }).setDescription(`${encode(encodedData)}${circle.description}`);
       const parsedEmoji = parseEmoji(circle.emoji!);
       // Build interactive/buttons portion of the card
       const actionRow = new ActionRowBuilder<ButtonBuilder>().addComponents(
@@ -275,7 +274,7 @@ export default class CircleManager extends Manager {
         if (
           lastMessage == undefined ||
           new Date().getTime() - lastMessage.createdAt.getTime() >
-            this.remindThresholdDays * 24 * 3600 * 1000
+          this.remindThresholdDays * 24 * 3600 * 1000
         ) {
           inactiveCircles.push([circle, lastMessage!]);
         }
@@ -423,9 +422,12 @@ async function addRole(
 }
 
 function encode(obj: any): string {
-  return `[\u200B](http://fake.fake?data=${encodeURIComponent(
+  const string = `[\u200B](http://fake.fake?data=${encodeURIComponent(
     JSON.stringify(obj)
   )})`;
+
+  console.log(string)
+  return string
 }
 
 function decode(description: string | null): any {

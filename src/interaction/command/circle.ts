@@ -301,7 +301,7 @@ const createChannel = async (
   guild: Guild
 ) => {
   const channelName = `${circle.emoji} ${circle.name}`;
-  const channelDesc = `🎗️: ${circleRole.name}`;
+  const channelDesc = `🎗️: ${circle.description}`;
   return await guild.channels.create({
     name: channelName,
     type: ChannelType.GuildText,
@@ -329,7 +329,6 @@ const handleAddCircle = async (
 ) => {
   circle["_id"] = role.id; // circles distinguished by unique role
   circle.channel = channel.id;
-  circle.description = channel.topic || undefined;
   return await bot.managers.database.circleAdd(circle);
 };
 const timeDifference = (latest: Message) => {
@@ -340,6 +339,6 @@ const timeDifference = (latest: Message) => {
 const checkRecentMessage = (message: Message, days: number) => {
   return (
     new Date().getTime() - message.createdAt.getTime() >
-      days * 24 * 3600 * 1000 && !message.author.bot
+    days * 24 * 3600 * 1000 && !message.author.bot
   );
 };
