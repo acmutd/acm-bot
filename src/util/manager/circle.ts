@@ -195,10 +195,12 @@ export default class CircleManager extends Manager {
     const circleId = match![2];
     // Resolve circle
     const circle = this.getCircle(circleId);
-    if (!circle) return;
-
+    if (!circle)
+      return await interaction.reply({ content: "Circle not found", ephemeral: true })
+    await interaction.deferReply({ ephemeral: true })
     if (action == "join") await this.handleJoinLeave(circle, interaction);
     else if (action == "about") await this.handleSendAbout(circle, interaction);
+    else return await interaction.editReply({ content: "Valid interaction not found" })
   }
 
   public async handleJoinLeave(circle: Circle, interaction: ButtonInteraction) {
@@ -208,8 +210,8 @@ export default class CircleManager extends Manager {
     if (!member) return;
 
     // Resolve circle channel
-    const chan = await this.getCircleChannel(circle.channel!);
-    if (!chan) return;
+    const chan = await this.getCircleChannel(circle.id!);
+    if (!chan) return await interaction.editReply("Something went wrong, please contact the bot maintainers")
     if (!member.roles.cache.has(circle._id!))
       return await addRole(member, circle, interaction, chan);
     return await removeRole(member, circle, interaction);
@@ -401,9 +403,8 @@ async function removeRole(
   interaction: ButtonInteraction
 ) {
   await member.roles.remove(circle._id!);
-  return await interaction.reply({
+  return await interaction.editReply({
     content: `Thank you for using circles. You have left ${circle.name}.`,
-    ephemeral: true,
   });
 }
 
@@ -414,20 +415,23 @@ async function addRole(
   chan: TextChannel
 ) {
   await member.roles.add(circle._id!);
-  await interaction.reply({
+  await interaction.editReply({
     content: `Thank you for joining ${circle.name}! Here's the channel: <#${circle.channel}>`,
-    ephemeral: true,
   });
   return await chan.send(`${member}, welcome to ${circle.name}!`);
 }
 
 function encode(obj: any): string {
-  const string = `[\u200B](http://fake.fake?data=${encodeURIComponent(
+  return `[\u200B](http://fake.fake?data=${URIEncoding(
     JSON.stringify(obj)
   )})`;
-
-  console.log(string)
-  return string
+}
+function URIEncoding(str: string): string {
+  return encodeURIComponent(str)
+    .replace(
+      /[!'()*]/g,
+      (c) => `%${c.charCodeAt(0).toString(16).toUpperCase()}`
+    );
 }
 
 function decode(description: string | null): any {
