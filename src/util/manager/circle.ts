@@ -58,10 +58,13 @@ export default class CircleManager extends Manager {
       const circles = [...this.bot.managers.database.cache.circles.values()];
       for (const circle of circles) await this.sendCircleCard(c, circle);
 
-      await interaction.followUp("Done!");
+      await interaction.followUp({ content: "Done!", ephemeral: true });
     } catch (e) {
-      this.bot.managers.error.handleErr(e as any)
-      await interaction.followUp({ ephemeral: true, content: "An error occurred, please contact a bot maintainer" })
+      this.bot.managers.error.handleErr(e as any);
+      await interaction.followUp({
+        ephemeral: true,
+        content: "An error occurred, please contact a bot maintainer",
+      });
     }
   }
 
@@ -71,8 +74,8 @@ export default class CircleManager extends Manager {
     );
     await channel.send(
       `> :yellow_circle: Circles are interest groups made by the community!\n` +
-      `> :door: Join one by reacting to the emoji attached to each.\n` +
-      `> :crown: You can apply to make your own Circle by filling out this application: <https://apply.acmutd.co/circles>\n`
+        `> :door: Join one by reacting to the emoji attached to each.\n` +
+        `> :crown: You can apply to make your own Circle by filling out this application: <https://apply.acmutd.co/circles>\n`
     );
   }
 
@@ -142,8 +145,10 @@ export default class CircleManager extends Manager {
       await channel.send({ embeds: [embed], components: [actionRow] });
     } catch (e) {
       this.bot.managers.error.handleErr(e as any);
-      this.bot.managers.error.handleErr(new Error(`Failed at ${circle.name}\n${JSON.stringify(circle)}`))
-      throw new Error("Cancelling repost")
+      this.bot.managers.error.handleErr(
+        new Error(`Failed at ${circle.name}\n${JSON.stringify(circle)}`)
+      );
+      throw new Error("Cancelling repost");
     }
   }
 
@@ -203,11 +208,17 @@ export default class CircleManager extends Manager {
     // Resolve circle
     const circle = this.getCircle(circleId);
     if (!circle)
-      return await interaction.reply({ content: "Circle not found", ephemeral: true })
-    await interaction.deferReply({ ephemeral: true })
+      return await interaction.reply({
+        content: "Circle not found",
+        ephemeral: true,
+      });
+    await interaction.deferReply({ ephemeral: true });
     if (action == "join") await this.handleJoinLeave(circle, interaction);
     else if (action == "about") await this.handleSendAbout(circle, interaction);
-    else return await interaction.editReply({ content: "Valid interaction not found" })
+    else
+      return await interaction.editReply({
+        content: "Valid interaction not found",
+      });
   }
 
   public async handleJoinLeave(circle: Circle, interaction: ButtonInteraction) {
@@ -218,7 +229,10 @@ export default class CircleManager extends Manager {
 
     // Resolve circle channel
     const chan = await this.getCircleChannel(circle.id!);
-    if (!chan) return await interaction.editReply("Something went wrong, please contact the bot maintainers")
+    if (!chan)
+      return await interaction.editReply(
+        "Something went wrong, please contact the bot maintainers"
+      );
     if (!member.roles.cache.has(circle._id!))
       return await addRole(member, circle, interaction, chan);
     return await removeRole(member, circle, interaction);
@@ -283,7 +297,7 @@ export default class CircleManager extends Manager {
         if (
           lastMessage == undefined ||
           new Date().getTime() - lastMessage.createdAt.getTime() >
-          this.remindThresholdDays * 24 * 3600 * 1000
+            this.remindThresholdDays * 24 * 3600 * 1000
         ) {
           inactiveCircles.push([circle, lastMessage!]);
         }
@@ -429,16 +443,13 @@ async function addRole(
 }
 
 function encode(obj: any): string {
-  return `[\u200B](http://fake.fake?data=${URIEncoding(
-    JSON.stringify(obj)
-  )})`;
+  return `[\u200B](http://fake.fake?data=${URIEncoding(JSON.stringify(obj))})`;
 }
 function URIEncoding(str: string): string {
-  return encodeURIComponent(str)
-    .replace(
-      /[!'()*]/g,
-      (c) => `%${c.charCodeAt(0).toString(16).toUpperCase()}`
-    );
+  return encodeURIComponent(str).replace(
+    /[!'()*]/g,
+    (c) => `%${c.charCodeAt(0).toString(16).toUpperCase()}`
+  );
 }
 
 function decode(description: string | null): any {
