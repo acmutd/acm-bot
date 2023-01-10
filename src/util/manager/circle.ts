@@ -43,21 +43,26 @@ export default class CircleManager extends Manager {
    */
   public async repost({ interaction }: SlashCommandContext) {
     // Resolve join circles channel
-    const c = await this.getChannel(this.joinChannelId);
-    if (!c) {
-      this.bot.managers.error.handleErr(new Error("Join channel not found"));
-      return await interaction.followUp({
-        content: "Join channel not found",
-        ephemeral: true,
-      });
-    }
-    await this.deleteOriginal(c);
-    await this.sendHeader(c);
-    // Build and send circle cards
-    const circles = [...this.bot.managers.database.cache.circles.values()];
-    for (const circle of circles) await this.sendCircleCard(c, circle);
+    try {
+      const c = await this.getChannel(this.joinChannelId);
+      if (!c) {
+        this.bot.managers.error.handleErr(new Error("Join channel not found"));
+        return await interaction.followUp({
+          content: "Join channel not found",
+          ephemeral: true,
+        });
+      }
+      await this.deleteOriginal(c);
+      await this.sendHeader(c);
+      // Build and send circle cards
+      const circles = [...this.bot.managers.database.cache.circles.values()];
+      for (const circle of circles) await this.sendCircleCard(c, circle);
 
-    await interaction.followUp("Done!");
+      await interaction.followUp("Done!");
+    } catch (e) {
+      this.bot.managers.error.handleErr(e as any)
+      await interaction.followUp({ ephemeral: true, content: "An error occurred, please contact a bot maintainer" })
+    }
   }
 
   public async sendHeader(channel: TextChannel) {
@@ -137,6 +142,8 @@ export default class CircleManager extends Manager {
       await channel.send({ embeds: [embed], components: [actionRow] });
     } catch (e) {
       this.bot.managers.error.handleErr(e as any);
+      this.bot.managers.error.handleErr(new Error(`Failed at ${circle.name}\n${JSON.stringify(circle)}`))
+      throw new Error("Cancelling repost")
     }
   }
 
