@@ -1,7 +1,7 @@
 import Bot, { Config } from "../../api/bot";
 import Manager from "../../api/manager";
 import { Collection } from "discord.js";
-import mongoose, { Model } from "mongoose";
+import mongoose, { Model, SchemaType } from "mongoose";
 import {
   Member,
   Response,
@@ -28,6 +28,14 @@ export interface SchemaTypes {
   circle: Model<Circle>;
   coper: Model<Coper>;
 }
+export const schemaTypes = [
+  "circle",
+  "coper",
+  "member",
+  "response",
+  "rrmessage",
+  "task",
+];
 export interface CacheTypes {
   responses: Collection<string, Response>;
   rrmessages: Collection<string, RRMessage>;
@@ -108,6 +116,18 @@ export default class DatabaseManager extends Manager {
       this.bot.logger.error(e);
     }
   }
+
+  public async manualRecache(schema: keyof SchemaTypes) {
+    try {
+      await this.recache(schema);
+      this.bot.logger.database(`Recached ${schema}.`);
+    } catch (e: any) {
+      this.bot.logger.error(e);
+      return false;
+    }
+    return true;
+  }
+
   public async responseAdd(
     type: ResponseType,
     message: string
