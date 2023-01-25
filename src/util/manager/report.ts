@@ -99,20 +99,50 @@ export default class ReportManager extends Manager {
       return;
     }
     this.reports.delete(reportId);
+
     const { message, originalInteraction } = report;
+
+    const actionRow = getReportComponents(reportId, true);
+    // Remove buttons
+    await originalInteraction.editReply({
+      components: [actionRow],
+    });
+
+    if (interaction.replied || interaction.deferred) {
+      // Send confirmation to reporter
+      await interaction.editReply({
+        content:
+          "Your anonymous report has been passed to the mods. Thank you for keeping ACM safe!",
+      });
+    } else {
+      // Send confirmation to reporter
+      await interaction.reply({
+        content:
+          "Your anonymous report has been passed to the mods. Thank you for keeping ACM safe!",
+        ephemeral: true,
+      });
+    }
 
     let userReportMessage: string | undefined;
     if (category === "Other") {
       const report = new ReportModal();
 
       await interaction.showModal(report);
-      await interaction.awaitModalSubmit({ time: 20000 }).then((res) => {
+      try {
+        const res = await interaction.awaitModalSubmit({
+          time: 20000,
+          idle: 20000,
+        });
         userReportMessage = res.fields.getTextInputValue("report-text");
-        res.reply({
+        await res.reply({
           content: "Your report has been submitted.",
           ephemeral: true,
         });
-      });
+      } catch (e) {
+        return await interaction.editReply(
+          "You took too long to respond. Please try again."
+        );
+      }
     }
 
     // Build report to send out
@@ -150,39 +180,6 @@ export default class ReportManager extends Manager {
       embeds: [embed],
       allowedMentions: { users: [] },
     });
-
-    const actionRow = getReportComponents(reportId, true);
-    // Remove buttons
-    await originalInteraction.editReply({
-      components: [
-        new ActionRowBuilder<ButtonBuilder>().addComponents(
-          reportCategories.map(
-            (cat) =>
-              new ButtonBuilder({
-                label: cat,
-                custom_id: `report/${reportId}/${cat}`,
-                disabled: true,
-                style: ButtonStyle.Primary,
-              })
-          )
-        ),
-      ],
-    });
-
-    if (interaction.replied || interaction.deferred) {
-      // Send confirmation to reporter
-      await interaction.editReply({
-        content:
-          "Your anonymous report has been passed to the mods. Thank you for keeping ACM safe!",
-      });
-    } else {
-      // Send confirmation to reporter
-      await interaction.reply({
-        content:
-          "Your anonymous report has been passed to the mods. Thank you for keeping ACM safe!",
-        ephemeral: true,
-      });
-    }
   }
 }
 
