@@ -106,13 +106,26 @@ export default class ReportManager extends Manager {
       const report = new ReportModal();
 
       await interaction.showModal(report);
-      await interaction.awaitModalSubmit({ time: 20000 }).then((res) => {
+      try {
+        const res = await interaction.awaitModalSubmit({
+          time: 20000,
+          idle: 20000,
+        });
         userReportMessage = res.fields.getTextInputValue("report-text");
-        res.reply({
+        await res.reply({
           content: "Your report has been submitted.",
           ephemeral: true,
         });
-      });
+      } catch (e) {
+        await interaction.editReply(
+          "You took too long to respond. Please try again."
+        );
+        const actionRow = getReportComponents(reportId, true);
+        // Remove buttons
+        return await originalInteraction.editReply({
+          components: [actionRow],
+        });
+      }
     }
 
     // Build report to send out
@@ -154,19 +167,7 @@ export default class ReportManager extends Manager {
     const actionRow = getReportComponents(reportId, true);
     // Remove buttons
     await originalInteraction.editReply({
-      components: [
-        new ActionRowBuilder<ButtonBuilder>().addComponents(
-          reportCategories.map(
-            (cat) =>
-              new ButtonBuilder({
-                label: cat,
-                custom_id: `report/${reportId}/${cat}`,
-                disabled: true,
-                style: ButtonStyle.Primary,
-              })
-          )
-        ),
-      ],
+      components: [actionRow],
     });
 
     if (interaction.replied || interaction.deferred) {
