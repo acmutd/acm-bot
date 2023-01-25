@@ -99,7 +99,29 @@ export default class ReportManager extends Manager {
       return;
     }
     this.reports.delete(reportId);
+
     const { message, originalInteraction } = report;
+
+    const actionRow = getReportComponents(reportId, true);
+    // Remove buttons
+    await originalInteraction.editReply({
+      components: [actionRow],
+    });
+
+    if (interaction.replied || interaction.deferred) {
+      // Send confirmation to reporter
+      await interaction.editReply({
+        content:
+          "Your anonymous report has been passed to the mods. Thank you for keeping ACM safe!",
+      });
+    } else {
+      // Send confirmation to reporter
+      await interaction.reply({
+        content:
+          "Your anonymous report has been passed to the mods. Thank you for keeping ACM safe!",
+        ephemeral: true,
+      });
+    }
 
     let userReportMessage: string | undefined;
     if (category === "Other") {
@@ -117,14 +139,9 @@ export default class ReportManager extends Manager {
           ephemeral: true,
         });
       } catch (e) {
-        await interaction.editReply(
+        return await interaction.editReply(
           "You took too long to respond. Please try again."
         );
-        const actionRow = getReportComponents(reportId, true);
-        // Remove buttons
-        return await originalInteraction.editReply({
-          components: [actionRow],
-        });
       }
     }
 
@@ -163,27 +180,6 @@ export default class ReportManager extends Manager {
       embeds: [embed],
       allowedMentions: { users: [] },
     });
-
-    const actionRow = getReportComponents(reportId, true);
-    // Remove buttons
-    await originalInteraction.editReply({
-      components: [actionRow],
-    });
-
-    if (interaction.replied || interaction.deferred) {
-      // Send confirmation to reporter
-      await interaction.editReply({
-        content:
-          "Your anonymous report has been passed to the mods. Thank you for keeping ACM safe!",
-      });
-    } else {
-      // Send confirmation to reporter
-      await interaction.reply({
-        content:
-          "Your anonymous report has been passed to the mods. Thank you for keeping ACM safe!",
-        ephemeral: true,
-      });
-    }
   }
 }
 
