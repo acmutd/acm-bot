@@ -18,13 +18,13 @@ export default class ErrorManager extends Manager {
 
   async handleMsg(message: {}) {
     if (!message) return;
-    const msg = message.toString();
+    const msg = JSON.stringify(message);
     const guild = this.bot.guilds.resolve(this.bot.settings.guild);
     if (guild) {
-      let embed = new EmbedBuilder();
-      embed.setTitle(`🤖 ${this.bot.user!.username} | Unhandled Rejection`);
-      embed.addFields({ name: "Error Message", value: msg });
-      embed.setColor("Red");
+      let embed = new EmbedBuilder()
+        .setTitle(`🤖 ${this.bot.user!.username} | Unhandled Rejection`)
+        .addFields({ name: "Error Message", value: msg })
+        .setColor("Red");
 
       const errorChannel = await guild.channels.fetch(
         this.bot.settings.channels.error
@@ -33,20 +33,21 @@ export default class ErrorManager extends Manager {
     }
   }
 
-  async handleErr(err: Error | null | undefined) {
+  async handleErr(err: Error | null | undefined, msg?: string) {
     if (!err) return;
     console.error(err, err.stack);
+    console.error(msg);
     const guild = this.bot.guilds.resolve(this.bot.settings.guild);
     if (guild) {
       // Create embed with basic information
-      let embed = new EmbedBuilder();
-      embed.setTitle(`🤖 ${this.bot.user!.username} | Uncaught Exception`);
-      embed.addFields({
-        name: "Error Message",
-        value: (err.name || "UNKNOWN ERROR") + ": " + err.message,
-      });
-      embed.setColor("Red");
-
+      let embed = new EmbedBuilder()
+        .setTitle(`🤖 ${this.bot.user!.username} | Uncaught Exception`)
+        .addFields({
+          name: "Error Message",
+          value: (err.name || "UNKNOWN ERROR") + ": " + err.message,
+        });
+      if (msg)
+        embed.addFields({ name: "More info", value: msg }).setColor("Red");
 
       // Create text file containing stack trace, which is previewed on desktop clients
       const traceFile = {

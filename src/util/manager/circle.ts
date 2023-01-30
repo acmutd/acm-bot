@@ -60,7 +60,7 @@ export default class CircleManager extends Manager {
 
       await interaction.followUp({ content: "Done!", ephemeral: true });
     } catch (e) {
-      this.bot.managers.error.handleErr(e as any);
+      this.bot.managers.error.handleErr(e as Error, "Error trying to repost");
       await interaction.followUp({
         ephemeral: true,
         content: "An error occurred, please contact a bot maintainer",
