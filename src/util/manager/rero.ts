@@ -51,6 +51,10 @@ export default class ReactionRoleManager extends Manager {
   }
 
   async handleReactionAdd(reaction: MessageReaction, user: User) {
+    const channel = reaction.message.channel;
+    if (!(channel instanceof TextChannel)) return;
+    // Ignore reactions in the wrong channel
+    if (channel.id !== this.bot.settings.circles.joinChannel) return;
     // Handle partial
     if (reaction.partial) await reaction.fetch();
     await reaction.users.fetch();
