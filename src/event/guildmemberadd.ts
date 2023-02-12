@@ -36,10 +36,17 @@ export default class GuildMemberAddEvent extends Event {
         },
       ],
     });
-
-    const channel = await member.createDM();
-    if (channel) {
-      await channel.send({ embeds: [embed] });
+    try {
+      const channel = await member.createDM();
+      if (channel) {
+        await channel.send({ embeds: [embed] });
+      }
+    } catch (e) {
+      bot.managers.error.handleErr(
+        e as Error,
+        "Error sending welcome message."
+      );
+      console.error(e);
     }
   }
 }

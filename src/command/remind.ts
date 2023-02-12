@@ -36,15 +36,18 @@ export default class RemindCommand extends Command {
     };
 
     const dateStr = date.toLocaleString("en-US", options);
-
-    await bot.managers.scheduler.createTask({
-      cron: date,
-      type: "reminder",
-      payload: {
-        message,
-        id: msg.author.id,
-      },
-    });
+    try {
+      await bot.managers.scheduler.createTask({
+        cron: date,
+        type: "reminder",
+        payload: {
+          message,
+          id: msg.author.id,
+        },
+      });
+    } catch (e) {
+      bot.managers.error.handleErr(e as Error, "Error creating reminder.");
+    }
     return bot.response.emit(
       msg.channel,
       `${msg.author}, I'll DM you with your reminder at '${dateStr}'.`,
