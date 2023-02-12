@@ -51,6 +51,10 @@ export default class ReactionRoleManager extends Manager {
   }
 
   async handleReactionAdd(reaction: MessageReaction, user: User) {
+    const channel = reaction.message.channel;
+    if (!(channel instanceof TextChannel)) return;
+    // Ignore reactions in the wrong channel
+    if (channel.id !== this.bot.settings.channels.roles) return;
     // Handle partial
     if (reaction.partial) await reaction.fetch();
     await reaction.users.fetch();
@@ -68,6 +72,10 @@ export default class ReactionRoleManager extends Manager {
     const guild = reaction.message.guild;
     const member = guild.members.resolve(user.id!);
     if (!member) return;
+    // check if the reaction is valid
+    const reactionSnowflake = reaction.emoji.id || reaction.emoji.name!;
+
+    if (!guild.roles.cache.has(rrmsg.reactionRoles[reactionSnowflake])) return;
 
     // Add or remove role, depending on if they have the role already
     const hasRole = member.roles.cache.has(
