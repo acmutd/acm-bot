@@ -107,21 +107,6 @@ export default class ReportManager extends Manager {
       components: [actionRow],
     });
 
-    if (interaction.replied || interaction.deferred) {
-      // Send confirmation to reporter
-      await interaction.editReply({
-        content:
-          "Your anonymous report has been passed to the mods. Thank you for keeping ACM safe!",
-      });
-    } else {
-      // Send confirmation to reporter
-      await interaction.reply({
-        content:
-          "Your anonymous report has been passed to the mods. Thank you for keeping ACM safe!",
-        ephemeral: true,
-      });
-    }
-
     let userReportMessage: string | undefined;
     if (category === "Other") {
       const report = new ReportModal();
@@ -179,6 +164,21 @@ export default class ReportManager extends Manager {
       embeds: [embed],
       allowedMentions: { users: [] },
     });
+
+    if (interaction.replied || interaction.deferred) {
+      // Send confirmation to reporter
+      await interaction.editReply({
+        content:
+          "Your anonymous report has been passed to the mods. Thank you for keeping ACM safe!",
+      });
+    } else {
+      // Send confirmation to reporter
+      await interaction.reply({
+        content:
+          "Your anonymous report has been passed to the mods. Thank you for keeping ACM safe!",
+        ephemeral: true,
+      });
+    }
   }
 }
 
