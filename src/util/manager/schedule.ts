@@ -31,16 +31,9 @@ export default class ScheduleManager extends Manager {
    */
   public init(): void {
     const setup = async () => {
-      const res = await this.bot.managers.database.schemas.task.find({});
+      const res = await this.bot.managers.firestore.fetchTasks();
       res.forEach(async (data) => {
-        const taskData = data.toObject();
-        const task = {
-          id: taskData["_id"],
-          type: taskData["type"],
-          cron: taskData["cron"],
-          payload: taskData["payload"],
-        };
-        await this.createTask(task);
+        await this.createTask(data as Task);
       });
       return res;
     };
@@ -65,14 +58,12 @@ export default class ScheduleManager extends Manager {
     if (!t.id) t.id = v4();
 
     // Add task to the database
-    const search = await this.bot.managers.database.schemas.task.find({
-      _id: t.id,
-    });
-    if (search.length == 0)
-      await this.bot.managers.database.schemas.task.create({
+    const search = await this.bot.managers.firestore.findTask(t.id);
+    if (!search)
+      await this.bot.managers.firestore.createTask({
         _id: t.id,
-        cron: t.cron,
         type: t.type,
+        cron: t.cron,
         payload: t.payload,
       });
 
@@ -94,7 +85,7 @@ export default class ScheduleManager extends Manager {
 
     t.job?.cancel();
     this.tasks.delete(id);
-    await this.bot.managers.database.schemas.task.findByIdAndDelete(id);
+    await this.bot.managers.firestore.deleteTask(id);
 
     return true;
   }
@@ -110,7 +101,7 @@ export default class ScheduleManager extends Manager {
 
   private async runTask(task: Task | VCTask) {
     if (task.id) this.tasks.delete(task.id);
-    await this.bot.managers.database.schemas.task.deleteOne({ _id: task.id });
+    await this.bot.managers.firestore.deleteTask(task.id!);
     if (task.job) task.job.cancel();
 
     switch (task.type) {

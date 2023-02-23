@@ -12,10 +12,9 @@ export default class ReactionRoleManager extends Manager {
   }
 
   public async init(): Promise<void> {
-    // Fetch reaction role messages
-    let channelIDs = this.bot.managers.database.cache.rrmessages.map(
-      (rr) => rr.channel
-    );
+    let channelIDs = [
+      ...this.bot.managers.firestore.cache.rrmessages.values(),
+    ].map((rr) => rr.channel);
     channelIDs = channelIDs.filter((a, b) => channelIDs.indexOf(a) === b);
     for (let i = 0; i < channelIDs.length; i++) {
       let id = channelIDs[i];
@@ -47,7 +46,7 @@ export default class ReactionRoleManager extends Manager {
     });
 
     // Add rero to database
-    await this.bot.managers.database.rrmsgAdd(rrData);
+    await this.bot.managers.firestore.rrmsgAdd(rrData);
   }
 
   async handleReactionAdd(reaction: MessageReaction, user: User) {
@@ -63,7 +62,7 @@ export default class ReactionRoleManager extends Manager {
     if (!reaction.message.guild) return;
 
     // Resolve the reaction role message, if any
-    const rrmsg = this.bot.managers.database.cache.rrmessages.get(
+    const rrmsg = this.bot.managers.firestore.cache.rrmessages.get(
       reaction.message.id
     );
     if (!rrmsg) return;

@@ -15,7 +15,7 @@ import Bot from "../../api/bot";
 import SlashCommand, {
   SlashCommandContext,
 } from "../../api/interaction/slashcommand";
-import { CircleData } from "../../api/schema";
+import { Circle, CircleData } from "../../api/schema";
 import { settings } from "../../settings";
 
 export default class CircleCommand extends SlashCommand {
@@ -160,7 +160,7 @@ async function createExtraChannels(
   const circleId = interaction.options.getRole("circle", true).id;
   const guild = interaction.guild!;
 
-  const circle = bot.managers.database.cache.circles.get(circleId);
+  const circle = bot.managers.firestore.cache.circles.get(circleId);
   if (!circle)
     return await interaction.editReply({
       content: "That circle does not exist.",
@@ -184,7 +184,7 @@ async function createExtraChannels(
       },
     ],
   });
-  const res = await bot.managers.database.circleUpdate(circleId, {
+  const res = await bot.managers.firestore.circleUpdate(circleId, {
     subChannels: [...(circle.subChannels || []), channel.id],
   });
 
@@ -242,13 +242,11 @@ async function checkInactivity(
   const days = interaction.options.getInteger("days") || 30;
   const circleId = interaction.options.getRole("circle", true).id;
 
-  const circle = bot.managers.database.cache.circles.get(circleId);
+  const circle = bot.managers.firestore.cache.circles.get(circleId);
   if (!circle)
     return await interaction.editReply("That circle does not exist.");
 
-  const channel = (await bot.channels.fetch(
-    circle.channel!
-  )) as TextBasedChannel;
+  const channel = (await bot.channels.fetch(circle.channel)) as TextChannel;
 
   const sorted = await sortMessages(channel);
   for (const message of sorted.values()) {
@@ -270,7 +268,7 @@ async function checkInactivity(
   );
 }
 
-const sortMessages = async (channel: TextBasedChannel) => {
+const sortMessages = async (channel: TextChannel) => {
   const messages = await channel.messages.fetch({ limit: 100 });
   const filtered = [...messages.values()].filter((msg) => !msg.author.bot);
 
@@ -284,7 +282,7 @@ const testEmoji = (emoji: string) => {
 
 const createCircleData = (
   interaction: ChatInputCommandInteraction
-): CircleData => {
+): Omit<Circle, "_id" | "channel"> => {
   return {
     name: interaction.options.getString("name", true),
     description: interaction.options.getString("description", true),
@@ -296,7 +294,7 @@ const createCircleData = (
   };
 };
 const createChannel = async (
-  circle: CircleData,
+  circle: Partial<Circle>,
   circleRole: Role,
   guild: Guild
 ) => {
@@ -323,13 +321,17 @@ const createChannel = async (
 };
 const handleAddCircle = async (
   bot: Bot,
-  circle: CircleData,
+  circle: Omit<Circle, "_id" | "channel">,
   role: Role,
   channel: TextChannel
 ) => {
-  circle["_id"] = role.id; // circles distinguished by unique role
-  circle.channel = channel.id;
-  return await bot.managers.database.circleAdd(circle);
+  const newCircle: Circle = {
+    ...circle,
+    _id: role.id,
+    channel: channel.id,
+  };
+
+  return await bot.managers.firestore.circleAdd(newCircle);
 };
 const timeDifference = (latest: Message) => {
   const lastMessageTime = latest.createdTimestamp;
@@ -339,6 +341,6 @@ const timeDifference = (latest: Message) => {
 const checkRecentMessage = (message: Message, days: number) => {
   return (
     new Date().getTime() - message.createdAt.getTime() >
-    days * 24 * 3600 * 1000 && !message.author.bot
+      days * 24 * 3600 * 1000 && !message.author.bot
   );
 };

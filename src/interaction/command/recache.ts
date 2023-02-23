@@ -1,9 +1,10 @@
-import { schemaTypes, SchemaTypes } from "./../../util/manager/database";
 import { CIRCLE_PERMS } from "./../../util/perms";
 import SlashCommand, {
   SlashCommandContext,
 } from "../../api/interaction/slashcommand";
+import { schemaTypes } from "../../util/manager/firestore";
 
+const schemas = schemaTypes.options;
 export default class RecacheCommand extends SlashCommand {
   public constructor() {
     super({
@@ -13,7 +14,9 @@ export default class RecacheCommand extends SlashCommand {
     });
     this.slashCommand.addStringOption((option) =>
       option
-        .addChoices(...schemaTypes.map((type) => ({ name: type, value: type })))
+        .addChoices(
+          ...schemas.map((schema) => ({ name: schema, value: schema }))
+        )
         .setName("type")
         .setDescription("The type of data to recache")
         .setRequired(true)
@@ -21,18 +24,13 @@ export default class RecacheCommand extends SlashCommand {
   }
 
   public async handleInteraction({ bot, interaction }: SlashCommandContext) {
-    const type = interaction.options.getString("type", true);
-    if (!isSchemaType(type))
+    const temp = interaction.options.getString("type", true);
+    const type = schemaTypes.safeParse(temp);
+    if (!type.success)
       return interaction.reply({ ephemeral: true, content: "Invalid type" });
     await interaction.reply({ ephemeral: true, content: "Caching" });
-    if (await bot.managers.database.manualRecache(type))
+    if (await bot.managers.firestore.manualRecache(type.data))
       return interaction.editReply("Recached");
     return interaction.editReply("Failed to recache");
   }
 }
-
-function isSchemaType(schema: string): schema is schemas {
-  return schemaTypes.includes(schema);
-}
-
-type schemas = keyof SchemaTypes;

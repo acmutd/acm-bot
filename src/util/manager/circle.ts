@@ -55,7 +55,9 @@ export default class CircleManager extends Manager {
       await this.deleteOriginal(c);
       await this.sendHeader(c);
       // Build and send circle cards
-      const circles = [...this.bot.managers.database.cache.circles.values()];
+      const circles: Circle[] = [
+        ...this.bot.managers.firestore.cache.circles.values(),
+      ];
       for (const circle of circles) await this.sendCircleCard(c, circle);
 
       await interaction.followUp({ content: "Done!", ephemeral: true });
@@ -114,7 +116,7 @@ export default class CircleManager extends Manager {
           { name: "**Members**", value: `${count ?? "N/A"}`, inline: true },
         ],
         footer: {
-          text: `⏰ Created on ${circle.createdOn!.toLocaleDateString("en-US", {
+          text: `⏰ Created on ${circle.createdOn.toLocaleDateString("en-US", {
             year: "numeric",
             month: "long",
             day: "numeric",
@@ -228,7 +230,7 @@ export default class CircleManager extends Manager {
     if (!member) return;
 
     // Resolve circle channel
-    const chan = await this.getCircleChannel(circle.id!);
+    const chan = await this.getCircleChannel(circle._id);
     if (!chan)
       return await interaction.editReply(
         "Something went wrong, please contact the bot maintainers"
@@ -286,7 +288,7 @@ export default class CircleManager extends Manager {
       if (this.remindThresholdDays <= 0) return;
 
       // Create list of inactive circles & their last messages
-      const circles = [...this.bot.managers.database.cache.circles.values()];
+      const circles = [...this.bot.managers.firestore.cache.circles.values()];
       let inactiveCircles: [Circle, Message][] = [];
       for (const circle of circles) {
         const channel = (await this.bot.channels.fetch(
@@ -390,7 +392,7 @@ export default class CircleManager extends Manager {
   }
 
   public getCircle(id: string) {
-    return this.bot.managers.database.cache.circles.get(id);
+    return this.bot.managers.firestore.cache.circles.get(id);
   }
 
   public async getChannel(id: string) {

@@ -94,6 +94,7 @@ export default class ResponseUtil {
     type?: ResponseType,
     format?: ResponseFormat
   ): void {
+    if (!channel?.isTextBased() || channel.isVoiceBased()) return;
     const response = this.build(message, type, format);
     typeof response == "string"
       ? channel.send(response)
@@ -104,6 +105,7 @@ export default class ResponseUtil {
     channel: TextBasedChannel,
     response: string | EmbedBuilder
   ): void {
+    if (channel.isVoiceBased()) return;
     typeof response == "string"
       ? channel.send(response)
       : channel.send({ embeds: [response] });

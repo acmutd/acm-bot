@@ -67,7 +67,7 @@ export default class BookVC extends SlashCommand {
   // Interaction Handled !
   public async handleInteraction({ bot, interaction }: SlashCommandContext) {
     const circleRole = interaction.options.getRole("circle", true) as Role;
-    const circle = bot.managers.database.cache.circles.get(circleRole.id);
+    const circle = bot.managers.firestore.cache.circles.get(circleRole.id);
     try {
       if (!circle || !circle.channel)
         return await interaction.reply({

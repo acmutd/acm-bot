@@ -46,6 +46,9 @@ export default class VCSnapshotCommand extends Command {
       if (member.user.bot) continue;
       attendees.push(`<@${member.id}>`);
     }
+
+    if (msg.channel.isVoiceBased()) return;
+
     msg.channel
       .send({
         content:
@@ -55,6 +58,7 @@ export default class VCSnapshotCommand extends Command {
         allowedMentions: { users: [] },
       })
       .catch(() => {
+        if (msg.channel.isVoiceBased()) return;
         msg.channel.send({
           content: `**VC Snapshot request failed for ${msg.author}**`,
           allowedMentions: { users: [] },

@@ -29,7 +29,8 @@ export default class ErrorManager extends Manager {
       const errorChannel = await guild.channels.fetch(
         this.bot.settings.channels.error
       );
-      if (errorChannel?.isTextBased()) errorChannel.send({ embeds: [embed] });
+      if (errorChannel?.isTextBased() && !errorChannel.isVoiceBased())
+        errorChannel.send({ embeds: [embed] });
     }
   }
 
@@ -59,7 +60,7 @@ export default class ErrorManager extends Manager {
       const errorChannel = await guild.channels.fetch(
         this.bot.settings.channels.error
       );
-      if (errorChannel?.isTextBased())
+      if (errorChannel?.isTextBased() && !errorChannel.isVoiceBased())
         errorChannel.send({ embeds: [embed], files: [traceFile] });
     }
   }
