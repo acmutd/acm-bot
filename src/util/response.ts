@@ -94,7 +94,7 @@ export default class ResponseUtil {
     type?: ResponseType,
     format?: ResponseFormat
   ): void {
-    if (!channel?.isTextBased() || channel.isVoiceBased()) return;
+    if (channel.isVoiceBased()) return;
     const response = this.build(message, type, format);
     typeof response == "string"
       ? channel.send(response)

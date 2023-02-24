@@ -10,7 +10,7 @@ export default class RemindCommand extends Command {
   }
 
   public async exec({ msg, bot, args }: CommandContext) {
-    if (!msg.channel.isTextBased() || msg.channel.isVoiceBased()) return;
+    if (msg.channel.isVoiceBased()) return;
     if (args.length < 2) return this.sendInvalidUsage(msg, bot);
 
     const minutes = parseInt(args[0]);

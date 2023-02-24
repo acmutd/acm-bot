@@ -116,7 +116,7 @@ export default class PointsCommand extends Command {
               "__**Activities**__\n" + userActivities.join("\n")
             );
           }
-          if (!msg.channel.isTextBased() || msg.channel.isVoiceBased())
+          if (msg.channel.isVoiceBased())
             throw new Error("Channel is not text based");
 
           await msg.channel.send({ embeds: [scorecardEmbed] });
@@ -253,7 +253,7 @@ export default class PointsCommand extends Command {
             );
         });
 
-        if (!msg.channel.isTextBased() || msg.channel.isVoiceBased())
+        if (msg.channel.isVoiceBased())
           throw new Error("Channel is not text based");
 
         await msg.channel.send({
@@ -325,7 +325,7 @@ export default class PointsCommand extends Command {
           if (winningNumbers.size == 0) break;
         }
 
-        if (!msg.channel.isTextBased() || msg.channel.isVoiceBased())
+        if (msg.channel.isVoiceBased())
           throw new Error("Channel is not text based");
 
         await msg.channel.send({
@@ -414,7 +414,7 @@ export default class PointsCommand extends Command {
             attendees
           );
 
-          if (!msg.channel.isTextBased() || msg.channel.isVoiceBased())
+          if (msg.channel.isVoiceBased())
             throw new Error("Channel is not text based");
 
           await msg.channel.send({

@@ -83,7 +83,7 @@ export default class VCEventCommand extends Command {
           (id) => `<#${id}>`
         );
 
-        if (!msg.channel.isTextBased() || msg.channel.isVoiceBased()) return;
+        if (msg.channel.isVoiceBased()) return;
         await msg.channel.send({
           embeds: [
             new EmbedBuilder({
@@ -114,7 +114,7 @@ export default class VCEventCommand extends Command {
       );
     });
 
-    if (!channel.isTextBased() || channel.isVoiceBased()) return;
+    if (channel.isVoiceBased()) return;
 
     await channel.send({
       embeds: [

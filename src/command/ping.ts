@@ -10,7 +10,7 @@ export default class PingCommand extends Command {
 
   public async exec({ msg, bot, args }: CommandContext) {
     const startTime = new Date().getTime();
-    if (!msg.channel.isTextBased() || msg.channel.isVoiceBased()) return;
+    if (msg.channel.isVoiceBased()) return;
     await msg.channel
       .send("Ping: This message should be deleted...")
       .then((m) => {
