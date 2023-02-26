@@ -60,6 +60,10 @@ export default class ErrorManager extends Manager {
       const errorChannel = await guild.channels.fetch(
         this.bot.settings.channels.error
       );
+
+      // Have to check if channel is text based and not voice based
+      // For some reason this channel can be voice based or category based
+      // and it will still resolve
       if (errorChannel?.isTextBased() && !errorChannel.isVoiceBased())
         errorChannel.send({ embeds: [embed], files: [traceFile] });
     }

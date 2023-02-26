@@ -24,7 +24,7 @@ export const cacheTypes = z.object({
 
 export type CacheTypes = z.infer<typeof cacheTypes>;
 
-export const schemaTypes = z.enum([
+export const cacheKeys = z.enum([
   "responses",
   "rrmessages",
   "circle",
@@ -33,7 +33,7 @@ export const schemaTypes = z.enum([
   "task",
 ]);
 
-export type Schema = z.infer<typeof schemaTypes>;
+export type CacheKeys = z.infer<typeof cacheKeys>;
 
 export default class FirestoreManager extends Manager {
   public firestore!: Firestore;
@@ -58,13 +58,14 @@ export default class FirestoreManager extends Manager {
     await this.recache("coper", "copers");
   }
 
-  private async recache(schema: Schema, cache?: keyof CacheTypes) {
+  private async recache(schema: CacheKeys, cache?: keyof CacheTypes) {
     try {
       const data = await this.firestore.collection(schema).get();
       if (cache) {
         this.cache[cache] = new Map();
         data.forEach((doc) => {
-          // this.cache[cache]?.set(doc.id, doc.data() as any);
+          // Firebase doesn't support Date objects, so we have to convert it to a Date object
+          // This is a hacky way to do it, but it works
           if (cache === "circles") {
             let date = doc.data().createdOn.toDate();
             const circle = CircleData.parse({
@@ -82,13 +83,13 @@ export default class FirestoreManager extends Manager {
     }
   }
 
-  public async manualRecache(schema: Schema): Promise<boolean> {
+  public async manualRecache(schema: CacheKeys): Promise<boolean> {
     try {
       await this.recache(schema);
       this.bot.logger.database("Recached firestore data", schema);
       return true;
     } catch (error: any) {
-      this.bot.logger.error(error, "Error recaching firestore data");
+      this.bot.logger.error(error, `Error recaching ${schema} from firestore`);
       return false;
     }
   }

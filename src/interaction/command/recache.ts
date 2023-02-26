@@ -2,9 +2,9 @@ import { CIRCLE_PERMS } from "./../../util/perms";
 import SlashCommand, {
   SlashCommandContext,
 } from "../../api/interaction/slashcommand";
-import { schemaTypes } from "../../util/manager/firestore";
+import { cacheKeys, CacheKeys } from "../../util/manager/firestore";
 
-const schemas = schemaTypes.options;
+const schemas = cacheKeys.options;
 export default class RecacheCommand extends SlashCommand {
   public constructor() {
     super({
@@ -24,8 +24,9 @@ export default class RecacheCommand extends SlashCommand {
   }
 
   public async handleInteraction({ bot, interaction }: SlashCommandContext) {
-    const temp = interaction.options.getString("type", true);
-    const type = schemaTypes.safeParse(temp);
+    const unParsed = interaction.options.getString("type", true);
+    const type = cacheKeys.safeParse(unParsed);
+
     if (!type.success)
       return interaction.reply({ ephemeral: true, content: "Invalid type" });
     await interaction.reply({ ephemeral: true, content: "Caching" });
