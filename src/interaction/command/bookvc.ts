@@ -36,7 +36,8 @@ export default class BookVC extends SlashCommand {
       return option
         .setName("minutes")
         .setDescription("How many minutes until the event starts")
-        .setRequired(true);
+        .setRequired(true)
+        .setMinValue(1);
     });
     this.slashCommand.addRoleOption((option) => {
       return option
@@ -84,7 +85,7 @@ export default class BookVC extends SlashCommand {
       const embed = createEmbed(interaction, circleRole, circle);
 
       await textChannel.send({
-        content: `<@&${circleRole.id}> a new  event has been created. See below for more details`,
+        content: `A new  event has been created. See below for more details`,
         embeds: [embed],
       });
 
@@ -144,9 +145,7 @@ const createCron = (
       ],
     });
 
-    await textChannel.send(
-      `<@&${roleId}> The event is starting! Join <#${newChannel?.id}>!`
-    );
+    await textChannel.send(`The event is starting! Join <#${newChannel?.id}>!`);
     return newChannel!.id;
   };
   return {
