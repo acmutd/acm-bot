@@ -84,7 +84,7 @@ export default class BookVC extends SlashCommand {
       const embed = createEmbed(interaction, circleRole, circle);
 
       await textChannel.send({
-        content: `<@&${circleRole.id}> a new  event has been created. See below for more details`,
+        content: `A new  event has been created. See below for more details`,
         embeds: [embed],
       });
 
@@ -144,9 +144,7 @@ const createCron = (
       ],
     });
 
-    await textChannel.send(
-      `<@&${roleId}> The event is starting! Join <#${newChannel?.id}>!`
-    );
+    await textChannel.send(`The event is starting! Join <#${newChannel?.id}>!`);
     return newChannel!.id;
   };
   return {
