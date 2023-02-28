@@ -1,11 +1,17 @@
 import { z } from "zod";
 
 // Types
-export const Responses = z.enum(["strike", "kick", "ban", "mute", "caretaker"]);
-export type ResponseType = z.infer<typeof Responses>;
+export const responsesEnum = z.enum([
+  "strike",
+  "kick",
+  "ban",
+  "mute",
+  "caretaker",
+]);
+export type IResponses = z.infer<typeof responsesEnum>;
 
 // Document Models
-export const member = z.object({
+export const memberSchema = z.object({
   _id: z.string(),
   strikes: z.number(),
   lastStrike: z.date(),
@@ -13,15 +19,15 @@ export const member = z.object({
     subscribed: z.boolean(),
   }),
 });
-export type Member = z.infer<typeof member>;
+export type Member = z.infer<typeof memberSchema>;
 
-export const response = z.object({
-  type: Responses,
+export const responseSchema = z.object({
+  type: responsesEnum,
   message: z.string(),
 });
-export type Response = z.infer<typeof response>;
+export type Response = z.infer<typeof responseSchema>;
 
-export const rrMessageData = z.object({
+export const rrMessageDataSchema = z.object({
   _id: z.string(),
   guild: z.string(),
   channel: z.string(),
@@ -29,17 +35,17 @@ export const rrMessageData = z.object({
   reactionRoles: z.any(),
 });
 
-export type RRMessageData = z.infer<typeof rrMessageData>;
+export type RRMessageData = z.infer<typeof rrMessageDataSchema>;
 
-export const TaskData = z.object({
+export const taskDataSchema = z.object({
   _id: z.string(),
   type: z.string(),
   cron: z.union([z.string(), z.date()]),
-  payload: z.any().optional(),
+  payload: z.string(),
 });
-export type Task = z.infer<typeof TaskData>;
+export type Task = z.infer<typeof taskDataSchema>;
 
-export const CircleData = z.object({
+export const circleDataSchema = z.object({
   _id: z.string(),
   name: z.string(),
   description: z.string(),
@@ -50,15 +56,15 @@ export const CircleData = z.object({
   owner: z.string(),
   subChannels: z.array(z.string()),
 });
-export type Circle = z.infer<typeof CircleData>;
+export type Circle = z.infer<typeof circleDataSchema>;
 
-export const CoperData = z.object({
+export const coperSchema = z.object({
   _id: z.string(),
   score: z.number().default(0),
 });
-export type Coper = z.infer<typeof CoperData>;
+export type Coper = z.infer<typeof coperSchema>;
 
-export const guild = z.object({
+export const guildSchema = z.object({
   _id: z.string(),
   channels: z.object({
     verification: z.string(),
@@ -78,4 +84,19 @@ export const guild = z.object({
     ban: z.array(z.string()),
   }),
 });
-export type Guild = z.infer<typeof guild>;
+export type Guild = z.infer<typeof guildSchema>;
+
+export const vcEventTypeEnum = z.enum(["starting", "ending soon", "ended"]);
+
+export const vcEventSchema = z.object({
+  _id: z.string(),
+  title: z.string(),
+  startsIn: z.date(),
+  duration: z.number(),
+  circleRole: z.string(),
+  circle: circleDataSchema,
+  type: vcEventTypeEnum,
+  voiceChannel: z.string().optional(),
+});
+
+export type VCEvent = z.infer<typeof vcEventSchema>;

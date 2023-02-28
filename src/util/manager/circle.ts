@@ -2,6 +2,7 @@ import { ActionRowBuilder, ButtonBuilder } from "@discordjs/builders";
 import {
   ButtonInteraction,
   ButtonStyle,
+  ChannelType,
   EmbedBuilder,
   GuildMember,
   Message,
@@ -13,8 +14,7 @@ import {
 import Bot from "../../api/bot";
 import { SlashCommandContext } from "../../api/interaction/slashcommand";
 import Manager from "../../api/manager";
-import { Circle } from "../../api/schema";
-import { VCTask } from "../../interaction/command/bookvc";
+import { Circle, VCEvent } from "../../api/schema";
 import { settings } from "../../settings";
 
 const minutesInMs = 60000;
@@ -374,23 +374,6 @@ export default class CircleManager extends Manager {
     return undefined;
   }
 
-  public async sendActivity(task: VCTask, type: "start" | "warn" | "end") {
-    switch (type) {
-      case "start":
-        const warnTask = await handleStart(task);
-        await this.bot.managers.scheduler.createTask(warnTask);
-        break;
-      case "warn":
-        const channel = await this.getCircleChannel(task.payload.circle)!;
-        const endTask = await handleWarning(task, channel!);
-        await this.bot.managers.scheduler.createTask(endTask);
-        break;
-      case "end":
-        await this.sendActivityEnd(task);
-        break;
-    }
-  }
-
   public getCircle(id: string) {
     return this.bot.managers.firestore.cache.circles.get(id);
   }
@@ -407,16 +390,58 @@ export default class CircleManager extends Manager {
     return await this.getChannel(circle.channel!);
   }
 
-  public async sendActivityEnd(task: VCTask) {
-    const channel = await this.getCircleChannel(task.payload.circle)!;
+  public async runVCEvent(task: VCEvent) {
+    await this.bot.managers.firestore.deleteVCEvent(task._id!);
+    switch (task.type) {
+      case "starting": {
+        const channel = await this.createNewVCChannel(task);
+        const textChannel = await this.getCircleChannel(task.circle._id)!;
+        textChannel?.send(`The event is starting now! Join <#${channel.id}>`);
+        const warn = await handleStart(task);
+        const newTask = { ...warn, voiceChannel: channel.id };
+        await this.bot.managers.firestore.updateVCEvent(newTask._id, newTask);
+        await this.bot.managers.scheduler.createVCReminderTask(newTask);
+        break;
+      }
+      case "ending soon": {
+        const channel = await this.getCircleChannel(task.circle._id)!;
+        const endTask = await handleWarning(task, channel!);
+        await this.bot.managers.firestore.updateVCEvent(endTask._id, endTask);
+        await this.bot.managers.scheduler.createVCReminderTask(endTask);
+        break;
+      }
+      case "ended": {
+        await this.sendActivityEnd(task);
+        this.bot.managers.firestore.deleteVCEvent(task._id);
+        break;
+      }
+    }
+  }
+
+  public async sendActivityEnd(task: VCEvent) {
+    const channel = await this.getCircleChannel(task.circle._id)!;
     // Send message
     await channel!.send({
-      content: `<@&${task.payload.circle}> Event has ended! Thanks for participating!`,
+      content: `The event has ended! Thanks for participating!`,
     });
 
-    const vcChannel = await this.bot.channels.fetch(task.payload.vcChannel!);
-    if (vcChannel == undefined || !(vcChannel instanceof VoiceChannel)) return;
+    const vcChannel = await this.bot.channels.fetch(task.voiceChannel!);
+    if (!vcChannel || !(vcChannel instanceof VoiceChannel)) return;
     await vcChannel.delete();
+  }
+
+  private async createNewVCChannel(task: VCEvent): Promise<VoiceChannel> {
+    const guild = this.bot.guilds.cache.first();
+    const channel = await guild?.channels.create({
+      name: task.title,
+      type: ChannelType.GuildVoice,
+      parent: settings.circles.parentCategory,
+      permissionOverwrites: [
+        { id: guild?.id, deny: ["ViewChannel", "Connect"] },
+        { id: task.circleRole, allow: ["ViewChannel"] },
+      ],
+    });
+    return channel as VoiceChannel;
   }
 }
 
@@ -462,34 +487,26 @@ function decode(description: string | null): any {
   return JSON.parse(decodeURIComponent(description.match(re)![1]));
 }
 
-const handleStart = async (task: VCTask) => {
-  const vcId = await task.payload.eventStart();
+const handleStart = async (task: VCEvent): Promise<VCEvent> => {
   // Create a new task to warn the circle 2 minutes before the event ends
   return {
     ...task,
-    cron: new Date(Date.now() + (task.payload.duration - 2) * minutesInMs),
-    payload: {
-      ...task.payload,
-      type: "warn",
-      vcChannel: vcId,
-    },
+    startsIn: new Date(Date.now() + 2 * minutesInMs),
+    type: "ending soon",
   };
 };
 
 const handleWarning = async (
-  task: VCTask,
+  task: VCEvent,
   channel: TextChannel
-): Promise<VCTask> => {
+): Promise<VCEvent> => {
   // Send message
   await channel.send({
-    content: `<@&${task.payload.circle}> Event is ending soon!`,
+    content: `Event is ending soon!`,
   });
   return {
     ...task,
-    cron: new Date((task.cron as Date).getTime() + 4 * minutesInMs),
-    payload: {
-      ...task.payload,
-      type: "end",
-    },
+    startsIn: new Date(Date.now() + 4 * minutesInMs),
+    type: "ended",
   };
 };

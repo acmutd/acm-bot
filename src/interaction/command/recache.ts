@@ -1,8 +1,8 @@
-import { CIRCLE_PERMS } from "./../../util/perms";
+import { PermissionFlagsBits } from "discord.js";
 import SlashCommand, {
   SlashCommandContext,
 } from "../../api/interaction/slashcommand";
-import { cacheKeys, CacheKeys } from "../../util/manager/firestore";
+import { cacheKeys } from "../../util/manager/firestore";
 
 const schemas = cacheKeys.options;
 export default class RecacheCommand extends SlashCommand {
@@ -10,11 +10,12 @@ export default class RecacheCommand extends SlashCommand {
     super({
       name: "recache",
       description: "Recache the bot's data",
-      permissions: CIRCLE_PERMS,
+      permissions: PermissionFlagsBits.Administrator,
     });
     this.slashCommand.addStringOption((option) =>
       option
         .addChoices(
+          // Slightly scuffed cause it has to be spread into an array
           ...schemas.map((schema) => ({ name: schema, value: schema }))
         )
         .setName("type")

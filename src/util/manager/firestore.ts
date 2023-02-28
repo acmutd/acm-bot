@@ -1,25 +1,30 @@
+import {
+  IResponses,
+  responsesEnum,
+  taskDataSchema,
+  VCEvent,
+  vcEventSchema,
+} from "./../../api/schema";
 import Bot from "../../api/bot";
 import { settings } from "../../settings";
 import { Firestore } from "@google-cloud/firestore";
 import Manager from "../../api/manager";
 import {
   Circle,
-  CircleData,
+  circleDataSchema,
   Coper,
-  CoperData,
-  response,
-  ResponseType,
+  coperSchema,
   RRMessageData,
-  rrMessageData,
+  rrMessageDataSchema,
   Task,
 } from "../../api/schema";
 import { z } from "zod";
 
 export const cacheTypes = z.object({
-  responses: z.map(z.string(), response),
-  rrmessages: z.map(z.string(), rrMessageData),
-  circles: z.map(z.string(), CircleData),
-  copers: z.map(z.string(), CoperData),
+  responses: z.map(z.string(), responsesEnum),
+  rrmessages: z.map(z.string(), rrMessageDataSchema),
+  circles: z.map(z.string(), circleDataSchema),
+  copers: z.map(z.string(), coperSchema),
 });
 
 export type CacheTypes = z.infer<typeof cacheTypes>;
@@ -31,6 +36,7 @@ export const cacheKeys = z.enum([
   "coper",
   "member",
   "task",
+  "vcEvent",
 ]);
 
 export type CacheKeys = z.infer<typeof cacheKeys>;
@@ -56,6 +62,7 @@ export default class FirestoreManager extends Manager {
     await this.recache("rrmessages", "rrmessages");
     await this.recache("circle", "circles");
     await this.recache("coper", "copers");
+    this.bot.managers.scheduler.init();
   }
 
   private async recache(schema: CacheKeys, cache?: keyof CacheTypes) {
@@ -68,7 +75,7 @@ export default class FirestoreManager extends Manager {
           // This is a hacky way to do it, but it works
           if (cache === "circles") {
             let date = doc.data().createdOn.toDate();
-            const circle = CircleData.parse({
+            const circle = circleDataSchema.parse({
               ...doc.data(),
               createdOn: new Date(date),
             });
@@ -95,7 +102,7 @@ export default class FirestoreManager extends Manager {
   }
 
   public async responseAdd(
-    type: ResponseType,
+    type: IResponses,
     message: string
   ): Promise<boolean> {
     try {
@@ -105,7 +112,8 @@ export default class FirestoreManager extends Manager {
       });
       await this.recache("responses");
       return true;
-    } catch (e) {
+    } catch (e: any) {
+      this.bot.logger.error(e, "Error adding response to firestore");
       return false;
     }
   }
@@ -121,7 +129,8 @@ export default class FirestoreManager extends Manager {
       });
       await this.recache("responses");
       return true;
-    } catch (e) {
+    } catch (e: any) {
+      this.bot.logger.error(e, "Error deleting response from firestore");
       return false;
     }
   }
@@ -135,7 +144,8 @@ export default class FirestoreManager extends Manager {
     const data = await this.firestore.collection("coper").get();
     const result: [string, number][] = [];
     data.forEach((doc) => {
-      result.push([doc.id, doc.data().count]);
+      const coper = coperSchema.parse(doc.data());
+      result.push([coper._id, coper.score]);
     });
     result.sort((a, b) => b[1] - a[1]);
     return result.slice(0, Math.min(5, result.length));
@@ -145,7 +155,8 @@ export default class FirestoreManager extends Manager {
     try {
       await this.firestore.collection("coper").doc(id).set(newData);
       await this.recache("coper");
-    } catch (e) {
+    } catch (e: any) {
+      this.bot.logger.error(e, "Error updating coper in firestore");
       return false;
     }
   }
@@ -158,7 +169,8 @@ export default class FirestoreManager extends Manager {
         .set(coperData);
       await this.recache("coper");
       return true;
-    } catch (e) {
+    } catch (e: any) {
+      this.bot.logger.error(e, "Error adding coper to firestore");
       return false;
     }
   }
@@ -183,7 +195,8 @@ export default class FirestoreManager extends Manager {
       await this.firestore.collection("coper").doc(id).delete();
       await this.recache("coper");
       return true;
-    } catch (e) {
+    } catch (e: any) {
+      this.bot.logger.error(e, "Error removing coper from firestore");
       return false;
     }
   }
@@ -197,7 +210,7 @@ export default class FirestoreManager extends Manager {
       await this.recache("circle");
       return true;
     } catch (e: any) {
-      this.bot.logger.error(e, "Error adding circle");
+      this.bot.logger.error(e, `Error adding circle ${circleData.name}`);
       return false;
     }
   }
@@ -207,7 +220,8 @@ export default class FirestoreManager extends Manager {
       await this.firestore.collection("circle").doc(id).delete();
       await this.recache("circle");
       return true;
-    } catch (e) {
+    } catch (e: any) {
+      this.bot.logger.error(e, `Error removing circle ${id}`);
       return false;
     }
   }
@@ -216,7 +230,8 @@ export default class FirestoreManager extends Manager {
     try {
       await this.firestore.collection("circle").doc(id).set(newData);
       await this.recache("circle");
-    } catch (e) {
+    } catch (e: any) {
+      this.bot.logger.error(e, "Error updating circle in firestore");
       return false;
     }
   }
@@ -225,7 +240,18 @@ export default class FirestoreManager extends Manager {
     const data = await this.firestore.collection("task").get();
     const result: Task[] = [];
     data.forEach((doc) => {
-      result.push(doc.data() as Task);
+      const task = taskDataSchema.parse(doc.data());
+      result.push(task);
+    });
+    return result;
+  }
+
+  public async fetchVCTasks(): Promise<VCEvent[]> {
+    const data = await this.firestore.collection("vctask").get();
+    const result: VCEvent[] = [];
+    data.forEach((doc) => {
+      const task = vcEventSchema.parse(doc.data());
+      result.push(task);
     });
     return result;
   }
@@ -233,7 +259,8 @@ export default class FirestoreManager extends Manager {
   public async findTask(id: string): Promise<Task | undefined> {
     const data = await this.firestore.collection("task").doc(id).get();
     if (data.exists) {
-      return data.data() as Task;
+      const task = taskDataSchema.parse(data.data());
+      return task;
     }
     return undefined;
   }
@@ -243,7 +270,8 @@ export default class FirestoreManager extends Manager {
       await this.firestore.collection("task").doc(taskData._id).set(taskData);
       await this.recache("task");
       return true;
-    } catch (e) {
+    } catch (e: any) {
+      this.bot.logger.error(e, "Error creating task");
       return false;
     }
   }
@@ -253,7 +281,58 @@ export default class FirestoreManager extends Manager {
       await this.firestore.collection("task").doc(id).delete();
       await this.recache("task");
       return true;
-    } catch (e) {
+    } catch (e: any) {
+      this.bot.logger.error(e, "Error deleting task");
+      return false;
+    }
+  }
+
+  public async findVCEvent(id: string): Promise<VCEvent | undefined> {
+    const data = await this.firestore.collection("vcevent").doc(id).get();
+    if (data.exists) {
+      const event = vcEventSchema.parse(data.data());
+      return event;
+    }
+    return undefined;
+  }
+
+  public async createVCEvent(eventData: VCEvent): Promise<boolean> {
+    try {
+      await this.firestore
+        .collection("vcEvent")
+        .doc(eventData._id)
+        .set(eventData);
+      await this.recache("vcEvent");
+      return true;
+    } catch (e: any) {
+      this.bot.logger.error(
+        e,
+        `Error creating vc event for ${eventData.title}`
+      );
+      return false;
+    }
+  }
+
+  public async deleteVCEvent(id: string): Promise<boolean> {
+    try {
+      await this.firestore.collection("vcEvent").doc(id).delete();
+      await this.recache("vcEvent");
+      return true;
+    } catch (e: any) {
+      this.bot.logger.error(e, "Error deleting vc event");
+      return false;
+    }
+  }
+
+  public async updateVCEvent(id: string, newData: Partial<VCEvent>) {
+    try {
+      await this.firestore
+        .collection("vcEvent")
+        .doc(id)
+        .set(newData, { merge: true });
+      await this.recache("vcEvent");
+    } catch (e: any) {
+      this.bot.logger.error(e, "Error updating vc event in firestore");
       return false;
     }
   }

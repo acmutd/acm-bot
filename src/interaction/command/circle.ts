@@ -1,4 +1,3 @@
-import { CIRCLE_PERMS } from "./../../util/perms";
 import { ChannelType, OverwriteType } from "discord-api-types/v10";
 import {
   ChatInputCommandInteraction,
@@ -7,7 +6,6 @@ import {
   GuildMember,
   Message,
   Role,
-  TextBasedChannel,
   TextChannel,
 } from "discord.js";
 
@@ -15,7 +13,7 @@ import Bot from "../../api/bot";
 import SlashCommand, {
   SlashCommandContext,
 } from "../../api/interaction/slashcommand";
-import { Circle, CircleData } from "../../api/schema";
+import { Circle } from "../../api/schema";
 import { settings } from "../../settings";
 
 export default class CircleCommand extends SlashCommand {
@@ -23,7 +21,7 @@ export default class CircleCommand extends SlashCommand {
     super({
       name: "circle",
       description: "A suite of command that manage ACM Community Circles.",
-      permissions: CIRCLE_PERMS,
+      permissions: BigInt(settings.roles.circleLeaders),
     });
     // Adding "add" subcommand
     this.slashCommand.addSubcommand((subcommand) => {

@@ -61,6 +61,7 @@ export interface Settings {
       education: string;
       hackutd: string;
     };
+    circleLeaders: string;
   };
 }
 export const settings: Settings = require("../botconfig.js") as Settings;
