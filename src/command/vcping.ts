@@ -45,6 +45,9 @@ export default class VCPingCommand extends Command {
       attendees.push(`<@${member.id}>`);
       mentions.push(member.id);
     }
+
+    if (msg.channel.isVoiceBased()) return;
+
     msg.channel
       .send({
         content:
@@ -53,6 +56,7 @@ export default class VCPingCommand extends Command {
         allowedMentions: { users: mentions },
       })
       .catch(() => {
+        if (msg.channel.isVoiceBased()) return;
         msg.channel.send({
           content: `VC Ping request failed for ${msg.author}**`,
           allowedMentions: { users: [] },

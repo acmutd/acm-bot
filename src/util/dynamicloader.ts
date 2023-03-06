@@ -11,7 +11,6 @@ export default class DynamicLoader {
 
       // Load interaction
       const obj = require(path + file);
-
       res.push(new obj.default(...constructorArgs));
     });
     return res;

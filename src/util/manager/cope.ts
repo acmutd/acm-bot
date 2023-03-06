@@ -18,6 +18,6 @@ export default class CopeManager extends Manager {
     if (!reaction.message.guild) return;
 
     const id = reaction.message.author!.id;
-    await this.bot.managers.database.coperIncrement(id);
+    await this.bot.managers.firestore.coperIncrement(id);
   }
 }

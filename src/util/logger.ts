@@ -66,7 +66,7 @@ export default class LoggerUtil {
         lvlText = leeks.hex("#D82C20", `[REDIS/${process.pid}]`);
         break;
       case LogLevel.DATABASE:
-        lvlText = leeks.rgb([88, 150, 54], `[MONGODB/${process.pid}]`);
+        lvlText = leeks.rgb([88, 150, 54], `[FIREBASE/${process.pid}]`);
         break;
     }
     const msg = message

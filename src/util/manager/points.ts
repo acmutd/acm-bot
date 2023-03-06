@@ -83,6 +83,7 @@ export default class PointsManager extends Manager {
     let embed = new EmbedBuilder({
       description: `**${user} has approved \`${encodedData.activity}\` for <@${encodedData.snowflake}>!**\n[link to original message](${msg.url})`,
     }).setColor([0, 255, 0]);
+    if (msg.channel.isVoiceBased()) return;
     return msg.channel.send({ embeds: [embed] });
   }
 

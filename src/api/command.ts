@@ -60,7 +60,6 @@ export default abstract class Command {
       .setDescription(`**${this.description}**`)
 
       .addFields(
-
         {
           name: "Usage",
           value:
@@ -86,7 +85,6 @@ export default abstract class Command {
           inline: true,
         }
       );
-
   }
 
   public sendInvalidUsage(msg: Message, bot: Bot): void {

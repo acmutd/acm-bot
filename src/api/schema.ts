@@ -1,166 +1,102 @@
-import { Schema, Document, model } from "mongoose";
-import { TaskType } from "../util/manager/schedule";
+import { z } from "zod";
 
 // Types
-export type ResponsesType = "strike" | "kick" | "ban" | "mute" | "caretaker";
+export const responsesEnum = z.enum([
+  "strike",
+  "kick",
+  "ban",
+  "mute",
+  "caretaker",
+]);
+export type IResponses = z.infer<typeof responsesEnum>;
 
 // Document Models
-export interface Member extends Document {
-  _id: string;
-  strikes: number;
-  lastStrike: Date;
-  preferences: {
-    subscribed: boolean;
-  };
-}
-export interface Response extends Document {
-  type: ResponsesType;
-  message: string;
-}
-export interface RRMessageData {
-  _id: string;
-  guild: string;
-  channel: string;
-  type: string;
-  reactionRoles: any;
-}
-export interface RRMessage extends Document {
-  _id: string;
-  guild: string;
-  channel: string;
-  type: string;
-  reactionRoles: any;
-}
-export interface TaskData extends Document {
-  _id: string;
-  type: TaskType;
-  cron: string | Date;
-  payload?: any;
-}
-export interface CircleData {
-  _id?: string;
-  name?: string;
-  description?: string;
-  imageUrl?: string;
-  emoji?: string;
-  createdOn?: Date;
-  channel?: string;
-  owner?: string;
-  subChannels: string[];
-}
-export interface CoperData {
-  _id: string;
-  score?: number;
-}
-export interface Coper extends Document {
-  _id: string;
-  score?: number;
-}
-export interface Circle extends Document {
-  _id?: string;
-  name?: string;
-  description?: string;
-  imageUrl?: string;
-  emoji?: string;
-  createdOn?: Date;
-  channel?: string;
-  owner?: string;
-  subChannels?: string[];
-}
-export interface Guild extends Document {
-  _id: string;
-  channels: {
-    verification: string;
-    error: string;
-    bulletin: string;
-  };
-  roles: {
-    member: string;
-    mute: string;
-    director: string;
-  };
-  divisions: object;
-  responses: {
-    strike: string[];
-    mute: string[];
-    kick: string[];
-    ban: string[];
-  };
-}
+export const memberSchema = z.object({
+  _id: z.string(),
+  strikes: z.number(),
+  lastStrike: z.date(),
+  preferences: z.object({
+    subscribed: z.boolean(),
+  }),
+});
+export type Member = z.infer<typeof memberSchema>;
 
-// Schema Generations
-const memberSchema = new Schema({
-  _id: String,
-  strikes: Number,
-  lastStrike: Date,
-  preferences: {
-    subscribed: Boolean,
-  },
+export const responseSchema = z.object({
+  type: responsesEnum,
+  message: z.string(),
 });
-const responseSchema = new Schema({
-  type: String,
-  message: String,
-});
-const rrSchema = new Schema({
-  _id: String,
-  guild: String,
-  channel: String,
-  type: String,
-  reactionRoles: Object,
-});
-const taskSchema = new Schema({
-  _id: String,
-  type: String,
-});
-const circleSchema = new Schema({
-  _id: String,
-  name: String,
-  description: String,
-  imageUrl: String,
-  emoji: String,
-  createdOn: Date,
-  channel: String,
-  owner: String,
-  subChannels: Array.from(String()),
-});
-const coperSchema = new Schema({
-  _id: String,
-  score: Number,
-});
-const guildSchema = new Schema({
-  _id: String,
-  channels: {
-    verification: String,
-    error: String,
-    bulletin: String,
-  },
-  roles: {
-    member: String,
-    mute: String,
-    director: String,
-  },
-  divisions: Object,
-  responses: {
-    strike: Array,
-    mute: Array,
-    kick: Array,
-    ban: Array,
-  },
+export type Response = z.infer<typeof responseSchema>;
+
+export const rrMessageDataSchema = z.object({
+  _id: z.string(),
+  guild: z.string(),
+  channel: z.string(),
+  type: z.string(),
+  reactionRoles: z.any(),
 });
 
-// Model Exports
-export const MemberSchema = model<Member>("member", memberSchema, "members");
-export const ResponseSchema = model<Response>(
-  "response",
-  responseSchema,
-  "responses"
-);
-export const RRMessageSchema = model<RRMessage>(
-  "rrmessage",
-  rrSchema,
-  "rrmessages"
-);
-export const TaskSchema = model<TaskData>("task", taskSchema, "tasks");
-export const CircleSchema = model<Circle>("circle", circleSchema, "circles");
-export const CoperSchema = model<Coper>("coper", coperSchema, "copers");
-export const GuildSchema = model<Guild>("guild", guildSchema, "guilds");
+export type RRMessageData = z.infer<typeof rrMessageDataSchema>;
+
+export const taskDataSchema = z.object({
+  _id: z.string(),
+  type: z.string(),
+  cron: z.union([z.string(), z.date()]),
+  payload: z.string(),
+});
+export type Task = z.infer<typeof taskDataSchema>;
+
+export const circleDataSchema = z.object({
+  _id: z.string(),
+  name: z.string(),
+  description: z.string(),
+  imageUrl: z.string(),
+  emoji: z.string(),
+  createdOn: z.date(),
+  channel: z.string(),
+  owner: z.string(),
+  subChannels: z.array(z.string()),
+});
+export type Circle = z.infer<typeof circleDataSchema>;
+
+export const coperSchema = z.object({
+  _id: z.string(),
+  score: z.number().default(0),
+});
+export type Coper = z.infer<typeof coperSchema>;
+
+export const guildSchema = z.object({
+  _id: z.string(),
+  channels: z.object({
+    verification: z.string(),
+    error: z.string(),
+    bulletin: z.string(),
+  }),
+  roles: z.object({
+    member: z.string(),
+    mute: z.string(),
+    director: z.string(),
+  }),
+  divisions: z.any(),
+  responses: z.object({
+    strike: z.array(z.string()),
+    mute: z.array(z.string()),
+    kick: z.array(z.string()),
+    ban: z.array(z.string()),
+  }),
+});
+export type Guild = z.infer<typeof guildSchema>;
+
+export const vcEventTypeEnum = z.enum(["starting", "ending soon", "ended"]);
+
+export const vcEventSchema = z.object({
+  _id: z.string(),
+  title: z.string(),
+  startsIn: z.date(),
+  duration: z.number(),
+  circleRole: z.string(),
+  circle: circleDataSchema,
+  type: vcEventTypeEnum,
+  voiceChannel: z.string().optional(),
+});
+
+export type VCEvent = z.infer<typeof vcEventSchema>;

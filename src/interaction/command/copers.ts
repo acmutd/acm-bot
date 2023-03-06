@@ -18,7 +18,7 @@ export default class CopersCommand extends SlashCommand {
   }: SlashCommandContext): Promise<void> {
     const { member } = interaction;
 
-    const copers = await bot.managers.database.coperFetch();
+    const copers = await bot.managers.firestore.coperFetch();
 
     const title = `📣 ${member!.user.username} found some copers!`;
 

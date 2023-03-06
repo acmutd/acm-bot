@@ -1,9 +1,9 @@
-import { VCTask } from "./../../interaction/command/bookvc";
 import { Collection } from "discord.js";
 import schedule, { Job } from "node-schedule";
 import { v4 } from "uuid";
 import Bot from "../../api/bot";
 import Manager from "../../api/manager";
+import { VCEvent } from "../../api/schema";
 
 export type TaskType =
   | "reminder"
@@ -20,10 +20,12 @@ export interface Task {
 
 export default class ScheduleManager extends Manager {
   public tasks: Collection<string, Task>;
+  public vcEvents: Collection<string, VCEvent>;
 
   constructor(bot: Bot) {
     super(bot);
     this.tasks = new Collection();
+    this.vcEvents = new Collection();
   }
 
   /**
@@ -31,21 +33,20 @@ export default class ScheduleManager extends Manager {
    */
   public init(): void {
     const setup = async () => {
-      const res = await this.bot.managers.database.schemas.task.find({});
+      const res = await this.bot.managers.firestore.fetchTasks();
       res.forEach(async (data) => {
-        const taskData = data.toObject();
-        const task = {
-          id: taskData["_id"],
-          type: taskData["type"],
-          cron: taskData["cron"],
-          payload: taskData["payload"],
-        };
-        await this.createTask(task);
+        await this.createTask(data as Task);
       });
-      return res;
+      const vcRes = await this.bot.managers.firestore.fetchVCTasks();
+      vcRes.forEach(async (data) => {
+        await this.createVCReminderTask(data);
+      });
+      return [res, vcRes];
     };
-    setup().then((res) => {
-      this.bot.logger.info(`Loaded ${res.length} scheduled tasks.`);
+    setup().then(([res, vcRes]) => {
+      this.bot.logger.info(
+        `Loaded ${res.length} scheduled tasks and ${vcRes.length} VC events`
+      );
     });
   }
 
@@ -65,17 +66,17 @@ export default class ScheduleManager extends Manager {
     if (!t.id) t.id = v4();
 
     // Add task to the database
-    const search = await this.bot.managers.database.schemas.task.find({
-      _id: t.id,
-    });
-    if (search.length == 0)
-      await this.bot.managers.database.schemas.task.create({
+    const search = await this.bot.managers.firestore.findTask(t.id);
+    console.log(search);
+    if (!search) {
+      const res = await this.bot.managers.firestore.createTask({
         _id: t.id,
-        cron: t.cron,
         type: t.type,
+        cron: t.cron,
         payload: t.payload,
       });
-
+      console.log(res);
+    }
     // Schedule task in memory
     t.job = schedule.scheduleJob(t.cron, () => this.runTask(t));
     this.tasks.set(t.id, t);
@@ -83,6 +84,21 @@ export default class ScheduleManager extends Manager {
     return t;
   }
 
+  public async createVCReminderTask(task: VCEvent): Promise<VCEvent> {
+    // Check if task already exists
+    if (this.vcEvents.has(task._id)) {
+      this.vcEvents.set(task._id, task);
+    }
+
+    const search = await this.bot.managers.firestore.findVCEvent(task._id);
+    if (!search) await this.bot.managers.firestore.createVCEvent(task);
+
+    schedule.scheduleJob(task.startsIn, () => {
+      this.runVCEvent(task);
+    });
+    this.vcEvents.set(task._id, task);
+    return task;
+  }
   /**
    *
    * @param id
@@ -94,7 +110,7 @@ export default class ScheduleManager extends Manager {
 
     t.job?.cancel();
     this.tasks.delete(id);
-    await this.bot.managers.database.schemas.task.findByIdAndDelete(id);
+    await this.bot.managers.firestore.deleteTask(id);
 
     return true;
   }
@@ -108,9 +124,9 @@ export default class ScheduleManager extends Manager {
     return this.tasks.get(id);
   }
 
-  private async runTask(task: Task | VCTask) {
+  private async runTask(task: Task) {
     if (task.id) this.tasks.delete(task.id);
-    await this.bot.managers.database.schemas.task.deleteOne({ _id: task.id });
+    await this.bot.managers.firestore.deleteTask(task.id!);
     if (task.job) task.job.cancel();
 
     switch (task.type) {
@@ -123,13 +139,11 @@ export default class ScheduleManager extends Manager {
       case "circle_activity_reminder":
         this.bot.managers.circle.sendActivityReminder(task.payload);
         break;
-      case "circle_activity":
-        this.bot.managers.circle.sendActivity(
-          task as VCTask,
-          task.payload.type
-        );
-        break;
     }
     await this.deleteTask(task.id!);
+  }
+
+  private async runVCEvent(task: VCEvent) {
+    this.bot.managers.circle.runVCEvent(task);
   }
 }

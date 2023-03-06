@@ -36,8 +36,9 @@ export default class VCEventCommand extends Command {
         );
       vc = chan;
     } else {
-      if (!msg.member?.voice.channel && action !== "list")
+      if (!msg.member?.voice.channel && action !== "list") {
         return bot.response.emit(msg.channel, "Please join a voice channel.");
+      }
       vc = msg.member?.voice.channel!;
     }
     let data;
@@ -81,6 +82,8 @@ export default class VCEventCommand extends Command {
         const channels = Array.from(bot.managers.activity.voiceLog.keys()).map(
           (id) => `<#${id}>`
         );
+
+        if (msg.channel.isVoiceBased()) return;
         await msg.channel.send({
           embeds: [
             new EmbedBuilder({
@@ -110,6 +113,9 @@ export default class VCEventCommand extends Command {
         `\`${i + 1}\`. <@${userID}>: ${time} minute${time === 1 ? "" : "s"}`
       );
     });
+
+    if (channel.isVoiceBased()) return;
+
     await channel.send({
       embeds: [
         new EmbedBuilder({

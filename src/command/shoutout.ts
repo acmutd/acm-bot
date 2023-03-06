@@ -13,6 +13,7 @@ export default class ShoutoutCommand extends Command {
   }
 
   public async exec({ msg, bot, args }: CommandContext) {
+    if (msg.channel.isVoiceBased()) return;
     if (!/^<@!?[\d]{17,18}>/.test(args[0]))
       return bot.response.emit(msg.channel, "No user mentions.", "invalid");
 

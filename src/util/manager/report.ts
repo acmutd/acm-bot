@@ -9,7 +9,6 @@ import {
   MessageContextMenuCommandInteraction,
 } from "discord.js";
 import { v4 } from "uuid";
-import assert from "assert";
 import ReportModal from "../../interaction/modal/report";
 import { ActionRowBuilder, EmbedBuilder } from "@discordjs/builders";
 
@@ -157,8 +156,8 @@ export default class ReportManager extends Manager {
     const modChannel = await this.bot.channels.fetch(
       this.bot.settings.channels.mod
     );
-    assert.ok(modChannel!.isTextBased());
 
+    if (!modChannel?.isTextBased() || modChannel.isVoiceBased()) return;
     // Send report
     modChannel.send({
       content: reportContent,

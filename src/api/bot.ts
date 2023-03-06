@@ -5,7 +5,6 @@ import LoggerUtil from "../util/logger";
 import CommandManager from "../util/manager/command";
 import IndicatorManager from "../util/manager/indicator";
 import EventManager from "../util/manager/event";
-import DatabaseManager from "../util/manager/database";
 import ScheduleManager from "../util/manager/schedule";
 import CircleManager from "../util/manager/circle";
 import FirestoreManager from "../util/manager/firestore";
@@ -44,7 +43,6 @@ export interface ManagerList {
   verification: VerificationManager;
   event: EventManager;
   indicator: IndicatorManager;
-  database: DatabaseManager;
   scheduler: ScheduleManager;
   circle: CircleManager;
   rero: ReactionRoleManager;
@@ -98,7 +96,6 @@ export default class Bot extends Client {
       verification: new VerificationManager(this),
       event: new EventManager(this, config.eventPath),
       indicator: new IndicatorManager(this),
-      database: new DatabaseManager(this, config),
       scheduler: new ScheduleManager(this),
       circle: new CircleManager(this),
       rero: new ReactionRoleManager(this),
