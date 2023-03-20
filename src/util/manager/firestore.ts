@@ -32,7 +32,7 @@ export type CacheTypes = z.infer<typeof cacheTypes>;
 export const cacheKeys = z.enum([
   "responses",
   "rrmessages",
-  "circle",
+  "circles",
   "coper",
   "member",
   "task",
@@ -60,7 +60,7 @@ export default class FirestoreManager extends Manager {
     });
     await this.recache("responses", "responses");
     await this.recache("rrmessages", "rrmessages");
-    await this.recache("circle", "circles");
+    await this.recache("circles", "circles");
     await this.recache("coper", "copers");
     this.bot.managers.scheduler.init();
   }
@@ -204,10 +204,10 @@ export default class FirestoreManager extends Manager {
   public async circleAdd(circleData: Circle): Promise<boolean> {
     try {
       await this.firestore
-        .collection("circle")
+        .collection("circles")
         .doc(circleData._id)
         .set(circleData);
-      await this.recache("circle");
+      await this.recache("circles");
       return true;
     } catch (e: any) {
       this.bot.logger.error(e, `Error adding circle ${circleData.name}`);
@@ -217,8 +217,8 @@ export default class FirestoreManager extends Manager {
 
   public async circleRemove(id: string): Promise<boolean> {
     try {
-      await this.firestore.collection("circle").doc(id).delete();
-      await this.recache("circle");
+      await this.firestore.collection("circles").doc(id).delete();
+      await this.recache("circles");
       return true;
     } catch (e: any) {
       this.bot.logger.error(e, `Error removing circle ${id}`);
@@ -229,7 +229,7 @@ export default class FirestoreManager extends Manager {
   public async circleUpdate(id: string, newData: Partial<Circle>) {
     try {
       await this.firestore.collection("circle").doc(id).set(newData);
-      await this.recache("circle");
+      await this.recache("circles");
     } catch (e: any) {
       this.bot.logger.error(e, "Error updating circle in firestore");
       return false;

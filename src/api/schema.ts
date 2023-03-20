@@ -54,7 +54,7 @@ export const circleDataSchema = z.object({
   createdOn: z.date(),
   channel: z.string(),
   owner: z.string(),
-  subChannels: z.array(z.string()),
+  subChannels: z.array(z.string()).default([]),
 });
 export type Circle = z.infer<typeof circleDataSchema>;
 
