@@ -6,6 +6,7 @@ dist/
 botconfig.js
 
 acm-core.json
+acm-core-prod.json
 .idea/
 .vscode/
 .DS_Store
