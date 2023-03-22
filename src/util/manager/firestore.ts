@@ -230,6 +230,7 @@ export default class FirestoreManager extends Manager {
     try {
       await this.firestore.collection("circle").doc(id).set(newData);
       await this.recache("circles");
+      return true;
     } catch (e: any) {
       this.bot.logger.error(e, "Error updating circle in firestore");
       return false;
