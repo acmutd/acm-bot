@@ -66,8 +66,9 @@ export default class AdminCommand extends SlashCommand {
         ephemeral: true,
       });
     }
+    // Fetch all messages in the verification channel
+    const messages = await verificationChannel.messages.fetch({ limit: 50 });
 
-    const messages = await verificationChannel.messages.fetch();
     const verificationMessages = messages.filter((msg) => {
       if (!msg.member) return false;
       if (msg.content.length > 32) return false;

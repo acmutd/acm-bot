@@ -333,8 +333,6 @@ export default class FirestoreManager extends Manager {
         .collection("discord")
         .doc("snowflake_to_name")
         .set(obj, { merge: true });
-
-      console.log("updated verification");
     } catch (e: any) {
       this.bot.logger.error(e, "Error updating verification");
     }
