@@ -325,6 +325,19 @@ export default class FirestoreManager extends Manager {
     }
   }
 
+  public async verification(memberId: string, content: string) {
+    const obj: { [key: string]: string } = {};
+    try {
+      obj[memberId] = content;
+      await this.firestore
+        .collection("discord")
+        .doc("snowflake_to_name")
+        .set(obj, { merge: true });
+    } catch (e: any) {
+      this.bot.logger.error(e, "Error updating verification");
+    }
+  }
+
   public async updateVCEvent(id: string, newData: Partial<VCEvent>) {
     try {
       await this.firestore
