@@ -230,6 +230,7 @@ export default class FirestoreManager extends Manager {
     try {
       await this.firestore.collection("circle").doc(id).set(newData);
       await this.recache("circles");
+      return true;
     } catch (e: any) {
       this.bot.logger.error(e, "Error updating circle in firestore");
       return false;
@@ -321,6 +322,21 @@ export default class FirestoreManager extends Manager {
     } catch (e: any) {
       this.bot.logger.error(e, "Error deleting vc event");
       return false;
+    }
+  }
+
+  public async verification(memberId: string, content: string) {
+    const obj: { [key: string]: string } = {};
+    try {
+      obj[memberId] = content;
+      await this.firestore
+        .collection("discord")
+        .doc("snowflake_to_name")
+        .set(obj, { merge: true });
+
+      console.log("updated verification");
+    } catch (e: any) {
+      this.bot.logger.error(e, "Error updating verification");
     }
   }
 

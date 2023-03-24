@@ -14,29 +14,26 @@ export default class VerificationManager extends Manager {
     this.bot = bot;
   }
 
-  public init() {}
+  public async init() {}
 
   public async handle(msg: Message) {
-    if (msg.guild) {
-      if (msg.channel.id == this.verificationChannelID && msg.member) {
-        try {
-          // Modify member nickname and roles
-          await msg.member.setNickname(msg.content);
-          await msg.member.roles.add(this.memberRoleID);
-          await msg.delete();
+    // Check if the message is in the verification channel
+    if (!msg.guild) return;
+    if (msg.channel.id !== this.verificationChannelID) return;
+    if (!msg.member) return;
 
-          // Add to firebase
-          let map: any = {};
-          map[msg.member.id] = msg.content;
-          this.bot.managers.firestore.firestore
-            ?.collection("discord")
-            .doc("snowflake_to_name")
-            .set(map, { merge: true });
-          return;
-        } catch (err: any) {
-          this.bot.logger.error(err);
-        }
-      }
+    // Modify member nickname and roles
+    try {
+      await msg.member.setNickname(msg.content);
+      await msg.member.roles.add(this.memberRoleID);
+      await msg.delete();
+
+      await this.bot.managers.firestore.verification(
+        msg.member.id,
+        msg.content
+      );
+    } catch (err: any) {
+      this.bot.logger.error(err);
     }
   }
 }
