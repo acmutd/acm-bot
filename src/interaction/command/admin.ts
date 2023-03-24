@@ -1,4 +1,5 @@
 import assert from "assert";
+import { ChannelType } from "discord.js";
 
 import SlashCommand, {
   SlashCommandContext,
@@ -11,25 +12,79 @@ export default class AdminCommand extends SlashCommand {
       description: "Staff commands",
       permissions: 0,
     });
-    this.slashCommand.addSubcommand((subcommand) =>
-      subcommand
-        .setName("lookup")
-        .setDescription("Look up a user's name")
-        .addUserOption((option) =>
-          option
-            .setName("user")
-            .setDescription("User to look up")
-            .setRequired(true)
-        )
-    );
+    this.slashCommand
+      .addSubcommand((subcommand) =>
+        subcommand
+          .setName("lookup")
+          .setDescription("Look up a user's name")
+          .addUserOption((option) =>
+            option
+              .setName("user")
+              .setDescription("User to look up")
+              .setRequired(true)
+          )
+      )
+      .addSubcommand((subcommand) =>
+        subcommand
+          .setName("verify")
+          .setDescription("Verify all users in the verification channel")
+      );
   }
 
   public async handleInteraction({
     bot,
     interaction,
   }: SlashCommandContext): Promise<void> {
-    assert(interaction.options.getSubcommand() === "lookup");
+    switch (interaction.options.getSubcommand()) {
+      case "lookup":
+        await this.lookupUser({ bot, interaction });
+        break;
+      case "verify":
+        await this.verifyAll({ bot, interaction });
+        break;
+      default:
+        assert.fail("Unknown subcommand");
 
+        break;
+    }
+  }
+
+  private async verifyAll({ bot, interaction }: SlashCommandContext) {
+    const verificationChannel = await bot.channels.fetch(
+      bot.settings.channels.verification
+    );
+    if (!verificationChannel || verificationChannel.isVoiceBased()) {
+      return await interaction.reply({
+        content: "Verification channel is not a text channel.",
+        ephemeral: true,
+      });
+    }
+
+    if (verificationChannel.type !== ChannelType.GuildText) {
+      return await interaction.reply({
+        content: "Verification channel is not a text channel.",
+        ephemeral: true,
+      });
+    }
+
+    const messages = await verificationChannel.messages.fetch();
+    const verificationMessages = messages.filter((msg) => {
+      if (!msg.member) return false;
+      if (msg.content.length > 32) return false;
+      return true;
+    });
+
+    verificationMessages.forEach(async (msg) => {
+      await bot.managers.verification.handle(msg);
+    });
+
+    await interaction.reply({
+      content: `Verified ${verificationMessages.size} users.`,
+      ephemeral: true,
+    });
+  }
+
+  private async lookupUser({ bot, interaction }: SlashCommandContext) {
     const user = interaction.options.getUser("user", true);
 
     const nameMappingReq = await bot.managers.firestore.firestore

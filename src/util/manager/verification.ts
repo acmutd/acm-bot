@@ -14,7 +14,7 @@ export default class VerificationManager extends Manager {
     this.bot = bot;
   }
 
-  public init() {}
+  public async init() {}
 
   public async handle(msg: Message) {
     // Check if the message is in the verification channel
