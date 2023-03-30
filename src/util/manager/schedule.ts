@@ -67,7 +67,6 @@ export default class ScheduleManager extends Manager {
 
     // Add task to the database
     const search = await this.bot.managers.firestore.findTask(t.id);
-    console.log(search);
     if (!search) {
       const res = await this.bot.managers.firestore.createTask({
         _id: t.id,
@@ -75,7 +74,6 @@ export default class ScheduleManager extends Manager {
         cron: t.cron,
         payload: t.payload,
       });
-      console.log(res);
     }
     // Schedule task in memory
     t.job = schedule.scheduleJob(t.cron, () => this.runTask(t));

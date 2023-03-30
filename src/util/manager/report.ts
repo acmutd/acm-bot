@@ -156,8 +156,9 @@ export default class ReportManager extends Manager {
     const modChannel = await this.bot.channels.fetch(
       this.bot.settings.channels.mod
     );
-
-    if (!modChannel?.isTextBased() || modChannel.isVoiceBased()) return;
+    if (!modChannel?.isTextBased() || modChannel.isVoiceBased()) {
+      return;
+    }
     // Send report
     modChannel.send({
       content: reportContent,
