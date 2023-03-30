@@ -338,6 +338,36 @@ export default class FirestoreManager extends Manager {
     }
   }
 
+  // Checks if the user is already verified
+  public async isVerified(memberId: string): Promise<boolean> {
+    const data = await this.firestore
+      .collection("discord")
+      .doc("snowflake_to_name")
+      .get();
+    if (data.exists) {
+      const obj = data.data();
+      if (obj) {
+        return !!obj[memberId];
+      }
+    }
+    return false;
+  }
+
+  // Gets the name of the user from the verification
+  public async getVerifiedName(memberId: string): Promise<string | undefined> {
+    const data = await this.firestore
+      .collection("discord")
+      .doc("snowflake_to_name")
+      .get();
+    if (data.exists) {
+      const obj = data.data();
+      if (obj) {
+        return obj[memberId];
+      }
+    }
+    return undefined;
+  }
+
   public async updateVCEvent(id: string, newData: Partial<VCEvent>) {
     try {
       await this.firestore

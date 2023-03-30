@@ -9,6 +9,26 @@ export default class GuildMemberAddEvent extends Event {
   }
 
   public async emit(bot: Bot, member: GuildMember) {
+    // Check if the user is already verified
+    if (await bot.managers.verification.handleRepeatJoin(member)) {
+      const embed = new EmbedBuilder()
+        .setTitle(`**Welcome back to the ACM Discord Server!** 🎉`)
+        .setAuthor({
+          name: `The Association for Computing Machinery`,
+          iconURL: "https://www.acmutd.co/png/acm-light.png",
+          url: "https://acmutd.co/",
+        })
+        .setColor(0xec7621)
+        .setFooter({
+          text: `Powered by ACM`,
+          iconURL: bot.user!.avatarURL() ?? "",
+        })
+        .addFields([
+          { name: `You are already verified!`, value: `Welcome back!` },
+        ]);
+
+      await member.send({ embeds: [embed] });
+    }
     const embed = new EmbedBuilder({
       title: `**Welcome to the ACM Discord Server!** 🎉`,
       author: {
