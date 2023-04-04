@@ -84,6 +84,7 @@ export default class Bot extends Client {
     this.response = new ResponseUtil(config.responseFormat);
     this.restConnection = new REST({ version: "10" }).setToken(config.token);
     this.managers = {
+      firestore: new FirestoreManager(this),
       command: new CommandManager(this, config.commandPath),
       interaction: new InteractionManager(
         this,
@@ -99,7 +100,6 @@ export default class Bot extends Client {
       scheduler: new ScheduleManager(this),
       circle: new CircleManager(this),
       rero: new ReactionRoleManager(this),
-      firestore: new FirestoreManager(this),
       resolve: new ResolveManager(this),
       express: new ExpressManager(this, config.endpointPath),
       points: new PointsManager(this),

@@ -41,7 +41,7 @@ export const taskDataSchema = z.object({
   _id: z.string(),
   type: z.string(),
   cron: z.union([z.string(), z.date()]),
-  payload: z.string(),
+  payload: z.string().default(""),
 });
 export type Task = z.infer<typeof taskDataSchema>;
 

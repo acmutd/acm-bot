@@ -57,7 +57,7 @@ export default class ScheduleManager extends Manager {
    */
   public async createTask(task: Task): Promise<Task> {
     // create local task
-    const t = { ...task };
+    const t: Task = { ...task, payload: task.payload || "" };
 
     // If ID passed in and already exists, return existing task
     if (t.id && this.tasks.has(t.id)) return this.tasks.get(t.id)!;

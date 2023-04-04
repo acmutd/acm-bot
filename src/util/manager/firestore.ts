@@ -241,7 +241,10 @@ export default class FirestoreManager extends Manager {
     const data = await this.firestore.collection("task").get();
     const result: Task[] = [];
     data.forEach((doc) => {
-      const task = taskDataSchema.parse(doc.data());
+      if (!doc.exists) return;
+      const docData = doc.data();
+      if (!docData) return;
+      const task = taskDataSchema.parse(docData);
       result.push(task);
     });
     return result;
