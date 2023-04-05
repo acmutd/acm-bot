@@ -38,8 +38,8 @@ export const rrMessageDataSchema = z.object({
 export type RRMessageData = z.infer<typeof rrMessageDataSchema>;
 
 export const taskDataSchema = z.object({
-  _id: z.string(),
-  type: z.string(),
+  id: z.string(),
+  type: z.enum(["reminder", "circle_activity_reminder", "circle_activity"]),
   cron: z.union([z.string(), z.date()]),
   payload: z.string().default(""),
 });

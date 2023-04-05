@@ -35,7 +35,7 @@ export default class ScheduleManager extends Manager {
     const setup = async () => {
       const res = await this.bot.managers.firestore.fetchTasks();
       res.forEach(async (data) => {
-        await this.createTask(data as Task);
+        await this.createTask(data);
       });
       const vcRes = await this.bot.managers.firestore.fetchVCTasks();
       vcRes.forEach(async (data) => {
@@ -68,8 +68,8 @@ export default class ScheduleManager extends Manager {
     // Add task to the database
     const search = await this.bot.managers.firestore.findTask(t.id);
     if (!search) {
-      const res = await this.bot.managers.firestore.createTask({
-        _id: t.id,
+      await this.bot.managers.firestore.createTask({
+        id: t.id,
         type: t.type,
         cron: t.cron,
         payload: t.payload,

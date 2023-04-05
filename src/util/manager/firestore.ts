@@ -62,7 +62,6 @@ export default class FirestoreManager extends Manager {
     await this.recache("rrmessages", "rrmessages");
     await this.recache("circles", "circles");
     await this.recache("coper", "copers");
-    this.bot.managers.scheduler.init();
   }
 
   private async recache(schema: CacheKeys, cache?: keyof CacheTypes) {
@@ -261,17 +260,17 @@ export default class FirestoreManager extends Manager {
   }
 
   public async findTask(id: string): Promise<Task | undefined> {
-    const data = await this.firestore.collection("task").doc(id).get();
-    if (data.exists) {
-      const task = taskDataSchema.parse(data.data());
-      return task;
-    }
-    return undefined;
+    const data = await this.firestore.collection("task").get();
+    // Should only be one
+    const doc = data.docs.find((doc) => doc.data().id === id);
+    if (!doc) return;
+    const task = taskDataSchema.parse(doc.data());
+    return task;
   }
 
   public async createTask(taskData: Task): Promise<boolean> {
     try {
-      await this.firestore.collection("task").doc(taskData._id).set(taskData);
+      await this.firestore.collection("task").doc(taskData.id).set(taskData);
       await this.recache("task");
       return true;
     } catch (e: any) {
@@ -341,34 +340,24 @@ export default class FirestoreManager extends Manager {
     }
   }
 
-  // Checks if the user is already verified
-  public async isVerified(memberId: string): Promise<boolean> {
-    const data = await this.firestore
-      .collection("discord")
-      .doc("snowflake_to_name")
-      .get();
-    if (data.exists) {
-      const obj = data.data();
-      if (obj) {
-        return !!obj[memberId];
-      }
-    }
-    return false;
+  /**
+   * Checks if a user is verified
+   * @param memberId
+   * @returns The name of the user if they are verified, undefined otherwise
+   */
+  public async isVerified(memberId: string): Promise<string | undefined> {
+    return await this.getVerifiedName(memberId);
   }
 
-  // Gets the name of the user from the verification
-  public async getVerifiedName(memberId: string): Promise<string | undefined> {
+  // Maybe implement cache?
+  private async getVerifiedName(memberId: string): Promise<string | undefined> {
     const data = await this.firestore
       .collection("discord")
       .doc("snowflake_to_name")
       .get();
-    if (data.exists) {
-      const obj = data.data();
-      if (obj) {
-        return obj[memberId];
-      }
-    }
-    return undefined;
+
+    // If the data doesn't exist, return undefined
+    return (data?.exists && data?.data()?.[memberId]) ?? undefined;
   }
 
   public async updateVCEvent(id: string, newData: Partial<VCEvent>) {
