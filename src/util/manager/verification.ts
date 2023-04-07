@@ -21,6 +21,7 @@ export default class VerificationManager extends Manager {
     if (!msg.guild) return;
     if (msg.channel.id !== this.verificationChannelID) return;
     if (!msg.member) return;
+    console.log(msg);
 
     // Modify member nickname and roles
     try {
@@ -45,12 +46,14 @@ export default class VerificationManager extends Manager {
 
     // Modify member nickname and roles
     try {
-      await Promise.allSettled([
+      const res = await Promise.allSettled([
         member.setNickname(name),
         member.roles.add(this.memberRoleID),
       ]);
+      console.log(res);
+      return true;
     } catch (err: any) {
-      this.bot.logger.error(err, "Error handling repeat join");
+      this.bot.managers.error.handleErr(err, "Error verifying user.");
     }
     return true;
   }
