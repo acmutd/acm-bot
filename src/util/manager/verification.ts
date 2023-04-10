@@ -21,7 +21,6 @@ export default class VerificationManager extends Manager {
     if (!msg.guild) return;
     if (msg.channel.id !== this.verificationChannelID) return;
     if (!msg.member) return;
-    console.log(msg);
 
     // Modify member nickname and roles
     try {
@@ -42,15 +41,13 @@ export default class VerificationManager extends Manager {
   public async handleRepeatJoin(member: GuildMember): Promise<boolean> {
     // Check if the user is already verified
     const name = await this.bot.managers.firestore.isVerified(member.id);
+    console.log({ name });
     if (!name) return false;
 
     // Modify member nickname and roles
     try {
-      const res = await Promise.allSettled([
-        member.setNickname(name),
-        member.roles.add(this.memberRoleID),
-      ]);
-      console.log(res);
+      await member.setNickname(name);
+      await member.roles.add(this.memberRoleID);
       return true;
     } catch (err: any) {
       this.bot.managers.error.handleErr(err, "Error verifying user.");
