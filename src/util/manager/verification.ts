@@ -41,7 +41,6 @@ export default class VerificationManager extends Manager {
   public async handleRepeatJoin(member: GuildMember): Promise<boolean> {
     // Check if the user is already verified
     const name = await this.bot.managers.firestore.isVerified(member.id);
-    console.log({ name });
     if (!name) return false;
 
     // Modify member nickname and roles
