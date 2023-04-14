@@ -1,4 +1,4 @@
-import { Message } from "discord.js";
+import { GuildMember, Message } from "discord.js";
 import Bot from "../../api/bot";
 import Manager from "../../api/manager";
 
@@ -35,5 +35,22 @@ export default class VerificationManager extends Manager {
     } catch (err: any) {
       this.bot.logger.error(err);
     }
+  }
+
+  // Return true if the user is already in the database
+  public async handleRepeatJoin(member: GuildMember): Promise<boolean> {
+    // Check if the user is already verified
+    const name = await this.bot.managers.firestore.isVerified(member.id);
+    if (!name) return false;
+
+    // Modify member nickname and roles
+    try {
+      await member.setNickname(name);
+      await member.roles.add(this.memberRoleID);
+      return true;
+    } catch (err: any) {
+      this.bot.managers.error.handleErr(err, "Error verifying user.");
+    }
+    return true;
   }
 }
