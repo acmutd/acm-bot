@@ -34,7 +34,7 @@ export default class CircleManager extends Manager {
   }
 
   public init(): void {
-    this.scheduleActivityReminder();
+    // this.scheduleActivityReminder();
   }
 
   /**
@@ -342,7 +342,7 @@ export default class CircleManager extends Manager {
         embeds: [embed],
       });
     } finally {
-      this.scheduleActivityReminder();
+      // this.scheduleActivityReminder();
     }
   }
 
