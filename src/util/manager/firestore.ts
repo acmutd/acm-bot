@@ -72,6 +72,7 @@ export default class FirestoreManager extends Manager {
         data.forEach((doc) => {
           // Firebase doesn't support Date objects, so we have to convert it to a Date object
           // This is a hacky way to do it, but it works
+          console.log(doc.data());
           if (cache === "circles") {
             let date = doc.data().createdOn.toDate();
             const circle = circleDataSchema.parse({
@@ -91,7 +92,8 @@ export default class FirestoreManager extends Manager {
 
   public async manualRecache(schema: CacheKeys): Promise<boolean> {
     try {
-      await this.recache(schema);
+      const cacheName = schema as keyof CacheTypes;
+      await this.recache(schema, cacheName);
       this.bot.logger.database("Recached firestore data", schema);
       return true;
     } catch (error: any) {
@@ -206,7 +208,7 @@ export default class FirestoreManager extends Manager {
         .collection("circles")
         .doc(circleData._id)
         .set(circleData);
-      await this.recache("circles");
+      await this.manualRecache("circles");
       return true;
     } catch (e: any) {
       this.bot.logger.error(e, `Error adding circle ${circleData.name}`);
@@ -227,7 +229,7 @@ export default class FirestoreManager extends Manager {
 
   public async circleUpdate(id: string, newData: Partial<Circle>) {
     try {
-      await this.firestore.collection("circle").doc(id).set(newData);
+      await this.firestore.collection("circles").doc(id).update(newData);
       await this.recache("circles");
       return true;
     } catch (e: any) {

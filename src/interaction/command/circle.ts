@@ -15,6 +15,7 @@ import SlashCommand, {
 } from "../../api/interaction/slashcommand";
 import { Circle } from "../../api/schema";
 import { settings } from "../../settings";
+import { HexColorString } from "discord.js";
 
 export default class CircleCommand extends SlashCommand {
   public constructor() {
@@ -169,6 +170,7 @@ async function createExtraChannels(
     name: channelName,
     type: ChannelType.GuildText,
     parent: settings.circles.parentCategory,
+    topic: circle.description,
     permissionOverwrites: [
       {
         id: guild.roles.everyone,
@@ -182,8 +184,12 @@ async function createExtraChannels(
       },
     ],
   });
+  console.log(circle);
+  const subChannels = circle.subChannels;
+  subChannels.push(channel.id);
+
   const res = await bot.managers.firestore.circleUpdate(circleId, {
-    subChannels: [...(circle.subChannels || []), channel.id],
+    subChannels,
   });
 
   if (!res) {
@@ -197,40 +203,49 @@ async function createExtraChannels(
 }
 
 async function addCircle(bot: Bot, interaction: ChatInputCommandInteraction) {
-  const emoji = interaction.options.getString("emoji", true);
-  if (!testEmoji(emoji))
-    return await interaction.editReply("Invalid emoji, try again.");
+  try {
+    const emoji = interaction.options.getString("emoji", true);
+    if (!testEmoji(emoji))
+      return await interaction.editReply("Invalid emoji, try again.");
 
-  const circle = createCircleData(interaction);
+    const circle = createCircleData(interaction);
 
-  const circleOwner = interaction.options.getMember("owner") as GuildMember;
-  const guild = interaction.guild!;
+    const circleOwner = interaction.options.getMember("owner") as GuildMember;
+    const guild = interaction.guild!;
 
-  // Create role
-  const color = interaction.options.getString("color", true) as ColorResolvable;
-  const circleRole = await guild.roles.create({
-    name: `${circle.emoji} ${circle.name}`,
-    mentionable: true,
-    color,
-  });
+    // Create role
+    const color = `#${interaction.options.getString(
+      "color",
+      true
+    )}` satisfies HexColorString;
 
-  // Give role to owner
-  await circleOwner.roles.add(circleRole);
+    const circleRole = await guild.roles.create({
+      name: `${circle.emoji} ${circle.name}`,
+      mentionable: true,
+      color,
+    });
 
-  const circleChannel = await createChannel(circle, circleRole, guild);
-  const added = await handleAddCircle(bot, circle, circleRole, circleChannel);
-  // If failed to add circle, delete the role and channel
-  if (!added) {
-    await circleRole.delete();
-    await circleChannel.delete();
-    return await interaction.editReply(
-      "Failed to add circle please try again."
+    // Give role to owner
+    await circleOwner.roles.add(circleRole);
+
+    const circleChannel = await createChannel(circle, circleRole, guild);
+    const added = await handleAddCircle(bot, circle, circleRole, circleChannel);
+    // If failed to add circle, delete the role and channel
+    if (!added) {
+      await circleRole.delete();
+      await circleChannel.delete();
+      return await interaction.editReply(
+        "Failed to add circle please try again."
+      );
+    }
+
+    await interaction.followUp(
+      `Successfully created circle <@&${circleRole.id}>.`
     );
+  } catch (err) {
+    console.log(err);
+    await interaction.followUp("Failed to add circle please try again.");
   }
-
-  await interaction.followUp(
-    `Successfully created circle <@&${circleRole.id}>.`
-  );
 }
 
 async function checkInactivity(
