@@ -184,7 +184,6 @@ async function createExtraChannels(
       },
     ],
   });
-  console.log(circle);
   const subChannels = circle.subChannels;
   subChannels.push(channel.id);
 

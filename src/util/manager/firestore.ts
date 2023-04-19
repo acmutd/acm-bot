@@ -72,7 +72,6 @@ export default class FirestoreManager extends Manager {
         data.forEach((doc) => {
           // Firebase doesn't support Date objects, so we have to convert it to a Date object
           // This is a hacky way to do it, but it works
-          console.log(doc.data());
           if (cache === "circles") {
             let date = doc.data().createdOn.toDate();
             const circle = circleDataSchema.parse({
@@ -111,7 +110,7 @@ export default class FirestoreManager extends Manager {
         type,
         message,
       });
-      await this.recache("responses");
+      await this.recache("responses", "responses");
       return true;
     } catch (e: any) {
       this.bot.logger.error(e, "Error adding response to firestore");
@@ -138,7 +137,7 @@ export default class FirestoreManager extends Manager {
 
   public async rrmsgAdd(newData: RRMessageData) {
     await this.firestore.collection("rrmessage").add(newData);
-    await this.recache("rrmessages");
+    await this.recache("rrmessages", "rrmessages");
   }
 
   public async coperFetch(): Promise<[string, number][]> {
@@ -168,7 +167,7 @@ export default class FirestoreManager extends Manager {
         .collection("coper")
         .doc(coperData._id)
         .set(coperData);
-      await this.recache("coper");
+      await this.recache("coper", "copers");
       return true;
     } catch (e: any) {
       this.bot.logger.error(e, "Error adding coper to firestore");
@@ -194,7 +193,7 @@ export default class FirestoreManager extends Manager {
   public async coperRemove(id: string): Promise<boolean> {
     try {
       await this.firestore.collection("coper").doc(id).delete();
-      await this.recache("coper");
+      await this.recache("coper", "copers");
       return true;
     } catch (e: any) {
       this.bot.logger.error(e, "Error removing coper from firestore");
@@ -219,7 +218,7 @@ export default class FirestoreManager extends Manager {
   public async circleRemove(id: string): Promise<boolean> {
     try {
       await this.firestore.collection("circles").doc(id).delete();
-      await this.recache("circles");
+      await this.recache("circles", "circles");
       return true;
     } catch (e: any) {
       this.bot.logger.error(e, `Error removing circle ${id}`);
@@ -230,7 +229,7 @@ export default class FirestoreManager extends Manager {
   public async circleUpdate(id: string, newData: Partial<Circle>) {
     try {
       await this.firestore.collection("circles").doc(id).update(newData);
-      await this.recache("circles");
+      await this.recache("circles", "circles");
       return true;
     } catch (e: any) {
       this.bot.logger.error(e, "Error updating circle in firestore");
