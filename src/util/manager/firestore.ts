@@ -67,23 +67,24 @@ export default class FirestoreManager extends Manager {
   private async recache(schema: CacheKeys, cache?: keyof CacheTypes) {
     try {
       const data = await this.firestore.collection(schema).get();
-      if (cache) {
-        this.cache[cache] = new Map();
-        data.forEach((doc) => {
-          // Firebase doesn't support Date objects, so we have to convert it to a Date object
-          // This is a hacky way to do it, but it works
-          if (cache === "circles") {
-            let date = doc.data().createdOn.toDate();
-            const circle = circleDataSchema.parse({
-              ...doc.data(),
-              createdOn: new Date(date),
-            });
-            this.cache[cache]?.set(doc.id, circle);
-          } else {
-            this.cache[cache]?.set(doc.id, doc.data() as any);
-          }
-        });
-      }
+      if (!cache) return;
+
+      this.cache[cache] = new Map();
+      data.forEach((doc) => {
+        // Firebase doesn't support Date objects, so we have to convert it to a Date object
+        // This is a hacky way to do it, but it works
+
+        if (cache === "circles") {
+          let date = doc.data().createdOn.toDate();
+          const circle = circleDataSchema.parse({
+            ...doc.data(),
+            createdOn: new Date(date),
+          });
+          this.cache[cache]?.set(doc.id, circle);
+        } else {
+          this.cache[cache]?.set(doc.id, doc.data() as any);
+        }
+      });
     } catch (error: any) {
       this.bot.logger.error(error, "Error recaching firestore data");
     }
@@ -154,7 +155,7 @@ export default class FirestoreManager extends Manager {
   public async coperUpdate(id: string, newData: Coper) {
     try {
       await this.firestore.collection("coper").doc(id).set(newData);
-      await this.recache("coper");
+      await this.recache("coper", "copers");
     } catch (e: any) {
       this.bot.logger.error(e, "Error updating coper in firestore");
       return false;
@@ -177,17 +178,10 @@ export default class FirestoreManager extends Manager {
 
   public async coperIncrement(id: string) {
     const coper = this.cache.copers.get(id);
-    if (!coper) {
-      await this.coperAdd({
-        _id: id,
-        score: 1,
-      });
-    } else {
-      await this.coperUpdate(id, {
-        _id: id,
-        score: coper.score + 1,
-      });
-    }
+    // If the coper doesn't exist, create it
+    if (!coper) return await this.coperAdd({ _id: id, score: 1 });
+    // Otherwise, increment the score
+    await this.coperUpdate(id, { _id: id, score: coper.score + 1 });
   }
 
   public async coperRemove(id: string): Promise<boolean> {
@@ -207,7 +201,7 @@ export default class FirestoreManager extends Manager {
         .collection("circles")
         .doc(circleData._id)
         .set(circleData);
-      await this.manualRecache("circles");
+      await this.recache("circles", "circles");
       return true;
     } catch (e: any) {
       this.bot.logger.error(e, `Error adding circle ${circleData.name}`);
@@ -293,11 +287,10 @@ export default class FirestoreManager extends Manager {
 
   public async findVCEvent(id: string): Promise<VCEvent | undefined> {
     const data = await this.firestore.collection("vcevent").doc(id).get();
-    if (data.exists) {
-      const event = vcEventSchema.parse(data.data());
-      return event;
-    }
-    return undefined;
+    if (!data.exists) return undefined;
+
+    const event = vcEventSchema.parse(data.data());
+    return event;
   }
 
   public async createVCEvent(eventData: VCEvent): Promise<boolean> {
