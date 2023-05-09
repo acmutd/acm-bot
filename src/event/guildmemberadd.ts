@@ -13,7 +13,7 @@ export default class GuildMemberAddEvent extends Event {
 
     try {
       const channel = await member.createDM();
-      channel?.send({ embeds: [embed] });
+      await channel?.send({ embeds: [embed] });
     } catch (e) {
       bot.managers.error.handleErr(
         e as Error,
