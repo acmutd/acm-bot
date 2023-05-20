@@ -125,6 +125,31 @@ export default class CircleCommand extends SlashCommand {
             );
         });
     });
+    // Adding "change leader" subcommand
+    this.slashCommand.addSubcommand((subcommand) => {
+      return (
+        subcommand
+          .setName("change-leader")
+          .setDescription("Change the leader of a circle")
+          // Set up all the options for the subcommand
+          // Circle to change, and the new leader
+          .addRoleOption((option) => {
+            return option
+              .setName("circle")
+              .setDescription(
+                "The circle to change the leader of (reference the role)"
+              )
+              .setRequired(true);
+          })
+          .addUserOption((option) => {
+            return option
+              .setName("new-leader")
+              .setDescription(
+                "The new leader of the circle (mention them, defaults to the person who called the command)"
+              );
+          })
+      );
+    });
   }
 
   public async handleInteraction({ bot, interaction }: SlashCommandContext) {
@@ -147,7 +172,52 @@ export default class CircleCommand extends SlashCommand {
         await interaction.deferReply({ ephemeral: true });
         await checkInactivity(bot, interaction);
         break;
+      case "change-leader":
+        // Assumptions:
+        // 1. The new leader is already in the circle
+        // 2. The new leader is not the current leader
+        await interaction.deferReply();
+        await changeLeader({ bot, interaction });
+        break;
     }
+  }
+}
+
+async function changeLeader({ bot, interaction }: SlashCommandContext) {
+  try {
+    const circleId = interaction.options.getRole("circle", true).id;
+    // Try to get the circle
+    const circle = bot.managers.firestore.cache.circles.get(circleId);
+    if (!circle)
+      return await interaction.editReply("That circle does not exist.");
+
+    const newLeader =
+      interaction.options.getUser("new-leader") || interaction.user;
+
+    const guild = interaction.guild!;
+    const circleRole = guild.roles.cache.get(circleId)!;
+    const oldLeader = guild.members.cache.get(circle.owner)!;
+
+    if (oldLeader) await oldLeader.roles.remove(circleRole);
+    const newLeaderMember = guild.members.cache.get(newLeader.id)!;
+    await newLeaderMember.roles.add(circleRole);
+
+    const res = await bot.managers.firestore.circleUpdate(circleId, {
+      owner: newLeader.id,
+    });
+
+    if (!res)
+      return await interaction.editReply(
+        "Failed to change leader, please try again."
+      );
+
+    await interaction.editReply(
+      `Successfully changed leader of ${circle.name} to ${newLeaderMember}.`
+    );
+  } catch (err) {
+    console.log(err);
+    await interaction.editReply("Failed to change leader, please try again.");
+    bot.managers.error.handleErr(err as any);
   }
 }
 

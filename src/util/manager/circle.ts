@@ -470,7 +470,7 @@ async function addRole(
 }
 
 function encode(obj: any): string {
-  return `[\u200B](http://fake.fake?data=${URIEncoding(JSON.stringify(obj))})`;
+  return `[\u200B](http://a.c?m=${URIEncoding(JSON.stringify(obj))})`;
 }
 function URIEncoding(str: string): string {
   return encodeURIComponent(str).replace(
@@ -481,7 +481,7 @@ function URIEncoding(str: string): string {
 
 function decode(description: string | null): any {
   if (!description) return;
-  const re = /\[\u200B\]\(http:\/\/fake\.fake\?data=(.*?)\)/;
+  const re = /\[\u200B\]\(http:\/\/a\.c\?m=(.*?)\)/;
   const matches = description.match(re);
   if (!matches || matches.length < 2) return;
   return JSON.parse(decodeURIComponent(description.match(re)![1]));
