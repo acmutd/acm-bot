@@ -52,12 +52,22 @@ export default class CircleManager extends Manager {
           ephemeral: true,
         });
       }
-      await this.deleteOriginal(c);
-      await this.sendHeader(c);
       // Build and send circle cards
       const circles: Circle[] = [
         ...this.bot.managers.firestore.cache.circles.values(),
       ];
+
+      // Check if all circles have a leader
+      const allLeaders = await this.checkLeader(circles);
+      if (!allLeaders) {
+        return await interaction.followUp({
+          content: "Not all circles have a leader",
+          ephemeral: true,
+        });
+      }
+
+      await this.deleteOriginal(c);
+      await this.sendHeader(c);
       for (const circle of circles) await this.sendCircleCard(c, circle);
 
       await interaction.followUp({ content: "Done!", ephemeral: true });
@@ -68,6 +78,22 @@ export default class CircleManager extends Manager {
         content: "An error occurred, please contact a bot maintainer",
       });
     }
+  }
+
+  private async checkLeader(circles: Circle[]): Promise<boolean> {
+    const guild = await this.bot.guilds.fetch(settings.guild);
+    for (const circle of circles) {
+      if (!circle.owner) return false;
+      const member = await guild.members.fetch(circle.owner).catch((e) => {
+        this.bot.managers.error.handleErr(
+          e as Error,
+          `No leader found for circle ${circle.name}`
+        );
+        return undefined;
+      });
+      if (!member) return false;
+    }
+    return true;
   }
 
   public async sendHeader(channel: TextChannel) {
