@@ -52,12 +52,22 @@ export default class CircleManager extends Manager {
           ephemeral: true,
         });
       }
-      await this.deleteOriginal(c);
-      await this.sendHeader(c);
       // Build and send circle cards
       const circles: Circle[] = [
         ...this.bot.managers.firestore.cache.circles.values(),
       ];
+
+      // Check if all circles have a leader
+      const allLeaders = await this.checkLeader(circles);
+      if (!allLeaders) {
+        return await interaction.followUp({
+          content: "Not all circles have a leader",
+          ephemeral: true,
+        });
+      }
+
+      await this.deleteOriginal(c);
+      await this.sendHeader(c);
       for (const circle of circles) await this.sendCircleCard(c, circle);
 
       await interaction.followUp({ content: "Done!", ephemeral: true });
@@ -68,6 +78,22 @@ export default class CircleManager extends Manager {
         content: "An error occurred, please contact a bot maintainer",
       });
     }
+  }
+
+  private async checkLeader(circles: Circle[]): Promise<boolean> {
+    const guild = await this.bot.guilds.fetch(settings.guild);
+    for (const circle of circles) {
+      if (!circle.owner) return false;
+      const member = await guild.members.fetch(circle.owner).catch((e) => {
+        this.bot.managers.error.handleErr(
+          e as Error,
+          `No leader found for circle ${circle.name}`
+        );
+        return undefined;
+      });
+      if (!member) return false;
+    }
+    return true;
   }
 
   public async sendHeader(channel: TextChannel) {
@@ -122,7 +148,7 @@ export default class CircleManager extends Manager {
             day: "numeric",
           })}${owner ? `﹒👑 Owner: ${owner.displayName}` : ""}`,
         },
-      }).setDescription(`${encode(encodedData)}${circle.description}`);
+      }).setDescription(circle.description);
       const parsedEmoji = parseEmoji(circle.emoji!);
       // Build interactive/buttons portion of the card
       const actionRow = new ActionRowBuilder<ButtonBuilder>().addComponents(
@@ -152,46 +178,6 @@ export default class CircleManager extends Manager {
       );
       throw new Error("Cancelling repost");
     }
-  }
-
-  public async update(channel: TextChannel, circleId: string) {
-    const msgs = await channel.messages.fetch({ limit: 50 });
-    let message: Message | undefined;
-    for (const m of msgs.values()) {
-      if (m.embeds.length === 0) return;
-      if (!m.embeds[0].description) return;
-
-      const obj = decode(m.embeds[0].description);
-      if (!obj || !obj.circle) return;
-      if (obj.circle === circleId) {
-        message = m;
-        break;
-      }
-    }
-    if (!message) return;
-    const memberField = message.embeds[0].fields.find(
-      (f) => f.name === "**Members**"
-    );
-    if (!memberField) return;
-
-    const count = await this.findMemberCount(circleId);
-    const embed = new EmbedBuilder({
-      title: message.embeds[0].title || "",
-      description: message.embeds[0].description || "",
-      color: message.embeds[0].color!,
-      footer: {
-        text: message.embeds[0].footer?.text || "",
-      },
-      thumbnail: {
-        url: message.embeds[0].thumbnail?.url || "",
-      },
-
-      fields: [
-        { name: "**Role**", value: `<@&${circleId}>`, inline: true },
-        { name: "**Members**", value: `${count ?? "N/A"}`, inline: true },
-      ],
-    });
-    await message.edit({ embeds: [embed] });
   }
 
   public async findMemberCount(id: string) {
@@ -467,24 +453,6 @@ async function addRole(
     content: `Thank you for joining ${circle.name}! Here's the channel: <#${circle.channel}>`,
   });
   return await chan.send(`${member}, welcome to ${circle.name}!`);
-}
-
-function encode(obj: any): string {
-  return `[\u200B](http://a.c?m=${URIEncoding(JSON.stringify(obj))})`;
-}
-function URIEncoding(str: string): string {
-  return encodeURIComponent(str).replace(
-    /[!'()*]/g,
-    (c) => `%${c.charCodeAt(0).toString(16).toUpperCase()}`
-  );
-}
-
-function decode(description: string | null): any {
-  if (!description) return;
-  const re = /\[\u200B\]\(http:\/\/a\.c\?m=(.*?)\)/;
-  const matches = description.match(re);
-  if (!matches || matches.length < 2) return;
-  return JSON.parse(decodeURIComponent(description.match(re)![1]));
 }
 
 const handleStart = async (task: VCEvent): Promise<VCEvent> => {

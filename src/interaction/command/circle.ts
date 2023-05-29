@@ -1,7 +1,6 @@
 import { ChannelType, OverwriteType } from "discord-api-types/v10";
 import {
   ChatInputCommandInteraction,
-  ColorResolvable,
   Guild,
   GuildMember,
   Message,
