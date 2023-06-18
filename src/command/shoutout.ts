@@ -50,7 +50,7 @@ export default class ShoutoutCommand extends Command {
     }).setColor(null);
 
     const channel = msg.guild?.channels.resolve(
-      settings.channels.shoutout
+      bot.settings.channels.shoutout
     ) as TextChannel;
     await channel.send({ embeds: [embed] });
     await channel.send(

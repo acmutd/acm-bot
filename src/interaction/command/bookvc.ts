@@ -1,4 +1,3 @@
-import { ChannelType } from "discord-api-types/v10";
 import {
   ChatInputCommandInteraction,
   EmbedBuilder,
@@ -8,16 +7,16 @@ import {
 import { v4 } from "uuid";
 
 import SlashCommand, {
+  MANAGER_PERMS,
   SlashCommandContext,
 } from "../../api/interaction/slashcommand";
 import { Circle, VCEvent } from "./../../api/schema";
-import { settings } from "./../../settings";
 export default class BookVC extends SlashCommand {
   public constructor() {
     super({
       name: "bookvc",
       description: "Setup a time to host a VC event for a circle",
-      permissions: BigInt(settings.roles.circleLeaders),
+      permissions: MANAGER_PERMS,
     });
     this.slashCommand.addNumberOption((option) => {
       return option

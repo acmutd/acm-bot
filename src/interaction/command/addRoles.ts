@@ -1,15 +1,15 @@
 import { GuildMember } from "discord.js";
 import SlashCommand, {
+  MANAGER_PERMS,
   SlashCommandContext,
 } from "../../api/interaction/slashcommand";
-import { settings } from "../../settings";
 
 export default class RoleCommand extends SlashCommand {
   public constructor() {
     super({
       name: "role",
       description: "Utilities to add/remove roles",
-      permissions: BigInt(settings.roles.circleLeaders),
+      permissions: MANAGER_PERMS,
     });
 
     // Adding members

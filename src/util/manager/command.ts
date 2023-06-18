@@ -59,13 +59,6 @@ export default class CommandManager extends Manager {
       const role = await msg.guild?.roles.fetch(command.requiredRoles[0]);
       return `Missing a role to perform this command, such as '${role?.toString()}'.`;
     }
-
-    // Filter on command disabled
-    if (
-      this.bot.config.disabledCommands &&
-      this.bot.config.disabledCommands.includes(command.name)
-    )
-      return "Command disabled.";
   }
 
   /**

@@ -1,6 +1,6 @@
 import { Client, IntentsBitField, Partials } from "discord.js";
-import { settings, Settings } from "../settings";
-import ResponseUtil, { ResponseFormat } from "../util/response";
+import { settings, Settings, FirebaseSettings } from "../settings";
+import ResponseUtil from "../util/response";
 import LoggerUtil from "../util/logger";
 import CommandManager from "../util/manager/command";
 import IndicatorManager from "../util/manager/indicator";
@@ -21,19 +21,14 @@ import ReportManager from "../util/manager/report";
 import CopeManager from "../util/manager/cope";
 
 export interface Config {
-  token: string;
-  dbUrl: string;
   commandPath: string;
   slashCommandPath: string;
   cmCommandPath: string;
   buttonPath: string;
   eventPath: string;
   endpointPath: string;
-  sentryDNS: string;
-  responseFormat: ResponseFormat;
-  disabledCommands: string[] | undefined;
-  disabledCategories: string[] | undefined;
   modalPath: string;
+  firebaseSettings: FirebaseSettings;
 }
 
 export interface ManagerList {
@@ -80,10 +75,10 @@ export default class Bot extends Client {
       intents,
       partials: [Partials.Reaction, Partials.Message, Partials.Channel],
     });
-    this.settings = settings;
+    this.settings = { ...settings, ...config.firebaseSettings };
     this.logger = new LoggerUtil();
-    this.response = new ResponseUtil(config.responseFormat);
-    this.restConnection = new REST({ version: "10" }).setToken(config.token);
+    this.response = new ResponseUtil(settings.responseFormat);
+    this.restConnection = new REST({ version: "10" }).setToken(settings.token);
     this.managers = {
       firestore: new FirestoreManager(this),
       command: new CommandManager(this, config.commandPath),
@@ -112,7 +107,7 @@ export default class Bot extends Client {
   }
 
   async start(): Promise<void> {
-    await this.login(this.config.token);
+    await this.login(settings.token);
     this.logger.info("Initializing managers...");
     Object.entries(this.managers).forEach(([k, v]) => {
       v.init();

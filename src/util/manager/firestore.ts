@@ -42,10 +42,14 @@ export const cacheKeys = z.enum([
 export type CacheKeys = z.infer<typeof cacheKeys>;
 
 export default class FirestoreManager extends Manager {
-  public firestore!: Firestore;
+  public firestore: Firestore;
   public cache: CacheTypes;
   constructor(bot: Bot) {
     super(bot);
+    this.firestore = new Firestore({
+      projectId: settings.firestore.projectId,
+      keyFilename: settings.firestore.keyFilename,
+    });
     this.cache = {
       responses: new Map(),
       rrmessages: new Map(),
@@ -54,10 +58,6 @@ export default class FirestoreManager extends Manager {
     };
   }
   async init() {
-    this.firestore = new Firestore({
-      projectId: settings.firestore.projectId,
-      keyFilename: settings.firestore.keyFilename,
-    });
     await this.recache("responses", "responses");
     await this.recache("rrmessages", "rrmessages");
     await this.recache("circles", "circles");
