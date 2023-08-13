@@ -19,8 +19,9 @@ export default class CommandManager extends Manager {
   /**
    * Dynamically load all commands from some path
    */
-  public init(): void {
-    DynamicLoader.loadClasses(this.path).forEach((command) => {
+  public async init() {
+    const classes = (await DynamicLoader.loadClasses(this.path)) as Command[];
+    classes.forEach((command) => {
       this.commands.set(command.name, command);
       this.bot.logger.info(`Loaded command '${command.name}'`);
     });
