@@ -1,4 +1,4 @@
-import { ChatInputCommandInteraction } from "discord.js";
+import { ChatInputCommandInteraction, PermissionFlagsBits } from "discord.js";
 import { SlashCommandBuilder } from "@discordjs/builders";
 import BaseInteraction, {
   InteractionConfig,
@@ -47,3 +47,8 @@ export default abstract class SlashCommand extends BaseInteraction {
 
   public abstract handleInteraction(context: SlashCommandContext): any;
 }
+
+export const MANAGER_PERMS =
+  PermissionFlagsBits.ManageChannels |
+  PermissionFlagsBits.ManageMessages |
+  PermissionFlagsBits.ManageRoles;

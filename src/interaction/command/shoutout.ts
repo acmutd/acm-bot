@@ -3,7 +3,6 @@ import SlashCommand, {
 } from "../../api/interaction/slashcommand";
 import { TextChannel } from "discord.js";
 
-import { settings } from "../../settings";
 import { EmbedBuilder } from "@discordjs/builders";
 
 export default class ShoutoutCommand extends SlashCommand {
@@ -52,7 +51,7 @@ export default class ShoutoutCommand extends SlashCommand {
     });
 
     const channel = guild!.channels.resolve(
-      settings.channels.shoutout
+      bot.settings.channels.shoutout
     ) as TextChannel;
     await channel.send({ content: users, embeds: [embed] });
   }

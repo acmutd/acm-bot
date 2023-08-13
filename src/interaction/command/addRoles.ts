@@ -1,15 +1,15 @@
 import { GuildMember } from "discord.js";
 import SlashCommand, {
+  MANAGER_PERMS,
   SlashCommandContext,
 } from "../../api/interaction/slashcommand";
-import { settings } from "../../settings";
 
 export default class RoleCommand extends SlashCommand {
   public constructor() {
     super({
       name: "role",
       description: "Utilities to add/remove roles",
-      permissions: BigInt(settings.roles.circleLeaders),
+      permissions: MANAGER_PERMS,
     });
 
     // Adding members
@@ -68,7 +68,7 @@ export default class RoleCommand extends SlashCommand {
   }
 
   private async handleAdd({ bot, interaction }: SlashCommandContext) {
-    await interaction.deferReply();
+    await interaction.deferReply({ ephemeral: true });
     const roleId = interaction.options.getRole("role", true).id;
     const list = interaction.options.getAttachment("list", true);
     // Check if the file is a txt file
@@ -104,7 +104,8 @@ export default class RoleCommand extends SlashCommand {
     const guildMembers = [...(await guild.members.fetch()).values()];
     const members: GuildMember[] = [];
     for (const member of data) {
-      const [name, discriminator] = member.split("#");
+      let [name, discriminator] = member.split("#");
+      if (!discriminator) discriminator = "0";
       const user = guildMembers.find(
         (member) =>
           member.user.username === name &&
@@ -164,7 +165,8 @@ export default class RoleCommand extends SlashCommand {
     const guildMembers = [...(await guild.members.fetch()).values()];
     const members: GuildMember[] = [];
     for (const member of data) {
-      const [name, discriminator] = member.split("#");
+      let [name, discriminator] = member.split("#");
+      if (!discriminator) discriminator = "0";
       const user = guildMembers.find(
         (member) =>
           member.user.username === name &&

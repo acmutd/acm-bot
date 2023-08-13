@@ -37,7 +37,7 @@ export default class ExpressManager extends Manager {
     });
   }
 
-  setupEndpoints() {
+  async setupEndpoints() {
     if (!fs.existsSync(this.endpointPath)) {
       this.bot.logger.error(
         `No express endpoints found at ${this.endpointPath}!`
@@ -45,7 +45,7 @@ export default class ExpressManager extends Manager {
       return;
     }
 
-    DynamicLoader.loadFunctions(this.endpointPath, [this.app, this.bot]);
+    await DynamicLoader.loadFunctions(this.endpointPath, [this.app, this.bot]);
 
     // Log endpoint names
     this.app._router.stack.forEach((r: any) => {

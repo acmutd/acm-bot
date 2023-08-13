@@ -10,10 +10,10 @@ import {
 
 import Bot from "../../api/bot";
 import SlashCommand, {
+  MANAGER_PERMS,
   SlashCommandContext,
 } from "../../api/interaction/slashcommand";
 import { Circle } from "../../api/schema";
-import { settings } from "../../settings";
 import { HexColorString } from "discord.js";
 
 export default class CircleCommand extends SlashCommand {
@@ -21,7 +21,7 @@ export default class CircleCommand extends SlashCommand {
     super({
       name: "circle",
       description: "A suite of command that manage ACM Community Circles.",
-      permissions: BigInt(settings.roles.circleLeaders),
+      permissions: MANAGER_PERMS,
     });
     // Adding "add" subcommand
     this.slashCommand.addSubcommand((subcommand) => {
@@ -172,9 +172,6 @@ export default class CircleCommand extends SlashCommand {
         await checkInactivity(bot, interaction);
         break;
       case "change-leader":
-        // Assumptions:
-        // 1. The new leader is already in the circle
-        // 2. The new leader is not the current leader
         await interaction.deferReply();
         await changeLeader({ bot, interaction });
         break;
@@ -238,7 +235,7 @@ async function createExtraChannels(
   const channel = await guild.channels.create({
     name: channelName,
     type: ChannelType.GuildText,
-    parent: settings.circles.parentCategory,
+    parent: bot.settings.circles.parentCategory,
     topic: circle.description,
     permissionOverwrites: [
       {
@@ -296,7 +293,12 @@ async function addCircle(bot: Bot, interaction: ChatInputCommandInteraction) {
     // Give role to owner
     await circleOwner.roles.add(circleRole);
 
-    const circleChannel = await createChannel(circle, circleRole, guild);
+    const circleChannel = await createChannel(
+      circle,
+      circleRole,
+      guild,
+      bot.settings.circles.parentCategory
+    );
     const added = await handleAddCircle(bot, circle, circleRole, circleChannel);
     // If failed to add circle, delete the role and channel
     if (!added) {
@@ -307,6 +309,9 @@ async function addCircle(bot: Bot, interaction: ChatInputCommandInteraction) {
       );
     }
 
+    const circleLeader = bot.settings.roles.circleLeaders;
+
+    await circleOwner.roles.add(circleLeader);
     await interaction.followUp(
       `Successfully created circle <@&${circleRole.id}>.`
     );
@@ -315,6 +320,34 @@ async function addCircle(bot: Bot, interaction: ChatInputCommandInteraction) {
     await interaction.followUp("Failed to add circle please try again.");
   }
 }
+
+const createChannel = async (
+  circle: Partial<Circle>,
+  circleRole: Role,
+  guild: Guild,
+  parentCategory: string
+) => {
+  const channelName = `${circle.emoji} ${circle.name}`;
+  const channelDesc = `🎗️: ${circle.description}`;
+  return await guild.channels.create({
+    name: channelName,
+    type: ChannelType.GuildText,
+    topic: channelDesc,
+    parent: parentCategory,
+    permissionOverwrites: [
+      {
+        id: guild.roles.everyone,
+        deny: "ViewChannel",
+        type: OverwriteType.Role,
+      },
+      {
+        id: circleRole.id,
+        allow: "ViewChannel",
+        type: OverwriteType.Role,
+      },
+    ],
+  });
+};
 
 async function checkInactivity(
   bot: Bot,
@@ -373,32 +406,6 @@ const createCircleData = (
     owner: interaction.options.getUser("owner", true).id,
     subChannels: [],
   };
-};
-const createChannel = async (
-  circle: Partial<Circle>,
-  circleRole: Role,
-  guild: Guild
-) => {
-  const channelName = `${circle.emoji} ${circle.name}`;
-  const channelDesc = `🎗️: ${circle.description}`;
-  return await guild.channels.create({
-    name: channelName,
-    type: ChannelType.GuildText,
-    topic: channelDesc,
-    parent: settings.circles.parentCategory,
-    permissionOverwrites: [
-      {
-        id: guild.roles.everyone,
-        deny: "ViewChannel",
-        type: OverwriteType.Role,
-      },
-      {
-        id: circleRole.id,
-        allow: "ViewChannel",
-        type: OverwriteType.Role,
-      },
-    ],
-  });
 };
 const handleAddCircle = async (
   bot: Bot,

@@ -13,7 +13,7 @@ export default class VCEventCommand extends Command {
         "vcevent <start|stop|stats> [channel-id]",
       ],
       dmWorks: false,
-      requiredRoles: [settings.roles.staff, settings.points.staffRole],
+      requiredRoles: [settings.points.staffRole],
     });
   }
 

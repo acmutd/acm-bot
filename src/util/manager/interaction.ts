@@ -101,9 +101,9 @@ export default class InteractionManager extends Manager {
   private async registerSlashAndContextMenuCommands() {
     try {
       // Load slash commands
-      const slashCommands = await DynamicLoader.loadClasses(
+      const slashCommands = (await DynamicLoader.loadClasses(
         this.slashCommandPath
-      );
+      )) as SlashCommand[];
 
       this.slashCommands = new Map(slashCommands.map((sc) => [sc.name, sc]));
 
@@ -145,10 +145,11 @@ export default class InteractionManager extends Manager {
 
   private async registerButtons() {
     try {
+      const buttons = (await DynamicLoader.loadClasses(
+        this.buttonPath
+      )) as CustomButtonInteraction[];
       // Dynamically load source files
-      this.buttons = new Map(
-        DynamicLoader.loadClasses(this.buttonPath).map((sc) => [sc.name, sc])
-      );
+      this.buttons = new Map(buttons.map((sc) => [sc.name, sc]));
 
       for (const btn of this.buttons.keys()) {
         this.bot.logger.info(`Loaded button '${btn}'`);
@@ -161,11 +162,11 @@ export default class InteractionManager extends Manager {
   private async registerModals() {
     try {
       // Dynamically load source files
+      const modals = (await DynamicLoader.loadClasses(
+        this.modalPath
+      )) as BaseModal[];
       this.modals = new Map<string, BaseModal>(
-        DynamicLoader.loadClasses(this.modalPath).map((sc: BaseModal) => [
-          sc.name,
-          sc,
-        ])
+        modals.map((sc: BaseModal) => [sc.name, sc])
       );
 
       for (const modal of this.modals.keys()) {

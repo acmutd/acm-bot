@@ -33,9 +33,7 @@ export default class CircleManager extends Manager {
     this.joinChannelId = this.bot.settings.circles.joinChannel;
   }
 
-  public init(): void {
-    // this.scheduleActivityReminder();
-  }
+  public async init() {}
 
   /**
    * Repost all circle messages. Used to update all the cards in the join circles channel, and send new ones
@@ -421,7 +419,7 @@ export default class CircleManager extends Manager {
     const channel = await guild?.channels.create({
       name: task.title,
       type: ChannelType.GuildVoice,
-      parent: settings.circles.parentCategory,
+      parent: this.bot.settings.circles.parentCategory,
       permissionOverwrites: [
         { id: guild?.id, deny: ["ViewChannel", "Connect"] },
         { id: task.circleRole, allow: ["ViewChannel"] },
