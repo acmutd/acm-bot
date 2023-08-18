@@ -1,9 +1,10 @@
-import { ChannelType, OverwriteType } from "discord-api-types/v10";
 import {
+  ChannelType,
   ChatInputCommandInteraction,
   Guild,
   GuildMember,
   Message,
+  OverwriteType,
   Role,
   TextChannel,
 } from "discord.js";
