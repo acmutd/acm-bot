@@ -14,8 +14,14 @@ export default class ReadyEvent extends Event {
       );
 
       // Set status
-      bot.user.setActivity(bot.settings.activity.description, {
-        type: bot.settings.activity.type,
+      bot.user.setPresence({
+        activities: [
+          {
+            name: bot.settings.activity.description,
+            type: bot.settings.activity.type,
+          },
+        ],
+        status: "online",
       });
     }
   }

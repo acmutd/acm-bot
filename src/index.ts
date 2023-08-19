@@ -4,6 +4,10 @@ import { settings, settingsSchema } from "./settings";
 import sourceMapSupport from "source-map-support";
 import { Firestore } from "@google-cloud/firestore";
 
+sourceMapSupport.install({
+  handleUncaughtExceptions: false,
+});
+
 const main = async () => {
   const firestore = new Firestore({
     projectId: settings.firestore.projectId,
@@ -47,10 +51,6 @@ const main = async () => {
     firebaseSettings,
   });
   bot.start();
-
-  sourceMapSupport.install({
-    handleUncaughtExceptions: false,
-  });
 };
 
 main();
