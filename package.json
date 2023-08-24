@@ -22,7 +22,7 @@
   "homepage": "https://github.com/jafrilli/acm-bot#readme",
   "dependencies": {
     "@discordjs/builders": "^1.6.5",
-    "@discordjs/rest": "^2.0.1",
+    "@discordjs/rest": "^1.6.0",
     "@google-cloud/firestore": "^6.7.0",
     "axios": "^1.4.0",
     "body-parser": "^1.20.2",
