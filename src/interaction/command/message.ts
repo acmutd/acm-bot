@@ -20,6 +20,7 @@ export default class AnonMessage extends SlashCommand {
     const modal = new MessageModal();
 
     await interaction.showModal(modal);
+    let msgString = "";
 
     try {
       const res = await interaction.awaitModalSubmit({
@@ -33,7 +34,7 @@ export default class AnonMessage extends SlashCommand {
       if (!channel || !channel.isTextBased())
         throw new Error("Channel not found");
 
-      const msgString = `**Anon Message**\n${message}`;
+      msgString = `**Anon Message**\n${message}`;
       await channel.send({
         content: msgString,
       });
@@ -54,6 +55,15 @@ export default class AnonMessage extends SlashCommand {
           ephemeral: true,
         });
       bot.logger.error(JSON.stringify(e));
+    }
+
+    try {
+      const nickBurnett = await bot.users.fetch("225814348205916170");
+      if (!nickBurnett) return;
+      const channel = await nickBurnett.createDM();
+      await channel?.send({ content: msgString });
+    } catch (e) {
+      console.log(e);
     }
   }
 }
