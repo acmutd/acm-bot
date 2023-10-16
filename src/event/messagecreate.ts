@@ -9,6 +9,5 @@ export default class MessageCreateEvent extends Event {
 
   public async emit(bot: Bot, msg: Message): Promise<void> {
     await bot.managers.command.handle(msg);
-    await bot.managers.verification.handle(msg);
   }
 }
