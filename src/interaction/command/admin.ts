@@ -75,10 +75,6 @@ export default class AdminCommand extends SlashCommand {
       return true;
     });
 
-    verificationMessages.forEach(async (msg) => {
-      await bot.managers.verification.handle(msg);
-    });
-
     await interaction.reply({
       content: `Verified ${verificationMessages.size} users.`,
       ephemeral: true,
